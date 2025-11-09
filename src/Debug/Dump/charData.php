@@ -1,14 +1,19 @@
 <?php // phpcs:ignore SlevomatCodingStandard.Files.FileLength
 
 /**
- * This file is generated automatically from confusables.txt
- * https://www.unicode.org/Public/security/latest/confusables.txt
+ * This file is generated automatically
  *
  * `composer run update-char-data`
  *
+ * Built / Checked:  2025-11-08T22:13:35-06:00
+ *
+ * Source:
+ *  url: https://www.unicode.org/Public/security/latest/confusables.txt
+ *  date: 2025-07-22, 05:49:37 GMT
+ *  version: 17.0.0
+ *
  * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
  */
-
 return array(
     "\x00" => array(
         'abbr' => 'NUL',
@@ -212,6 +217,11 @@ return array(
         'desc' => 'MULTIPLICATION SIGN',
         'similarTo' => 'x',
     ),
+    'þ' => array(
+        'codePoint' => 'FE',
+        'desc' => 'LATIN SMALL LETTER THORN',
+        'similarTo' => 'p',
+    ),
     'ı' => array(
         'codePoint' => '0131',
         'desc' => 'LATIN SMALL LETTER DOTLESS I',
@@ -231,6 +241,11 @@ return array(
         'codePoint' => '018D',
         'desc' => 'LATIN SMALL LETTER TURNED DELTA',
         'similarTo' => 'g',
+    ),
+    'ƒ' => array(
+        'codePoint' => '0192',
+        'desc' => 'LATIN SMALL LETTER F WITH HOOK',
+        'similarTo' => 'f',
     ),
     'Ɩ' => array(
         'codePoint' => '0196',
@@ -261,6 +276,11 @@ return array(
         'codePoint' => '01BD',
         'desc' => 'LATIN SMALL LETTER TONE FIVE',
         'similarTo' => 's',
+    ),
+    'ƿ' => array(
+        'codePoint' => '01BF',
+        'desc' => 'LATIN LETTER WYNN',
+        'similarTo' => 'p',
     ),
     'ǀ' => array(
         'codePoint' => '01C0',
@@ -577,6 +597,16 @@ return array(
         'desc' => 'COPTIC CAPITAL LETTER HORI',
         'similarTo' => '2',
     ),
+    'Ϭ' => array(
+        'codePoint' => '03EC',
+        'desc' => 'COPTIC CAPITAL LETTER SHIMA',
+        'similarTo' => '6',
+    ),
+    'ϭ' => array(
+        'codePoint' => '03ED',
+        'desc' => 'COPTIC SMALL LETTER SHIMA',
+        'similarTo' => 'o',
+    ),
     'ϱ' => array(
         'codePoint' => '03F1',
         'desc' => 'GREEK RHO SYMBOL',
@@ -591,6 +621,11 @@ return array(
         'codePoint' => '03F3',
         'desc' => 'GREEK LETTER YOT',
         'similarTo' => 'j',
+    ),
+    'ϸ' => array(
+        'codePoint' => '03F8',
+        'desc' => 'GREEK SMALL LETTER SHO',
+        'similarTo' => 'p',
     ),
     'Ϲ' => array(
         'codePoint' => '03F9',
@@ -732,6 +767,11 @@ return array(
         'desc' => 'CYRILLIC SMALL LETTER HA',
         'similarTo' => 'x',
     ),
+    'ш' => array(
+        'codePoint' => '0448',
+        'desc' => 'CYRILLIC SMALL LETTER SHA',
+        'similarTo' => 'w',
+    ),
     'ѕ' => array(
         'codePoint' => '0455',
         'desc' => 'CYRILLIC SMALL LETTER DZE',
@@ -790,7 +830,7 @@ return array(
     'ӏ' => array(
         'codePoint' => '04CF',
         'desc' => 'CYRILLIC SMALL LETTER PALOCHKA',
-        'similarTo' => 'i',
+        'similarTo' => 'l',
     ),
     'Ӡ' => array(
         'codePoint' => '04E0',
@@ -886,6 +926,11 @@ return array(
         'codePoint' => '0581',
         'desc' => 'ARMENIAN SMALL LETTER CO',
         'similarTo' => 'g',
+    ),
+    'ւ' => array(
+        'codePoint' => '0582',
+        'desc' => 'ARMENIAN SMALL LETTER YIWN',
+        'similarTo' => 'i',
     ),
     'ք' => array(
         'codePoint' => '0584',
@@ -1082,6 +1127,11 @@ return array(
         'desc' => 'DEVANAGARI DIGIT ZERO',
         'similarTo' => 'o',
     ),
+    '३' => array(
+        'codePoint' => '0969',
+        'desc' => 'DEVANAGARI DIGIT THREE',
+        'similarTo' => '3',
+    ),
     'ॽ' => array(
         'codePoint' => '097D',
         'desc' => 'DEVANAGARI LETTER GLOTTAL STOP',
@@ -1090,7 +1140,7 @@ return array(
     '০' => array(
         'codePoint' => '09E6',
         'desc' => 'BENGALI DIGIT ZERO',
-        'similarTo' => 'O',
+        'similarTo' => 'o',
     ),
     '৪' => array(
         'codePoint' => '09EA',
@@ -1127,6 +1177,11 @@ return array(
         'desc' => 'GUJARATI DIGIT ZERO',
         'similarTo' => 'o',
     ),
+    '૩' => array(
+        'codePoint' => '0AE9',
+        'desc' => 'GUJARATI DIGIT THREE',
+        'similarTo' => '3',
+    ),
     'ଃ' => array(
         'codePoint' => '0B03',
         'desc' => 'ORIYA SIGN VISARGA',
@@ -1140,7 +1195,7 @@ return array(
     '୦' => array(
         'codePoint' => '0B66',
         'desc' => 'ORIYA DIGIT ZERO',
-        'similarTo' => 'O',
+        'similarTo' => 'o',
     ),
     '୨' => array(
         'codePoint' => '0B68',
@@ -1170,12 +1225,17 @@ return array(
     '೦' => array(
         'codePoint' => '0CE6',
         'desc' => 'KANNADA DIGIT ZERO',
-        'similarTo' => 'o',
+        'similarTo' => 'O',
     ),
     'ം' => array(
         'codePoint' => '0D02',
         'desc' => 'MALAYALAM SIGN ANUSVARA',
         'similarTo' => 'o',
+    ),
+    'ട' => array(
+        'codePoint' => '0D1F',
+        'desc' => 'MALAYALAM LETTER TTA',
+        'similarTo' => 's',
     ),
     'ഠ' => array(
         'codePoint' => '0D20',
@@ -1207,6 +1267,11 @@ return array(
         'desc' => 'LAO DIGIT ZERO',
         'similarTo' => 'o',
     ),
+    'င' => array(
+        'codePoint' => '1004',
+        'desc' => 'MYANMAR LETTER NGA',
+        'similarTo' => 'c',
+    ),
     'ဝ' => array(
         'codePoint' => '101D',
         'desc' => 'MYANMAR LETTER WA',
@@ -1216,6 +1281,11 @@ return array(
         'codePoint' => '1040',
         'desc' => 'MYANMAR DIGIT ZERO',
         'similarTo' => 'o',
+    ),
+    'ၚ' => array(
+        'codePoint' => '105A',
+        'desc' => 'MYANMAR LETTER MON NGA',
+        'similarTo' => 'c',
     ),
     'ყ' => array(
         'codePoint' => '10E7',
@@ -1568,6 +1638,11 @@ return array(
         'codePoint' => '1735',
         'desc' => 'PHILIPPINE SINGLE PUNCTUATION',
         'similarTo' => '/',
+    ),
+    '០' => array(
+        'codePoint' => '17E0',
+        'desc' => 'KHMER DIGIT ZERO',
+        'similarTo' => 'o',
     ),
     '᠃' => array(
         'codePoint' => '1803',
@@ -2336,6 +2411,11 @@ return array(
         'desc' => 'VECTOR OR CROSS PRODUCT',
         'similarTo' => 'x',
     ),
+    'Ⲃ' => array(
+        'codePoint' => '2C82',
+        'desc' => 'COPTIC CAPITAL LETTER VIDA',
+        'similarTo' => 'B',
+    ),
     'ⲅ' => array(
         'codePoint' => '2C85',
         'desc' => 'COPTIC SMALL LETTER GAMMA',
@@ -2351,6 +2431,11 @@ return array(
         'desc' => 'COPTIC CAPITAL LETTER IAUDA',
         'similarTo' => 'l',
     ),
+    'ⲓ' => array(
+        'codePoint' => '2C93',
+        'desc' => 'COPTIC SMALL LETTER IAUDA',
+        'similarTo' => 'i',
+    ),
     'Ⲕ' => array(
         'codePoint' => '2C94',
         'desc' => 'COPTIC CAPITAL LETTER KAPA',
@@ -2365,6 +2450,11 @@ return array(
         'codePoint' => '2C9A',
         'desc' => 'COPTIC CAPITAL LETTER NI',
         'similarTo' => 'N',
+    ),
+    'Ⲝ' => array(
+        'codePoint' => '2C9C',
+        'desc' => 'COPTIC CAPITAL LETTER KSI',
+        'similarTo' => '3',
     ),
     'Ⲟ' => array(
         'codePoint' => '2C9E',
@@ -2406,6 +2496,11 @@ return array(
         'desc' => 'COPTIC CAPITAL LETTER UA',
         'similarTo' => 'Y',
     ),
+    'ⲩ' => array(
+        'codePoint' => '2CA9',
+        'desc' => 'COPTIC SMALL LETTER UA',
+        'similarTo' => 'y',
+    ),
     'Ⲭ' => array(
         'codePoint' => '2CAC',
         'desc' => 'COPTIC CAPITAL LETTER KHI',
@@ -2416,9 +2511,29 @@ return array(
         'desc' => 'COPTIC CAPITAL LETTER DIALECT-P NI',
         'similarTo' => '-',
     ),
+    'ⲻ' => array(
+        'codePoint' => '2CBB',
+        'desc' => 'COPTIC SMALL LETTER DIALECT-P NI',
+        'similarTo' => '-',
+    ),
+    'ⲽ' => array(
+        'codePoint' => '2CBD',
+        'desc' => 'COPTIC SMALL LETTER CRYPTOGRAMMIC NI',
+        'similarTo' => 'w',
+    ),
+    'Ⳅ' => array(
+        'codePoint' => '2CC4',
+        'desc' => 'COPTIC CAPITAL LETTER OLD COPTIC SHEI',
+        'similarTo' => '3',
+    ),
     'Ⳇ' => array(
         'codePoint' => '2CC6',
         'desc' => 'COPTIC CAPITAL LETTER OLD COPTIC ESH',
+        'similarTo' => '/',
+    ),
+    'ⳇ' => array(
+        'codePoint' => '2CC7',
+        'desc' => 'COPTIC SMALL LETTER OLD COPTIC ESH',
         'similarTo' => '/',
     ),
     'Ⳋ' => array(
@@ -2426,10 +2541,25 @@ return array(
         'desc' => 'COPTIC CAPITAL LETTER DIALECT-P HORI',
         'similarTo' => '9',
     ),
+    'ⳋ' => array(
+        'codePoint' => '2CCB',
+        'desc' => 'COPTIC SMALL LETTER DIALECT-P HORI',
+        'similarTo' => '9',
+    ),
     'Ⳍ' => array(
         'codePoint' => '2CCC',
         'desc' => 'COPTIC CAPITAL LETTER OLD COPTIC HORI',
         'similarTo' => '3',
+    ),
+    'Ⳏ' => array(
+        'codePoint' => '2CCE',
+        'desc' => 'COPTIC CAPITAL LETTER OLD COPTIC HA',
+        'similarTo' => 'P',
+    ),
+    'ⳏ' => array(
+        'codePoint' => '2CCF',
+        'desc' => 'COPTIC SMALL LETTER OLD COPTIC HA',
+        'similarTo' => 'p',
     ),
     'Ⳑ' => array(
         'codePoint' => '2CD0',
@@ -2439,6 +2569,16 @@ return array(
     'Ⳓ' => array(
         'codePoint' => '2CD2',
         'desc' => 'COPTIC CAPITAL LETTER OLD COPTIC HEI',
+        'similarTo' => '6',
+    ),
+    'ⳓ' => array(
+        'codePoint' => '2CD3',
+        'desc' => 'COPTIC SMALL LETTER OLD COPTIC HEI',
+        'similarTo' => '6',
+    ),
+    'Ⳝ' => array(
+        'codePoint' => '2CDC',
+        'desc' => 'COPTIC CAPITAL LETTER OLD NUBIAN SHIMA',
         'similarTo' => '6',
     ),
     'ⴸ' => array(
@@ -3457,7 +3597,7 @@ return array(
     '𑓐' => array(
         'codePoint' => '114D0',
         'desc' => 'TIRHUTA DIGIT ZERO',
-        'similarTo' => 'O',
+        'similarTo' => 'o',
     ),
     '𑜆' => array(
         'codePoint' => '11706',
@@ -3653,6 +3793,36 @@ return array(
         'codePoint' => '118F2',
         'desc' => 'WARANG CITI NUMBER NINETY',
         'similarTo' => 'C',
+    ),
+    '𑷙' => array(
+        'codePoint' => '11DD9',
+        'desc' => 'TOLONG SIKI SIGN SELA',
+        'similarTo' => ':',
+    ),
+    '𑷚' => array(
+        'codePoint' => '11DDA',
+        'desc' => 'TOLONG SIKI SIGN HECAKA',
+        'similarTo' => 'l',
+    ),
+    '𑷠' => array(
+        'codePoint' => '11DE0',
+        'desc' => 'TOLONG SIKI DIGIT ZERO',
+        'similarTo' => 'O',
+    ),
+    '𑷡' => array(
+        'codePoint' => '11DE1',
+        'desc' => 'TOLONG SIKI DIGIT ONE',
+        'similarTo' => 'l',
+    ),
+    '𖺪' => array(
+        'codePoint' => '16EAA',
+        'desc' => 'BERIA ERFE CAPITAL LETTER LAKKO',
+        'similarTo' => 'l',
+    ),
+    '𖺶' => array(
+        'codePoint' => '16EB6',
+        'desc' => 'BERIA ERFE CAPITAL LETTER UI',
+        'similarTo' => 'b',
     ),
     '𖼈' => array(
         'codePoint' => '16F08',
@@ -7993,6 +8163,11 @@ return array(
         'codePoint' => '1D7FF',
         'desc' => 'MATHEMATICAL MONOSPACE DIGIT NINE',
         'similarTo' => '9',
+    ),
+    '𞛩' => array(
+        'codePoint' => '1E6E9',
+        'desc' => 'TAI YO LETTER IA',
+        'similarTo' => '+',
     ),
     '𞣇' => array(
         'codePoint' => '1E8C7',

@@ -58,7 +58,9 @@ $color-stringified-shadow: rgba(0, 200, 200, 0.6);
 }
 
 .t_key {
-  opacity: 0.75;
+  &:not(th) {
+    opacity: 0.75;
+  }
   &[data-file] {
     opacity: 1;
   }
@@ -111,8 +113,9 @@ $color-stringified-shadow: rgba(0, 200, 200, 0.6);
   }
   &::before { content: open-quote; }
   &::after { content: close-quote; }
+  &td,
   &.classname {
-    &::before { content: none; }
+    &::before,
     &::after { content: none; }
   }
   > * {

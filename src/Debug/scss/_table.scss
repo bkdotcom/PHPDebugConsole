@@ -16,23 +16,29 @@ table {
       background-color: var(--color-table-hover-bg);
     }
   }
-  th,
-  td {
+  td,
+  th {
     padding: 0 0.25em;
     vertical-align: top;
-  }
-  th {
-    &.t_key {
-      white-space: nowrap;
-      &::before,
-      &::after { content: none; }
-    }
   }
   td {
     &.classname { font-weight: bold; }
     &.t_undefined {
       background-color: var(--color-table-undefined-bg);
-      &::after { content: none; }
+      &::after { content: none; } // hide the 'undefined' text (set in _tokens.scss)
+    }
+  }
+  th {
+    &:first-child {
+      text-align: right;
+    }
+    &::before,
+    &::after {
+      display: none;
+      content: none; // no quotes
+    }
+    &.t_key {
+      white-space: nowrap;
     }
   }
   th,
@@ -40,9 +46,6 @@ table {
   tfoot > td {
     font-weight: bold;
     background-color: var(--color-table-th-bg);
-  }
-  th:first-child {
-    text-align: right;
   }
   thead th {
     text-align: center;
@@ -60,65 +63,65 @@ table {
     text-align: right;
     white-space: nowrap;
   }
+
   &.table-bordered {
     th,
     td {
       border: 1px solid #7f7f7f;
       padding: 1px 0.25em;
     }
-  }
-}
+  } // .table-bordered
 
-table.table-hover {
-  tbody {
-    tr {
+  &.table-hover {
+    > tbody {
+      > tr {
+        cursor: default;
+        &:hover {
+          color: var(--color-table-hover-fg);
+          background-color: var(--color-table-hover-bg);
+        }
+      }
+    }
+  } // .table-hover
+
+  &.table-sort {
+    > thead th {
       cursor: default;
       &:hover {
         color: var(--color-table-hover-fg);
         background-color: var(--color-table-hover-bg);
       }
     }
-  }
-}
-
-// sortable table
-table.table-sort {
-  > thead th {
-    cursor: default;
-    &:hover {
-      color: var(--color-table-hover-fg);
-      background-color: var(--color-table-hover-bg);
+    .sort-arrows {
+      text-align: center;
+      height: 1.5em;
+      width: 1.2em;
+      margin-left: 0;
+      margin-right: 1px;
+      .fa {
+        position: absolute;
+        opacity: 0.33;
+      }
+      .fa-caret-down { bottom: 0; }
+      .fa-caret-up { top: -1px; }
     }
-  }
-  .sort-arrows {
-    text-align: center;
-    height: 1.5em;
-    width: 1.2em;
-    margin-left: 0;
-    margin-right: 1px;
-    .fa {
-      position: absolute;
-      opacity: 0.33;
-    }
-    .fa-caret-down { bottom: 0; }
-    .fa-caret-up { top: -1px; }
-  }
-  .sort-asc .fa-caret-down { opacity: 1; }
-  .sort-desc .fa-caret-up { opacity: 1; }
-}
+    .sort-asc .fa-caret-down { opacity: 1; }
+    .sort-desc .fa-caret-up { opacity: 1; }
+  } // .table-sort
 
-table.trace-context {
-  width: 100%;
-  tr.context {
-    display: none;
-    td {
-      color: var(--color-fg);
-      max-width: 1px;   // prevents content expanding ¯\_(ツ)_/¯
-      // background-color: #f5f2f0;
-      padding: 0.75em;
-      hr {
-        margin: 1em 0;
+  &.trace-context {
+    width: 100%;
+    tr.context {
+      display: none;
+      td {
+        color: var(--color-fg);
+        max-width: 1px;   // prevents content expanding ¯\_(ツ)_/¯
+        // background-color: #f5f2f0;
+        padding: 0.75em;
+        hr {
+          margin: 1em 0;
+        }
       }
     }
-  }
+  } // .trace-context
 }

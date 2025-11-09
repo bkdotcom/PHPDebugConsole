@@ -12,8 +12,14 @@ class UpdateCharData
     /** @var string */
     public static $filepathSrc = 'https://www.unicode.org/Public/security/latest/confusables.txt';
 
-    /** @var array<string,charInfo> */
-    protected $charData = array();
+    /** @var string */
+    public static $filepathOut = '../src/Debug/Dump/charData.php';
+
+    /** @var array<string,string> populated via loadData() */
+    protected static $sourceMeta = array(
+        'date' => '',
+        'version' => '',
+    );
 
     /**
      * Update confusableData.php
@@ -22,18 +28,12 @@ class UpdateCharData
      */
     public static function update()
     {
-        $filepathOut = __DIR__ . '/../src/Debug/Dump/charData.php';
-        $comment = '/**
-            * This file is generated automatically from confusables.txt
-            * https://www.unicode.org/Public/security/latest/confusables.txt
-            *
-            * `composer run update-char-data`
-            *
-            * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
-            */';
+        $parsedData = self::loadData();
+        $charData = self::build($parsedData);
+        $filepathOut = \realpath(__DIR__ . '/' . self::$filepathOut);
         $php = '<?php // phpcs:ignore SlevomatCodingStandard.Files.FileLength' . "\n\n"
-            . \preg_replace('/^[ ]{12}/m', ' ', $comment) . "\n\n"
-            . 'return ' . self::varExportPretty(self::build()) . ";\n";
+            . self::buildComment() . "\n"
+            . 'return ' . self::varExportPretty($charData) . ";\n";
         $php = \preg_replace_callback('/[\'"](.)[\'"] => /u', static function ($matches) {
             $char = $matches[1];
             $codePoint = \mb_ord($char);
@@ -41,18 +41,23 @@ class UpdateCharData
                 ? '"\\x' . \dechex($codePoint) . '" => '
                 : '\'' . $char . '\' => ';
         }, $php);
-        \file_put_contents($filepathOut, $php);
+        $result = \file_put_contents($filepathOut, $php);
+        self::output(
+            $result !== false
+                ? self::ansiColor('Wrote ', 'info') . $filepathOut . ' successfully'
+                : self::ansiColor('Error writing ', 'error') . $filepathOut
+        );
     }
 
     /**
-     * Build char data
+     * Build char data array
+     *
+     * @param array $rows parsed rows
      *
      * @return array<string,array<string,string|bool>>
      */
-    public static function build()
+    public static function build(array $rows)
     {
-        $rows = self::getParsedRows();
-
         // only interested in chars that are confusable with an ascii char
         // not interested in ascii chars that are confusable with other ascii chars
         $rows = \array_filter($rows, static function ($row) {
@@ -86,17 +91,82 @@ class UpdateCharData
     }
 
     /**
-     * Return parsed data for all confusable data
+     * Wrap text in ansi color codes
      *
-     * @return array<string,string|bool>[]
+     * @param string $text  text to color
+     * @param string $color semantic color name
+     *
+     * @return string
      */
-    private static function getParsedRows()
+    protected static function ansiColor($text, $color)
+    {
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
+        $colors = array(
+            'emergency' => "\e[38;5;11;1;4m",
+            'alert' => "\e[38;5;226m",
+            'critical' => "\e[38;5;220;1m",
+            'error' => "\e[38;5;220m",
+            'warning' => "\e[38;5;214;40m",
+            'notice' => "\e[38;5;208m",
+            'info' => "\e[38;5;51m",
+            'muted' => "\e[38;5;247m",
+        );
+        $colorReset = "\e[0m";
+        return isset($colors[$color])
+            ? $colors[$color] . $text . $colorReset
+            : $text;
+    }
+
+    /**
+     * Build output file's comment
+     *
+     * @return string
+     */
+    private static function buildComment()
+    {
+        $comment = '/**
+            * This file is generated automatically
+            *
+            * `composer run update-char-data`
+            *
+            * Built / Checked:  ' . \date(\DateTime::RFC3339) . '
+            *
+            * Source:
+            *  url: https://www.unicode.org/Public/security/latest/confusables.txt
+            *  date: ' . self::$sourceMeta['date'] . '
+            *  version: ' . self::$sourceMeta['version'] . '
+            *
+            * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
+            */';
+        return \preg_replace('/^[ ]{12}/m', ' ', $comment);
+    }
+
+    /**
+     * Load parsed data from source file
+     *
+     * @return array
+     */
+    private static function loadData()
     {
         $rows = \file(self::$filepathSrc);
         $rows = \array_filter($rows, static function ($row) {
-            $isEmptyOrComment = \strlen(\trim($row)) === 0 || $row[0] === '#';
-            return $isEmptyOrComment === false;
+            if ($row[0] === '#') {
+                if (\preg_match('/^# Date:\s+(?P<date>.+)$/', $row, $matches)) {
+                    self::$sourceMeta['date'] = $matches['date'];
+                } elseif (\preg_match('/^# Version:\s+(?P<version>.+)$/', $row, $matches)) {
+                    self::$sourceMeta['version'] = $matches['version'];
+                }
+                return false;
+            }
+            return \strlen(\trim($row)) > 0;
         });
+
+        self::output(self::ansiColor('Loaded ', 'info') . self::$filepathSrc . ' successfully');
+        self::output(\sprintf(
+            self::ansiColor('Version: ', 'info') . '%s' . self::ansiColor(' (%s)', 'muted'),
+            self::$sourceMeta['version'],
+            self::$sourceMeta['date']
+        ));
 
         return \array_map(static function ($row) {
             return self::parseRow($row);
@@ -161,5 +231,17 @@ class UpdateCharData
         }, $php);
         $php = \str_replace('\'\' . "\0" . \'\'', '"\x00"', $php);
         return $php;
+    }
+
+    /**
+     * Output string
+     *
+     * @param string $str String to output
+     *
+     * @return void
+     */
+    protected static function output($str)
+    {
+        echo $str . "\n";
     }
 }

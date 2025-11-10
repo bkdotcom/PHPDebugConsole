@@ -989,22 +989,17 @@ var phpDebugConsole = (function (exports, $) {
   }
 
   function addIconsMisc ($node) {
-    var $icon;
-    var $node2;
     var selector;
     for (selector in config$7.iconsMisc) {
-      $node2 = $node.find(selector);
-      if ($node2.length === 0) {
-        continue
-      }
-      $icon = $(config$7.iconsMisc[selector]);
-      if ($node2.find('> i:first-child').hasClass($icon.attr('class'))) {
-        // already have icon
-        $icon = null;
-        continue
-      }
-      $node2.prepend($icon);
-      $icon = null;
+      $node.find(selector).each(function () {
+        var $this = $(this);
+        var $icon = $(config$7.iconsMisc[selector]);
+        if ($this.find('> i:first-child').hasClass($icon.attr('class'))) {
+          // already have icon
+          return
+        }
+        $this.prepend($icon);
+      });
     }
   }
 

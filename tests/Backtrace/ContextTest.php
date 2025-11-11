@@ -4,6 +4,7 @@ namespace bdk\Test\Backtrace;
 
 use bdk\Backtrace;
 use bdk\Backtrace\Normalizer;
+use bdk\Backtrace\Xdebug;
 use bdk\PhpUnitPolyfill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 
@@ -53,6 +54,10 @@ class ContextTest extends TestCase
 
     public function testAddContextXdebug()
     {
+        if (Xdebug::isXdebugFuncStackAvail() === false) {
+            $this->markTestSkipped('xdebug not available');
+        }
+
         $line1 = __LINE__ + 2;
         $closure = static function ($php) {
             eval($php);
@@ -64,7 +69,9 @@ class ContextTest extends TestCase
         $line2 = __LINE__ + 1;
         $closure($php);
 
-        $trace = \array_reverse(isset($GLOBALS['xdebug_trace']) && \is_array($GLOBALS['xdebug_trace']) ? $GLOBALS['xdebug_trace'] : []);
+        $trace = \array_reverse(isset($GLOBALS['xdebug_trace']) && \is_array($GLOBALS['xdebug_trace'])
+            ? $GLOBALS['xdebug_trace']
+            : []);
         $trace = Normalizer::normalize($trace);
         $trace = \array_slice($trace, 0, 6);
         $trace = Backtrace::addContext($trace);

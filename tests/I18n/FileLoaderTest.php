@@ -77,7 +77,9 @@ class FileLoaderTest extends TestCase
     public function testParseCsvNoHandle()
     {
         $method = new \ReflectionMethod('bdk\I18n\FileLoader', 'parseExtCsv');
-        $method->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $method->setAccessible(true);
+        }
         try {
             // under some circumstances, this will throw an exception (fileStreamWrapper??)
             $return = $method->invoke(null, __DIR__ . '/bogusFile.csv');

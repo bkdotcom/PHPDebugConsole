@@ -107,10 +107,7 @@ class Cake4 extends BasePlugin
                 return $this->errorHandlerMiddleW->handleException($e, $request);
             },
         )));
-        $mwRef = new \ReflectionObject($middleware);
-        $queueRef = $mwRef->getProperty('queue');
-        $queueRef->setAccessible('true');
-        $queue = $queueRef->getValue($middleware);
+        $queue = $this->debug->reflection->propGet($middleware, 'queue');
         foreach ($queue as $obj) {
             if ($obj instanceof ErrorHandlerMiddleware) {
                 $this->errorHandlerMiddleW = $obj;

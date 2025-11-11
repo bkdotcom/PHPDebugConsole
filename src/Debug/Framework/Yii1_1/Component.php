@@ -163,7 +163,9 @@ class Component extends CApplicationComponent
                 continue;
             }
             $mProp = $refClass->getProperty('_m');
-            $mProp->setAccessible(true);
+            if (PHP_VERSION_ID < 80100) {
+                $mProp->setAccessible(true);
+            }
             $val = $mProp->getValue($this->yiiApp);
             $val['debug'] = $this->debug;
             $mProp->setValue($this->yiiApp, $val);

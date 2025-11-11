@@ -261,7 +261,9 @@ class PropertiesInstance extends Properties
      */
     private function valueFromReflection(array $propInfo, Abstraction $abs, ReflectionProperty $refProperty)
     {
-        $refProperty->setAccessible(true); // only accessible via reflection
+        if (PHP_VERSION_ID < 80100) {
+            $refProperty->setAccessible(true); // only accessible via reflection
+        }
         if ($propInfo['isVirtual']) {
             return $this->valueFromReflectionVirtual($propInfo, $abs, $refProperty);
         }

@@ -138,7 +138,9 @@ class DataTest extends DebugTestFramework
     {
         $this->debug->alert('Alerticus!', $this->debug->meta('id', 'alertId'));
         $refMethod = new \ReflectionMethod($this->debug->data, 'findLogEntry');
-        $refMethod->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $refMethod->setAccessible(true);
+        }
         $this->assertSame($this->debug->data->get('alerts'), $refMethod->invoke($this->debug->data, 'alertId'));
     }
 

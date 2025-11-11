@@ -91,7 +91,7 @@ class Manager implements SubscriberInterface
         if (\is_string($name)) {
             $this->namedPlugins[$name] = $plugin;
         }
-        $this->registeredPlugins->attach($plugin);
+        $this->registeredPlugins->offsetSet($plugin);
         return $this->debug;
     }
 
@@ -202,7 +202,7 @@ class Manager implements SubscriberInterface
         }
         // we don't check for RouteInterface (it extends SubscriberInterface)
         \bdk\Debug\Utility\PhpType::assertType($plugin, 'string|bdk\Debug\AssetProviderInterface|bdk\PubSub\SubscriberInterface');
-        return $this->registeredPlugins->contains($plugin);
+        return $this->registeredPlugins->offsetExists($plugin);
     }
 
     /**
@@ -227,7 +227,7 @@ class Manager implements SubscriberInterface
         if ($pluginName !== false) {
             unset($this->namedPlugins[$pluginName]);
         }
-        $this->registeredPlugins->detach($plugin);
+        $this->registeredPlugins->offsetUnset($plugin);
         if ($plugin instanceof AssetProviderInterface) {
             $this->debug->assetManager->removeProvider($plugin);
         }

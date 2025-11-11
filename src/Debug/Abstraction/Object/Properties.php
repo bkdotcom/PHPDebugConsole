@@ -151,6 +151,9 @@ class Properties extends AbstractInheritable
                 if ($refProperty->isDefault() === false) {
                     continue;
                 }
+                if (PHP_VERSION_ID < 80100) {
+                    $refProperty->setAccessible(true); // only accessible via reflection
+                }
                 $name = $refProperty->getName();
                 $info = isset($properties[$name])
                     ? $properties[$name]
@@ -179,7 +182,6 @@ class Properties extends AbstractInheritable
     protected function buildViaRef(Abstraction $abs, ReflectionProperty $refProperty, $isDynamic = false)
     {
         $phpDoc = $this->helper->getPhpDocVar($refProperty, $abs['fullyQualifyPhpDocType']);
-        $refProperty->setAccessible(true); // only accessible via reflection
         return static::buildValues(array(
             'attributes' => $abs['cfgFlags'] & AbstractObject::PROP_ATTRIBUTE_COLLECT
                 ? $this->helper->getAttributes($refProperty)

@@ -100,7 +100,7 @@ class FirephpTest extends DebugTestFramework
     ],
     [
         "X-Wf-1-1-1-2",
-        "%d|[{\"Type\":\"INFO\"},\"Built in %f ms\"]|"
+        "%d|[{\"Type\":\"INFO\"},\"Built in %f %ss\"]|"
     ],
     [
         "X-Wf-1-1-1-3",

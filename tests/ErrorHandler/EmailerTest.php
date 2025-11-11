@@ -96,10 +96,14 @@ class EmailerTest extends AbstractTestCase
                 $hash = $error['hash'];
                 $time6 = \strtotime('-6 hours');
                 $dataStoreRef = new \ReflectionProperty($this->errorHandler->stats, 'dataStore');
-                $dataStoreRef->setAccessible(true);
+                if (PHP_VERSION_ID < 80100) {
+                    $dataStoreRef->setAccessible(true);
+                }
                 $dataStore = $dataStoreRef->getValue($this->errorHandler->stats);
                 $dataRef = new \ReflectionProperty($dataStore, 'data');
-                $dataRef->setAccessible(true);
+                if (PHP_VERSION_ID < 80100) {
+                    $dataRef->setAccessible(true);
+                }
                 $data = $dataRef->getValue($dataStore);
                 $data['errors'][$hash] = \array_merge($data['errors'][$hash], array(
                     'email' => array(
@@ -145,7 +149,9 @@ class EmailerTest extends AbstractTestCase
             'type' => E_WARNING,
         );
         $serverParamsRef = new \ReflectionProperty('bdk\\ErrorHandler\\Plugin\\Emailer', 'serverParams');
-        $serverParamsRef->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $serverParamsRef->setAccessible(true);
+        }
         $serverParamsWas = $serverParamsRef->getValue($this->errorHandler->emailer);
         $serverParams = $serverParamsWas;
         $serverParams['argv'] = null;
@@ -218,7 +224,9 @@ class EmailerTest extends AbstractTestCase
         $onError = function (Error $error) {
             // set backtrace to a single frame
             $backtraceRef = new \ReflectionProperty($error, 'backtrace');
-            $backtraceRef->setAccessible(true);
+            if (PHP_VERSION_ID < 80100) {
+                $backtraceRef->setAccessible(true);
+            }
             $backtraceRef->setValue($error, array(
                 array(
                     'file' => __FILE__,
@@ -273,7 +281,9 @@ class EmailerTest extends AbstractTestCase
     public function testOnShutdownNoStats()
     {
         $statsRef = new \ReflectionProperty($this->errorHandler->emailer, 'stats');
-        $statsRef->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $statsRef->setAccessible(true);
+        }
         $statsWas = $statsRef->getValue($this->errorHandler->emailer);
         $statsRef->setValue($this->errorHandler->emailer, null);
         $this->errorHandler->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
@@ -290,10 +300,14 @@ class EmailerTest extends AbstractTestCase
     public function testOnShutdownGarbageCollectedError()
     {
         $dataStoreRef = new \ReflectionProperty($this->errorHandler->stats, 'dataStore');
-        $dataStoreRef->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $dataStoreRef->setAccessible(true);
+        }
         $dataStore = $dataStoreRef->getValue($this->errorHandler->stats);
         $dataRef = new \ReflectionProperty($dataStore, 'data');
-        $dataRef->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $dataRef->setAccessible(true);
+        }
         $data = $dataRef->getValue($dataStore);
         $ts24 = \strtotime('-24 hours');
         $tsNow = \time();
@@ -332,7 +346,9 @@ class EmailerTest extends AbstractTestCase
         );
         $dataRef->setValue($dataStore, $data);
         $dataWriteRef = new \ReflectionMethod($dataStore, 'dataWrite');
-        $dataWriteRef->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $dataWriteRef->setAccessible(true);
+        }
         $dataWriteRef->invoke($dataStore);
         $this->errorHandler->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
         self::assertNotEmpty($this->errorHandler->stats->find('errorhash1'));

@@ -39,29 +39,31 @@ class NormalizerTest extends TestCase
 
         self::assertSame(__CLASS__ . '->' . __FUNCTION__, $trace[3]['function']);
 
-        $trace = \array_reverse($GLOBALS['xdebug_trace']);
-        $trace = Normalizer::normalize($trace);
+        if (Xdebug::isXdebugFuncStackAvail()) {
+            $trace = \array_reverse($GLOBALS['xdebug_trace']);
+            $trace = Normalizer::normalize($trace);
 
-        self::assertSame(__FILE__, $trace[0]['file']);
-        self::assertSame('bdk\\Backtrace\\Xdebug::getFunctionStack', $trace[0]['function']);
+            self::assertSame(__FILE__, $trace[0]['file']);
+            self::assertSame('bdk\\Backtrace\\Xdebug::getFunctionStack', $trace[0]['function']);
 
-        self::assertSame(__FILE__, $trace[1]['file']);
-        self::assertSame('{closure}', $trace[1]['function']);
+            self::assertSame(__FILE__, $trace[1]['file']);
+            self::assertSame('{closure}', $trace[1]['function']);
 
-        self::assertSame(__FILE__, $trace[2]['file']);
-        self::assertSame('bdk\Test\Backtrace\func2', $trace[2]['function']);
-        self::assertSame(array(
-            "they're",
-            '"quotes"',
-            42,
-            null,
-            true,
-        ), $trace[2]['args']);
+            self::assertSame(__FILE__, $trace[2]['file']);
+            self::assertSame('bdk\Test\Backtrace\func2', $trace[2]['function']);
+            self::assertSame(array(
+                "they're",
+                '"quotes"',
+                42,
+                null,
+                true,
+            ), $trace[2]['args']);
 
-        self::assertSame(__FILE__, $trace[3]['file']);
-        self::assertSame('bdk\Test\Backtrace\func1', $trace[3]['function']);
+            self::assertSame(__FILE__, $trace[3]['file']);
+            self::assertSame('bdk\Test\Backtrace\func1', $trace[3]['function']);
 
-        self::assertSame(__CLASS__ . '->' . __FUNCTION__, $trace[4]['function']);
+            self::assertSame(__CLASS__ . '->' . __FUNCTION__, $trace[4]['function']);
+        }
     }
 
     public function testNormalizeInclude()
@@ -108,6 +110,10 @@ class NormalizerTest extends TestCase
 
     protected function assertIncludeXdebug($filepath)
     {
+        if (Xdebug::isXdebugFuncStackAvail() === false) {
+            $this->markTestSkipped('xdebug not available');
+        }
+
         $trace = \array_reverse($GLOBALS['xdebug_trace']);
         $trace = Normalizer::normalize($trace);
 

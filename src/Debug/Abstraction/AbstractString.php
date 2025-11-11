@@ -316,7 +316,7 @@ class AbstractString extends AbstractComponent
         $stringMaxLen = $this->cfg['brief']
             ? $this->cfg['stringMaxLenBrief']
             : $this->cfg['stringMaxLen'];
-        $maxLen = \array_key_exists($cat, $stringMaxLen)
+        $maxLen = $cat && \array_key_exists($cat, $stringMaxLen)
             ? $stringMaxLen[$cat]
             : $stringMaxLen['other'];
 

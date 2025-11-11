@@ -402,7 +402,9 @@ class DebugTest extends DebugTestFramework
         $debugRef = new \ReflectionClass($this->debug);
         $debugProps = $debugRef->getProperties(\ReflectionProperty::IS_STATIC);
         foreach ($debugProps as $prop) {
-            $prop->setAccessible(true);
+            if (PHP_VERSION_ID < 80100) {
+                $prop->setAccessible(true);
+            }
             $name = $prop->getName();
             $this->debugBackup['debug'][$name] = $prop->getValue();
             $newVal = \is_array($this->debugBackup['debug'][$name])
@@ -417,7 +419,9 @@ class DebugTest extends DebugTestFramework
         $eventManagerRef = new \ReflectionClass($this->debug->eventManager);
         $eventManagerProps = $eventManagerRef->getProperties();
         foreach ($eventManagerProps as $prop) {
-            $prop->setAccessible(true);
+            if (PHP_VERSION_ID < 80100) {
+                $prop->setAccessible(true);
+            }
             $name = $prop->getName();
             $this->debugBackup['eventManager'][$name] = $prop->getValue($this->debug->eventManager);
         }
@@ -433,7 +437,9 @@ class DebugTest extends DebugTestFramework
         $debugRef = new \ReflectionClass($this->debug);
         $debugProps = $debugRef->getProperties(\ReflectionProperty::IS_STATIC);
         foreach ($debugProps as $prop) {
-            $prop->setAccessible(true);
+            if (PHP_VERSION_ID < 80100) {
+                $prop->setAccessible(true);
+            }
             $name = $prop->getName();
             $prop->setValue(null, $this->debugBackup['debug'][$name]);
         }
@@ -444,7 +450,9 @@ class DebugTest extends DebugTestFramework
         $eventManagerRef = new \ReflectionClass($this->debug->eventManager);
         $eventManagerProps = $eventManagerRef->getProperties();
         foreach ($eventManagerProps as $prop) {
-            $prop->setAccessible(true);
+            if (PHP_VERSION_ID < 80100) {
+                $prop->setAccessible(true);
+            }
             $name = $prop->getName();
             $prop->setValue($this->debug->eventManager, $this->debugBackup['eventManager'][$name]);
         }

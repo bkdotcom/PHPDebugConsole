@@ -16,7 +16,9 @@ class NumberFormatterTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         $refProp = new \ReflectionProperty('bdk\\I18n\\NumberFormatter', 'localeconv');
-        $refProp->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $refProp->setAccessible(true);
+        }
         $refProp->setValue(null, array(
             'fr_CA' => array(
                 'currency_symbol' => '$',

@@ -443,9 +443,11 @@ class DebugTestFramework extends DOMTestCase
                 'subscriberStack' => new \ReflectionProperty('bdk\\PubSub\\Manager', 'subscriberStack'),
                 'textDepth' => new \ReflectionProperty('bdk\\Debug\\Dump\\Text', 'depth'),
             );
-            \array_walk($values['reflectionProperties'], static function ($refProp) {
-                $refProp->setAccessible(true);
-            });
+            if (PHP_VERSION_ID < 80100) {
+                \array_walk($values['reflectionProperties'], static function ($refProp) {
+                    $refProp->setAccessible(true);
+                });
+            }
         }
         if (!isset($values[$key])) {
             $values[$key] = null;
@@ -819,7 +821,9 @@ class DebugTestFramework extends DOMTestCase
         $refMethods = &self::getSharedVar('reflectionMethods');
         if (!isset($refMethods[$test])) {
             $refMethod = new ReflectionMethod($routeObj, 'processLogEntryViaEvent');
-            $refMethod->setAccessible(true);
+            if (PHP_VERSION_ID < 80100) {
+                $refMethod->setAccessible(true);
+            }
             $refMethods[$test] = $refMethod;
         }
         return $refMethods[$test]->invoke($routeObj, $logEntry);

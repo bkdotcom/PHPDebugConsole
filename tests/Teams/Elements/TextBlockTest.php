@@ -22,7 +22,9 @@ class TextBlockTest extends AbstractTestCaseWith
         parent::setUpBeforeClass();
         $refClass = new \ReflectionClass('bdk\\Teams\\AbstractItem');
         $refProp = $refClass->getProperty('constants');
-        $refProp->setAccessible('true');
+        if (PHP_VERSION_ID < 80100) {
+            $refProp->setAccessible('true');
+        }
         $refProp->setValue(null, array());
     }
 

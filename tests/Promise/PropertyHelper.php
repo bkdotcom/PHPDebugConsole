@@ -15,7 +15,9 @@ class PropertyHelper
     public static function get($object, $property)
     {
         $refProperty = new \ReflectionProperty($object, $property);
-        $refProperty->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $refProperty->setAccessible(true);
+        }
         return $refProperty->getValue($object);
     }
 
@@ -31,7 +33,9 @@ class PropertyHelper
     public static function set($object, $property, $value)
     {
         $refProperty = new \ReflectionProperty($object, $property);
-        $refProperty->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $refProperty->setAccessible(true);
+        }
         $refProperty->isStatic()
             ? $refProperty->setValue(null, $value)
             : $refProperty->setValue($object, $value);

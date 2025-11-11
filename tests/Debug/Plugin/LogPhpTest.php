@@ -182,7 +182,9 @@ class LogPhpTest extends DebugTestFramework
         \bdk\Debug\Utility\Reflection::propSet($logPhp, 'debug', $this->debug->getChannel('php', array('nested' => false)));
 
         $refMethod = new \ReflectionMethod($logPhp, 'logPhpEr');
-        $refMethod->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $refMethod->setAccessible(true);
+        }
 
         $this->debug->addPlugin($logPhp);
 

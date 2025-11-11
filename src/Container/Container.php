@@ -192,7 +192,7 @@ class Container implements ArrayAccess
     public function factory($invokable)
     {
         Utility::assertInvokable($invokable);
-        $this->factories->attach($invokable);
+        $this->factories->offsetSet($invokable);
         return $invokable;
     }
 
@@ -393,7 +393,7 @@ class Container implements ArrayAccess
     public function protect($invokable)
     {
         Utility::assertInvokable($invokable);
-        $this->protected->attach($invokable);
+        $this->protected->offsetSet($invokable);
         return $invokable;
     }
 

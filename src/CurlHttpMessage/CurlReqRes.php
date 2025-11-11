@@ -80,7 +80,9 @@ class CurlReqRes
             // ignore error
         });
         try {
-            \curl_close($this->curlHandle);
+            if (PHP_VERSION_ID < 80000) {
+                \curl_close($this->curlHandle);
+            }
         } catch (ErrorException $e) {
             // ignore exception
         }
@@ -163,7 +165,7 @@ class CurlReqRes
     {
         if ($curlHandle === null) {
             $this->unsetOptions();
-            if ($this->curlHandleInternal) {
+            if (PHP_VERSION_ID < 80000 && $this->curlHandleInternal) {
                 \curl_close($this->curlHandle);
             }
             $this->curlHandle = null;

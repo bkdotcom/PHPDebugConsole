@@ -18,8 +18,14 @@ class XdebugTest extends TestCase
 
     public function testXdebugGetFunctionStack()
     {
+        if (Xdebug::isXdebugFuncStackAvail() === false) {
+            $this->markTestSkipped('xdebug_get_function_stack() not available');
+        }
+
         $propRef = new \ReflectionProperty('bdk\\Backtrace\\Xdebug', 'isXdebugAvail');
-        $propRef->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $propRef->setAccessible(true);
+        }
         $propRef->setValue(null, null);
 
         $GLOBALS['functionReturn']['phpversion'] = '2.5.9'; // call fix
@@ -137,7 +143,9 @@ class XdebugTest extends TestCase
         $GLOBALS['functionReturn']['phpversion'] = null;
 
         $propRef = new \ReflectionProperty('bdk\\Backtrace\\Xdebug', 'isXdebugAvail');
-        $propRef->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $propRef->setAccessible(true);
+        }
         $propRef->setValue(null, null);
         self::assertFalse(Xdebug::getFunctionStack());
         $propRef->setValue(null, true);

@@ -292,9 +292,11 @@ class PhpCurlClass extends Curl
     {
         $classRef = (new ReflectionObject($this))->getParentClass();
         $optionsRef = $classRef->getProperty('options');
-        $optionsRef->setAccessible(true);
         $parseReqHeadersRef = $classRef->getMethod('parseRequestHeaders');
-        $parseReqHeadersRef->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $optionsRef->setAccessible(true);
+            $parseReqHeadersRef->setAccessible(true);
+        }
         $this->reflection = array(
             'options' => $optionsRef,
             'parseReqHeaders' => $parseReqHeadersRef,

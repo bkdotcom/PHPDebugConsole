@@ -151,7 +151,9 @@ class EventSubscribers implements SubscriberInterface
                 $refObj = $refObj->getParentClass();
             }
             $refProp = $refObj->getProperty('_models');
-            $refProp->setAccessible(true);
+            if (PHP_VERSION_ID < 80100) {
+                $refProp->setAccessible(true);
+            }
             $abs['propertyOverrideValues'] = array(
                 '_models' => \array_map(static function ($val) {
                     return \get_class($val) . ' (not inspected)';

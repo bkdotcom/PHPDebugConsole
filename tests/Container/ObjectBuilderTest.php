@@ -58,10 +58,14 @@ class ObjectBuilderTest extends TestCase
 
         unset($this->container[$classname]);
         $refObjBuilder = new \ReflectionProperty($this->container, 'objectBuilder');
-        $refObjBuilder->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $refObjBuilder->setAccessible(true);
+        }
         $objectBuilder = $refObjBuilder->getValue($this->container);
         $refUseGetType = new \ReflectionProperty($objectBuilder, 'useGetType');
-        $refUseGetType->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $refUseGetType->setAccessible(true);
+        }
         $refUseGetType->setValue($objectBuilder, false);
         $builtObj = $this->container->getObject($classname);
         $this->assertInstanceOf($classname, $builtObj);

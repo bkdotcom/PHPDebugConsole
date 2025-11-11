@@ -295,7 +295,7 @@ class Value extends AbstractValue
      */
     protected function charReplacement($char, $charReplace)
     {
-        if (\ord($char) < 0x80) {
+        if (\ord($char[0]) < 0x80) {
             // always replace control chars
             return '\\x' . \str_pad(\dechex(\ord($char)), 2, '0', STR_PAD_LEFT);
         }

@@ -216,7 +216,9 @@ class CurlMulti extends Curl
         $curlHandle = $curlReqRes->getCurlHandle();
         $curlReqRes->setCurlHandle(null);
         if (\count($this->idleHandles) >= $this->options['maxIdleHandles']) {
-            \curl_close($curlHandle);
+            if (PHP_VERSION_ID < 80000) {
+                \curl_close($curlHandle);
+            }
             return;
         }
         if (\function_exists('curl_reset')) {

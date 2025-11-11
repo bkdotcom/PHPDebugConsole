@@ -35,7 +35,9 @@ class TaskQueueTest extends TestCase
         });
 
         $refMethod = new ReflectionMethod($queue, 'onShutdown');
-        $refMethod->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $refMethod->setAccessible(true);
+        }
         $refMethod->invoke($queue);
 
         $this->assertSame(array(), $called);
@@ -86,7 +88,9 @@ class TaskQueueTest extends TestCase
             $called[] = 'c';
         });
         $refMethod = new ReflectionMethod($queue, 'onShutdown');
-        $refMethod->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $refMethod->setAccessible(true);
+        }
         $refMethod->invoke($queue);
         $this->assertSame(['a', 'b', 'c'], $called);
     }

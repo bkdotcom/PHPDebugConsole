@@ -23,7 +23,9 @@ class ConfigTest extends DebugTestFramework
     {
         $logPhp = $this->debug->getPlugin('logPhp');
         $reflectionMethod = new \ReflectionMethod($logPhp, 'assertSetting');
-        $reflectionMethod->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $reflectionMethod->setAccessible(true);
+        }
         $reflectionMethod->invoke($logPhp, array(
             'filter' => FILTER_VALIDATE_INT,
             'name' => 'testThing',

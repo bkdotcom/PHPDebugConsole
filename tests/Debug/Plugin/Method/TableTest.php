@@ -48,7 +48,9 @@ class TableTest extends DebugTestFramework
     {
         $table = new Table(null, array(), $this->debug);
         $colKeysMeth = new ReflectionMethod($table, 'colKeys');
-        $colKeysMeth->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $colKeysMeth->setAccessible(true);
+        }
         $array = array(
             array('col1' => '', 'col2' => '', 'col4' => ''),
             array('col1' => '', 'col2' => '', 'col3' => ''),

@@ -258,7 +258,7 @@ class SwiftMailerLogger implements
         $transportName = \get_class($evt->getSource());
         $this->add(\sprintf('++ %s started', $transportName));
         $this->clear();
-        $this->transports->attach($evt->getSource());
+        $this->transports->offsetSet($evt->getSource());
     }
 
     /**
@@ -274,7 +274,7 @@ class SwiftMailerLogger implements
     {
         $transportName = \get_class($evt->getSource());
         $this->add(\sprintf('-- %s stopped', $transportName));
-        $this->transports->detach($evt->getSource());
+        $this->transports->offsetUnset($evt->getSource());
     }
 
     /**

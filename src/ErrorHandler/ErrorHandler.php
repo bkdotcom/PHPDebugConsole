@@ -124,7 +124,7 @@ class ErrorHandler extends AbstractErrorHandler
     public function get($key, $hash = null)
     {
         if ($key === 'error') {
-            return isset($this->data['errors'][$hash])
+            return $hash && isset($this->data['errors'][$hash])
                 ? $this->data['errors'][$hash]
                 : null;
         }

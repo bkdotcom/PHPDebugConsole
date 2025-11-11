@@ -256,7 +256,7 @@ class ArrayUtil
             self::assertArrayAccess($array, $curPath, __METHOD__);
             $key = \array_pop($path);
             $curPath[] = $key;
-            if (isset($array[$key])) {
+            if ($key !== null && isset($array[$key])) {
                 $array = &$array[$key];
                 continue;
             } elseif ($key === '__count__') {
@@ -299,7 +299,7 @@ class ArrayUtil
                 unset($array[$key]);
                 /** @psalm-suppress ReferenceConstraintViolation */
                 return;
-            } elseif (!isset($array[$key]) || !\is_array($array[$key])) {
+            } elseif ($key === null || !isset($array[$key]) || !\is_array($array[$key])) {
                 $array[$key] = array(); // initialize this level
             }
             $array = &$array[$key];

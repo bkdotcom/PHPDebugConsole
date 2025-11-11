@@ -64,7 +64,9 @@ class Error extends AbstractError
             $this->values['line']
         );
         $traceReflector = new ReflectionProperty('Exception', 'trace');
-        $traceReflector->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $traceReflector->setAccessible(true);
+        }
         $traceReflector->setValue($exception, $this->getTrace() ?: array());
         return $exception;
     }

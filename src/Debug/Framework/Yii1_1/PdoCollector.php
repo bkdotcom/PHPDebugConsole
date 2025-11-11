@@ -123,7 +123,9 @@ class PdoCollector
             }
         }
         $pdoPropObj = $dbRefObj->getProperty('_pdo');
-        $pdoPropObj->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $pdoPropObj->setAccessible(true);
+        }
         $pdoPropObj->setValue($dbConnection, $pdoCollector);
     }
 }

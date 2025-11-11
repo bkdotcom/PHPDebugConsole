@@ -105,7 +105,9 @@ class Utility
             return (int) $size;
         }
         $units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB'];
-        $exp = (int) \floor(\log((float) $size, 1024));
+        $exp = $size === 0
+            ? 0
+            : (int) \floor(\log((float) $size, 1024));
         $pow = \pow(1024, $exp);
         /** @psalm-suppress RedundantCast */
         $size = (int) $pow < 1

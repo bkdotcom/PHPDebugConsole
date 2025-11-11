@@ -20,7 +20,9 @@ class SkipInternalTest extends TestCase
     public function setUp(): void
     {
         $internalClassesRef = new \ReflectionProperty('bdk\\Backtrace\\SkipInternal', 'internalClasses');
-        $internalClassesRef->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $internalClassesRef->setAccessible(true);
+        }
         $this->internalClassesBackup = $internalClassesRef->getValue();
         $internalClassesRef->setValue(null, array(
             'classes' => array(),
@@ -35,7 +37,9 @@ class SkipInternalTest extends TestCase
     public function tearDown(): void
     {
         $internalClassesRef = new \ReflectionProperty('bdk\\Backtrace\\SkipInternal', 'internalClasses');
-        $internalClassesRef->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $internalClassesRef->setAccessible(true);
+        }
         $internalClassesRef->setValue(null, $this->internalClassesBackup);
     }
 
@@ -44,7 +48,9 @@ class SkipInternalTest extends TestCase
         SkipInternal::addInternalClass('foo\\bar');
 
         $internalClassesRef = new \ReflectionProperty('bdk\\Backtrace\\SkipInternal', 'internalClasses');
-        $internalClassesRef->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $internalClassesRef->setAccessible(true);
+        }
         $internalClasses = $internalClassesRef->getValue();
         $this->assertSame(0, $internalClasses['classes']['foo\\bar']);
         Backtrace::addInternalClass(array(
@@ -162,7 +168,9 @@ class SkipInternalTest extends TestCase
     {
         $magic = new \bdk\Test\Backtrace\Fixture\Magic();
         $refMethod = new \ReflectionMethod($magic, 'secret');
-        $refMethod->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $refMethod->setAccessible(true);
+        }
         $refMethod->invoke($magic);
 
         $trace = $GLOBALS['debug_backtrace'];

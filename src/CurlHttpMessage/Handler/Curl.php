@@ -49,7 +49,9 @@ class Curl
             return $this->curlHandle;
         }
         if (\function_exists('curl_reset') === false) {
-            \curl_close($this->curlHandle);
+            if (PHP_VERSION_ID < 80000) {
+                \curl_close($this->curlHandle);
+            }
             $this->curlHandle = \curl_init();
             return $this->curlHandle;
         }

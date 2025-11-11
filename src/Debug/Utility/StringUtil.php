@@ -85,7 +85,7 @@ class StringUtil
         $operators = array(
             'strcmp',
             'strcasecmp',
-            'strnatcmp', null => 'strnatcmp',
+            'strnatcmp',
             'strnatcasecmp',
             '===',
             '==', 'eq' => '==', '=' => '==',
@@ -96,7 +96,9 @@ class StringUtil
             '>', 'gt' => '>',
             '<', 'lt' => '<',
         );
-        if (isset($operators[$operator]) && \is_numeric($operator) === false) {
+        if ($operator === null) {
+            $operator = 'strnatcmp';
+        } elseif (isset($operators[$operator]) && \is_numeric($operator) === false) {
             // one of the aliases
             $operator = $operators[$operator];
         } elseif (\in_array($operator, $operators, true) === false) {

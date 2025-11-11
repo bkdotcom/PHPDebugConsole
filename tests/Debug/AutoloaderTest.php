@@ -47,9 +47,11 @@ class AutoloaderTest extends DebugTestFramework
     {
         $classMap = \bdk\Debug\Utility\Reflection::propGet(static::$autoloader, 'classMap');
         $autoloadMethod = new \ReflectionMethod(static::$autoloader, 'autoload');
-        $autoloadMethod->setAccessible(true);
         $findClassMethod = new \ReflectionMethod(static::$autoloader, 'findClass');
-        $findClassMethod->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $autoloadMethod->setAccessible(true);
+            $findClassMethod->setAccessible(true);
+        }
         foreach (\array_keys($classMap) as $class) {
             self::assertNotFalse($findClassMethod->invoke(static::$autoloader, $class));
             if (\class_exists($class, false)) {
@@ -66,9 +68,11 @@ class AutoloaderTest extends DebugTestFramework
     public function testAutloadPsr4($class)
     {
         $autoloadMethod = new \ReflectionMethod(static::$autoloader, 'autoload');
-        $autoloadMethod->setAccessible(true);
         $findClassMethod = new \ReflectionMethod(static::$autoloader, 'findClass');
-        $findClassMethod->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $autoloadMethod->setAccessible(true);
+            $findClassMethod->setAccessible(true);
+        }
 
         self::assertNotFalse($findClassMethod->invoke(static::$autoloader, $class));
         if (\class_exists($class, false) || \interface_exists($class, false)) {
@@ -96,7 +100,9 @@ class AutoloaderTest extends DebugTestFramework
     public function testAutoloadNotFound()
     {
         $autoloadMethod = new \ReflectionMethod(static::$autoloader, 'autoload');
-        $autoloadMethod->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $autoloadMethod->setAccessible(true);
+        }
         $class = 'ding\\dang';
         $autoloadMethod->invoke(static::$autoloader, $class);
         self::assertFalse(\class_exists($class, false));

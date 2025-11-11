@@ -105,11 +105,11 @@ class SoapClient extends SoapClientBase
      * {@inheritDoc}
      */
     #[\ReturnTypeWillChange]
-    public function __doRequest($request, $location, $action, $version, $oneWay = 0)
+    public function __doRequest($request, $location, $action, $version, $oneWay = 0, $uriParserClass = null)
     {
         $exception = null;
         try {
-            $xmlResponse = parent::__doRequest($request, $location, $action, $version, $oneWay);
+            $xmlResponse = parent::__doRequest($request, $location, $action, $version, $oneWay, $uriParserClass);
         } catch (SoapFault $e) {
             // we'll rethrow bellow
         }

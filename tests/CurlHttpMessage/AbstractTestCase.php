@@ -111,7 +111,9 @@ abstract class AbstractTestCase extends TestCaseBase
                 $prop
             ));
         }
-        $refProp->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $refProp->setAccessible(true);
+        }
         return $refProp;
     }
 }

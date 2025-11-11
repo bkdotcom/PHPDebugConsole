@@ -109,7 +109,7 @@ class SoapClient extends SoapClientBase
     {
         $exception = null;
         try {
-            $xmlResponse = PHP_VERSJION_ID >= 80500
+            $xmlResponse = PHP_VERSION_ID >= 80500
                 ? parent::__doRequest($request, $location, $action, $version, $oneWay, $uriParserClass)
                 : parent::__doRequest($request, $location, $action, $version, $oneWay);
         } catch (SoapFault $e) {

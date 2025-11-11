@@ -109,7 +109,9 @@ class SoapClient extends SoapClientBase
     {
         $exception = null;
         try {
-            $xmlResponse = parent::__doRequest($request, $location, $action, $version, $oneWay, $uriParserClass);
+            $xmlResponse = PHP_VERSJION_ID >= 80500
+                ? parent::__doRequest($request, $location, $action, $version, $oneWay, $uriParserClass)
+                : parent::__doRequest($request, $location, $action, $version, $oneWay);
         } catch (SoapFault $e) {
             // we'll rethrow bellow
         }

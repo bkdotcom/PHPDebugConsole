@@ -37,7 +37,7 @@ Log, Debug, Inspect
 
 ## Installation
 
-This library supports PHP 5.4 - 8.4
+This library supports PHP 5.4 - 8.5
 
 It is installable and autoloadable via [Composer](https://getcomposer.org/) as [bdk/debug](https://packagist.org/packages/bdk/debug).
 

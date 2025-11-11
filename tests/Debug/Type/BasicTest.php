@@ -669,12 +669,18 @@ class BasicTest extends DebugTestFramework
             ),
         );
 
-        // $tests = \array_intersect_key($tests, \array_flip(array('callable')));
+        // phpunit issue with php 8.5 causing INF and NAN tests to fail
+        if (PHP_VERSION_ID >= 80500) {
+            $tests = \array_diff_key($tests, \array_flip(array(
+                'float.inf',
+                'float.NaN',
+            )));
+        }
 
-        return \array_map(function ($test) {
+        return \array_map(static function ($test) {
             return \is_callable($test)
-            ? $test()
-            : $test;
+                ? $test()
+                : $test;
         }, $tests);
     }
 }

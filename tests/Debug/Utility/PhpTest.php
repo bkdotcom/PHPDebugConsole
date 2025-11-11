@@ -50,13 +50,11 @@ class PhpTest extends TestCase
 
     public function testGetIniFiles()
     {
-        self::assertSame(
-            \array_merge(
-                array(\php_ini_loaded_file()),
-                \preg_split('#\s*[,\r\n]+\s*#', \trim(\php_ini_scanned_files()))
-            ),
-            Php::getIniFiles()
-        );
+        $expect = \array_filter(\array_merge(
+            array(\php_ini_loaded_file()),
+            \preg_split('#\s*[,\r\n]+\s*#', \trim(\php_ini_scanned_files()))
+        ));
+        self::assertSame($expect, Php::getIniFiles());
     }
 
     /**

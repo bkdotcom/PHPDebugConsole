@@ -569,7 +569,7 @@ class ErrorHandlerTest extends AbstractTestCase
         $trace = $exception->getTrace();
         self::assertSame($errorVals['file'], $trace[1]['file']);
         self::assertSame($backtraceLine, $trace[1]['line']);
-        PHP_VERSION_ID >= 70000 && PHP_VERSION_ID < 80500
+        PHP_VERSION_ID >= 70000 && \bdk\Backtrace\Xdebug::isXdebugFuncStackAvail()
             ? self::assertSame('bdk\\Test\\ErrorHandler\\ErrorHandlerTest->raiseError', $trace[1]['function'])
             : self::assertSame('bdk\\Test\\ErrorHandler\\AbstractTestCase->raiseError', $trace[1]['function']);
         self::assertSame(__CLASS__ . '->' . __FUNCTION__, $trace[2]['function']);

@@ -360,7 +360,7 @@ class AbstractError extends Event
         $errorReporting = \error_reporting();
         // @see https://php.watch/versions/8.0/fatal-error-suppression
         $php8suppressValue = E_ERROR | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR | E_PARSE;
-        return $errorReporting === 0
+        return !(\error_reporting() & $this->values['type'])
             || (PHP_VERSION_ID >= 80000 && $errorReporting === $php8suppressValue && $errorReporting < $this->subject->get('errorReportingInitial'));
     }
 }

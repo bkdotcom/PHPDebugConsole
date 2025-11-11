@@ -173,6 +173,11 @@ class DebugTestFramework extends DOMTestCase
         */
 
         self::$errorHandlerPrev = \set_error_handler(static function ($errno, $errstr, $errfile, $errline) {
+            if (!(\error_reporting() & $errno)) {
+                // suppressed
+                return true;
+            }
+
             $dirVendor = \realpath(__DIR__ . '/../../vendor');
             if (
                 $errno === E_DEPRECATED

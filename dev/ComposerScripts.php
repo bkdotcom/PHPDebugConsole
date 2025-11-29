@@ -131,7 +131,7 @@ class ComposerScripts
             // need a newer version to avoid ReturnTypeWillChange fatal
             // v 2.0 requires php 7.0
             ? \exec($composer . ' require twig/twig ~3.1 --dev --no-scripts')
-            : \exec($composer . ' require twig/twig ~1.42 --dev --no-scripts');
+            : \exec($composer . ' require twig/twig ~1.42 --dev --no-scripts --no-audit');
         if (\version_compare(self::$phpVersion, '7.0.0', '>=')) {
             \exec($composer . ' require psr/http-server-middleware --dev --no-scripts');
             \exec($composer . ' require mindplay/middleman --dev --no-scripts');

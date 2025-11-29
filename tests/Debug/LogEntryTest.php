@@ -31,7 +31,7 @@ class LogEntryTest extends DebugTestFramework
                 'icon' => ':php:',
                 'file' => '/fakepath/widget/test.php',
                 'id' => 'testId',
-            ),
+            )
         );
         self::assertSame(array(
             'appendLog' => true,

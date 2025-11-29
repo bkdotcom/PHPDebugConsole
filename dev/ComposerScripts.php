@@ -127,7 +127,7 @@ class ComposerScripts
     private static function installUnitTestDependencies()
     {
         // disable audit block-insecure (needed for older twig versions)
-        self::updateComposerJson('audit.block-insecure', false);
+        self::updateComposerJson('config.audit.block-insecure', false);
 
         $composer = self::getComposerCommand();
         \version_compare(self::$phpVersion, '8.0.0', '>=')

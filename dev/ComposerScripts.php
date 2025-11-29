@@ -162,15 +162,16 @@ class ComposerScripts
         $json = \file_get_contents($composerJsonPath);
         $data = \json_decode($json, true);
         $path = \explode('.', $path);
+        $pointer = &$data;
         foreach ($path as $key) {
-            if (!isset($data[$key]) || !\is_array($data[$key])) {
-                $data[$key] = array();
+            if (!isset($pointer[$key]) || !\is_array($pointer[$key])) {
+                $pointer[$key] = array();
             }
-            $data = &$data[$key];
+            $pointer = &$pointer[$key];
         }
-        $data = $value;
-        $newJson = \json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
-        \file_put_contents($composerJsonPath, $newJson);
+        $pointer = $value;
+        $json = \json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+        \file_put_contents($composerJsonPath, $json);
     }
 
     /**

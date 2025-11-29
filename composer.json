@@ -118,9 +118,6 @@
   "config": {
     "allow-plugins": {
       "dealerdirect/phpcodesniffer-composer-installer": false
-    },
-    "audit": {
-        "block-insecure": false
     }
   }
 }

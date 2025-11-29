@@ -126,6 +126,9 @@ class ComposerScripts
      */
     private static function installUnitTestDependencies()
     {
+        // disable audit block-insecure (needed for older twig versions)
+        self::updateComposerJson('audit.block-insecure', false);
+
         $composer = self::getComposerCommand();
         \version_compare(self::$phpVersion, '8.0.0', '>=')
             // need a newer version to avoid ReturnTypeWillChange fatal
@@ -139,6 +142,35 @@ class ComposerScripts
         if (\version_compare(self::$phpVersion, '5.5.0', '>=')) {
             \exec($composer . ' require guzzlehttp/guzzle --dev --no-scripts');
         }
+    }
+
+    /**
+     * Update composer.json
+     *
+     * https://github.com/composer/composer/issues/12611
+     * `composer config audit.block-insecure false`
+     * Setting audit.block-insecure does not exist or is not supported by this command
+     *
+     * @param string|null $path  Dot notation path to value to set
+     * @param mixed       $value Value to set
+     *
+     * @return void
+     */
+    private static function updateComposerJson($path, $value)
+    {
+        $composerJsonPath = __DIR__ . '/../composer.json';
+        $json = \file_get_contents($composerJsonPath);
+        $data = \json_decode($json, true);
+        $path = \explode('.', $path);
+        foreach ($path as $key) {
+            if (!isset($data[$key]) || !\is_array($data[$key])) {
+                $data[$key] = array();
+            }
+            $data = &$data[$key];
+        }
+        $data = $value;
+        $newJson = \json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+        \file_put_contents($composerJsonPath, $newJson);
     }
 
     /**

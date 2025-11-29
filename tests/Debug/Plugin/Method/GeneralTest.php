@@ -204,11 +204,7 @@ class GeneralTest extends DebugTestFramework
                 'typeMore' => Type::TYPE_STRING_JSON,
                 'value' => \json_encode($data, JSON_PRETTY_PRINT),
                 'attribs' => array(
-                    'class' => array(
-                        'highlight',
-                        'language-json',
-                        'no-quotes',
-                    ),
+                    'class' => ['highlight', 'language-json', 'no-quotes'],
                 ),
                 'brief' => false,
                 'contentType' => 'application/json',

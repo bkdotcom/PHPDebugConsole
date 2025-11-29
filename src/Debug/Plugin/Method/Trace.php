@@ -126,6 +126,10 @@ class Trace implements SubscriberInterface
                     : $meta['limit'],
                 $meta['trace'] // null or Exception
             );
+        $trace = $this->slice($trace, $meta);
+        if ($meta['inclContext']) {
+            $trace = $this->debug->backtrace->addContext($trace);
+        }
         return $this->getTraceFinish($trace, $meta);
     }
 
@@ -133,26 +137,19 @@ class Trace implements SubscriberInterface
      * Apply final adjustments to the trace
      *
      * @param array $trace Backtrace frames
-     * @param array $meta  meta values
      *
      * @return array
      */
-    private function getTraceFinish(array $trace, array $meta)
+    private function getTraceFinish(array $trace)
     {
-        if ($meta['inclInternal']) {
-            $trace = $this->removeMinInternal($trace);
-        }
-        if ($meta['limit'] > 0) {
-            $trace = \array_slice($trace, 0, $meta['limit']);
-        }
-        if ($meta['inclContext']) {
-            $trace = $this->debug->backtrace->addContext($trace);
-        }
+        $trace = $this->mapFilepaths($trace);
         $this->setCommonFilePrefix($trace);
         return \array_map(function ($frame) {
-            $frame['file'] = $frame['file'] === 'eval()\'d code'
-                ? $frame['file']
-                : $this->parseFilePath($frame['file'], $this->commonFilePrefix);
+            if ($frame['file'] === null) {
+                $frame['file'] = Abstracter::UNDEFINED;
+            } elseif ($frame['file'] !== 'eval()\'d code') {
+                $frame['file'] = $this->parseFilePath($frame['file'], $this->commonFilePrefix);
+            }
             $frame['function'] = isset($frame['function'])
                 ? new Abstraction(Type::TYPE_IDENTIFIER, array(
                     'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
@@ -283,6 +280,23 @@ class Trace implements SubscriberInterface
     }
 
     /**
+     * Update filepaths in trace according to filepathMap config
+     *
+     * @param array $trace Backtrace frames
+     *
+     * @return array
+     */
+    private function mapFilepaths(array $trace)
+    {
+        return \array_map(function ($frame) {
+            if (isset($frame['file'])) {
+                $frame['file'] = $this->debug->filepathMap($frame['file']);
+            }
+            return $frame;
+        }, $trace);
+    }
+
+    /**
      * Parse file path into parts
      *
      * @param string $filePath     filepath (ie /var/www/html/index.php)
@@ -332,12 +346,33 @@ class Trace implements SubscriberInterface
         if (\count($trace) < 2) {
             return;
         }
-        $files = [];
-        foreach ($trace as $frame) {
-            if (empty($frame['evalLine']) && !empty($frame['file'])) {
-                $files[] = $frame['file'];
-            }
+        $trace = \array_filter($trace, static function ($frame) {
+            return isset($frame['file']) && empty($frame['evalLine']);
+        });
+        $files = \array_column($trace, 'file');
+        $commonPrefix = $this->debug->stringUtil->commonPrefix($files);
+        // don't treat "/" as common prefix
+        $this->commonFilePrefix = \strlen($commonPrefix) > 1
+            ? $commonPrefix
+            : '';
+    }
+
+    /**
+     * Remove internal frames and limit the number of frames
+     *
+     * @param array $trace Backtrace frames
+     * @param array $meta  LogEntry meta
+     *
+     * @return array
+     */
+    private function slice(array $trace, array $meta)
+    {
+        if ($meta['inclInternal']) {
+            $trace = $this->removeMinInternal($trace);
         }
-        $this->commonFilePrefix = $this->debug->stringUtil->commonPrefix($files);
+        if ($meta['limit'] > 0) {
+            $trace = \array_slice($trace, 0, $meta['limit']);
+        }
+        return $trace;
     }
 }

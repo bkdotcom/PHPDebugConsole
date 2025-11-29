@@ -18,7 +18,6 @@ use bdk\Debug\Collector\StatementInfo;
 use bdk\PubSub\Event;
 use Exception;
 use mysqli as mysqliBase;
-use RuntimeException;
 
 /**
  * mysqli extended with debugging
@@ -58,9 +57,7 @@ class MySqli extends mysqliBase
     {
         \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
 
-        $this->doConstruct(\func_num_args()
-            ? \array_slice(\func_get_args(), 0, 6)
-            : array());
+        $this->doConstruct(\array_slice(\func_get_args(), 0, 6));
         $this->traitInit($debug, 'MySqli');
         $this->debug->eventManager->subscribe(Debug::EVENT_OUTPUT, [$this, 'onDebugOutput'], 1);
     }
@@ -84,12 +81,10 @@ class MySqli extends mysqliBase
      * @disregard P1038 method is not compatible
      */
     #[\ReturnTypeWillChange]
-    public function begin_transaction($flags = 0, $name = null)
+    public function begin_transaction($flags = 0, $name = null) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         // name became nullable as of PHP 8
-        $return = $name === null
-            ? parent::begin_transaction($flags)
-            : parent::begin_transaction($flags, $name);
+        $return = \call_user_func_array(['mysqli', __FUNCTION__], \func_get_args());
         if ($return === false) {
             $this->debug->warn($this->error);
             return $return;
@@ -108,12 +103,10 @@ class MySqli extends mysqliBase
      * @disregard P1038 method is not compatible
      */
     #[\ReturnTypeWillChange]
-    public function commit($flags = 0, $name = null)
+    public function commit($flags = 0, $name = null) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         // name became nullable as of PHP 8
-        $return = $name === null
-            ? parent::commit($flags)
-            : parent::commit($flags, $name);
+        $return = \call_user_func_array(['mysqli', __FUNCTION__], \func_get_args());
         if ($return === false) {
             $this->debug->warn($this->error);
             return $return;
@@ -217,12 +210,10 @@ class MySqli extends mysqliBase
      * @disregard P1038 method is not compatible
      */
     #[\ReturnTypeWillChange]
-    public function rollBack($flags = 0, $name = null)
+    public function rollBack($flags = 0, $name = null) // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
     {
         // name became nullable as of PHP 8
-        $return = $name === null
-            ? parent::rollback($flags)
-            : parent::rollback($flags, $name);
+        $return = \call_user_func_array(['mysqli', __FUNCTION__], \func_get_args());
         if ($return === false) {
             $this->debug->warn($this->error);
             return $return;
@@ -276,27 +267,28 @@ class MySqli extends mysqliBase
     {
         $debug = $event->getSubject();
         $debug->groupSummary(0);
-        $debug->groupCollapsed(
-            $debug->i18n->trans('info.for.x', array('x' => 'MySqli')),
-            $this->host_info,
-            $this->meta(array(
-                'argsAsParams' => false,
-                'level' => 'info',
-            ))
-        );
-        \set_error_handler(static function ($errno, $errstr) {
-            throw new RuntimeException($errstr, $errno);
-        }, E_ALL);
-        try {
+        $exception = null;
+        $debug->utility->callSuppressed(function () use ($debug) {
+            $debug->groupCollapsed(
+                $debug->i18n->trans('info.for.x', array('x' => 'MySqli')),
+                $this->host_info,
+                $this->meta(array(
+                    'argsAsParams' => false,
+                    'level' => 'info',
+                ))
+            );
             $this->logRuntime($this->connectionString());
-        } catch (RuntimeException $e) {
-            $debug->group('MySqli ' . $debug->i18n->trans('word.error'), $debug->meta(array('level' => 'error')));
-            $debug->log($debug->i18n->trans('db.connection-error'));
+            $debug->groupEnd();
+        }, [], $exception);
+        if ($exception) {
+            $currentGroups = $debug->rootInstance->getPlugin('methodGroup')->getCurrentGroups();
+            if (empty($currentGroups)) {
+                $debug->group('MySqli ' . $debug->i18n->trans('word.error'), $debug->meta(array('level' => 'error')));
+            }
+            $debug->error($debug->i18n->trans('db.connection-error'));
             $debug->groupEnd();
         }
-        \restore_error_handler();
-        $debug->groupEnd(); // groupCollapsed
-        $debug->groupEnd(); // groupSummary
+        $debug->groupEnd();
     }
 
     /**

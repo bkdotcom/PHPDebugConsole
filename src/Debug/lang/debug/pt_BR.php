@@ -207,6 +207,7 @@ return array(
     'request.without.contentType' => 'Parece que {contentTypeDetected} foi recebido sem um cabeçalho Content-Type',
     'response' => 'Resposta',
     'response.body' => 'corpo da resposta',
+    'response.body.contains.bom' => 'O corpo da resposta contém uma Marca de Ordem de Bytes (BOM).  Certifique-se de que nenhum dos seus arquivos php tenha um BOM!',
     'response.body.empty' => 'Corpo da resposta vazio. Pode ser que não conseguimos capturar a saída.',
     'response.body.large' => 'resposta muito grande ({contentLength}) para ser exibida',
     'response.body.not.logged' => 'Não registrando corpo da resposta para Content-Type "{contentType}"',

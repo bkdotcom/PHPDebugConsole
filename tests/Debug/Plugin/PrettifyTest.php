@@ -44,7 +44,7 @@ class PrettifyTest extends DebugTestFramework
                 'typeMore' => null,
                 'value' => '<html><title>test</title></html>',
                 'attribs' => array(
-                    'class' => array('highlight', 'language-markup', 'no-quotes'),
+                    'class' => ['highlight', 'language-markup', 'no-quotes'],
                 ),
                 'brief' => false,
                 'contentType' => 'text/html',
@@ -63,7 +63,7 @@ class PrettifyTest extends DebugTestFramework
                 'typeMore' => Type::TYPE_STRING_JSON,
                 'value' => \json_encode($data, JSON_PRETTY_PRINT),
                 'attribs' => array(
-                    'class' => array('highlight', 'language-json', 'no-quotes'),
+                    'class' => ['highlight', 'language-json', 'no-quotes'],
                 ),
                 'brief' => false,
                 'contentType' => 'application/json',
@@ -87,11 +87,7 @@ FROM·
 WHERE·
   col = "val"'),
                 'attribs' => array(
-                    'class' => array(
-                        'highlight',
-                        'language-sql',
-                        'no-quotes',
-                    ),
+                    'class' => ['highlight', 'language-sql', 'no-quotes'],
                 ),
                 'brief' => false,
                 'contentType' => 'application/sql',
@@ -118,11 +114,7 @@ WHERE·
                 'typeMore' => null,
                 'value' => $xmlExpect,
                 'attribs' => array(
-                    'class' => array(
-                        'highlight',
-                        'language-xml',
-                        'no-quotes',
-                    ),
+                    'class' => ['highlight', 'language-xml', 'no-quotes'],
                 ),
                 'brief' => false,
                 'contentType' => 'application/xml',

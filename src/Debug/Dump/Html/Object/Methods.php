@@ -108,7 +108,7 @@ class Methods extends AbstractSection
             ),
             $this->valDumper->dump($name, array(
                 'tagName' => null,
-                'type' => Type::TYPE_STRING,
+                'type' => Type::TYPE_STRING, // pass so dumper doesn't need to infer
             ))
         );
     }

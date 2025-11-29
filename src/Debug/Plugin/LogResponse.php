@@ -143,6 +143,8 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
     {
         $responseInfo = $this->getResponseInfo();
         $contentType = $this->detectContentType($responseInfo['content'], $responseInfo['contentType']);
+
+        $this->assertNoBomInContent($responseInfo['content']);
         $this->assertCorrectContentType($contentType, $responseInfo['contentType']);
 
         $logContent = $this->testLogResponseContent($contentType, $responseInfo['contentLength']);

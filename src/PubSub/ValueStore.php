@@ -296,10 +296,10 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
             $cache[$cacheKey] = false;
             return false;
         }
-        $reflecitonMethod = new ReflectionMethod($this, $getter);
+        $reflectionMethod = new ReflectionMethod($this, $getter);
         // check that the method does not have required parameters..
         //   ie offsetExists('value') and offsetGet('value') should not call attempt to call getValue() without params
-        $return = $reflecitonMethod->getNumberOfRequiredParameters() === 0
+        $return = $reflectionMethod->getNumberOfRequiredParameters() === 0
             ? $getter
             : false;
         $cache[$cacheKey] = $return;

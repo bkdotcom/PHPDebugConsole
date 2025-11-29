@@ -201,7 +201,7 @@ class HtmlTest extends DebugTestFramework
             'innerHtmlClosure' => array(
                 'div',
                 array(
-                    'class' => array('test', 'best'),
+                    'class' => ['test', 'best'],
                 ),
                 static function () {
                     return 'innerHtml';

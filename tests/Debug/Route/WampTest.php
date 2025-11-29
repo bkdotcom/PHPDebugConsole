@@ -128,7 +128,9 @@ class WampTest extends DebugTestFramework
                             'value' => '8f fb fd c0 da c5 e6 2d 5a 6c c5 c5 5b fe 2f 57',
                         ),
                         array(
-                            'attribs' => array('class' => array('highlight','language-json', 'no-quotes')),
+                            'attribs' => array(
+                                'class' => ['highlight','language-json', 'no-quotes'],
+                            ),
                             'brief' => false,
                             'contentType' => 'application/json',
                             'debug' => Abstracter::ABSTRACTION,
@@ -239,7 +241,7 @@ class WampTest extends DebugTestFramework
             ),
         ), $this->helper->deObjectifyData($msg['args'][1]));
         self::assertSame(array(
-            'class' => array('error'),
+            'class' => ['error'],
         ), $msg['args'][2]['attribs']);
     }
 

@@ -21,7 +21,8 @@ use bdk\Debug\LogEntry;
 /**
  * Dump val as HTML
  *
- * @property HtmlTable $table lazy-loaded HtmlTable... only loaded if outputting a table
+ * @property HtmlTable $table     lazy-loaded HtmlTable... only loaded if outputting a table
+ * @property Value     $valDumper HTML value dumper
  */
 class Html extends Base
 {
@@ -143,7 +144,7 @@ class Html extends Base
     /**
      * Get value dumper
      *
-     * @return \bdk\Debug\Dump\BaseValue
+     * @return Value
      */
     protected function getValDumper()
     {

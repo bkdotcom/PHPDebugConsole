@@ -98,8 +98,8 @@ class WpHttpTest extends DebugTestFramework
                 ],
                 'meta' => array(
                     'attribs' => array(
-                        'id' => $requestId,
                         'class' => [],
+                        'id' => $requestId,
                     ),
                     'channel' => 'general.http',
                     'icon' => 'fa fa-exchange',
@@ -234,8 +234,8 @@ class WpHttpTest extends DebugTestFramework
                 ],
                 'meta' => array(
                     'attribs' => array(
-                        'id' => $requestId,
                         'class' => [],
+                        'id' => $requestId,
                     ),
                     'channel' => 'general.http',
                     'icon' => 'fa fa-exchange',
@@ -323,7 +323,6 @@ class WpHttpTest extends DebugTestFramework
         self::$plugin->onResponse($responseStuff, 'response', 'TransportClass', $args, $url);
 
         self::assertSame([
-
             $requestId => array(
                 'method' => 'groupCollapsed',
                 'args' => [
@@ -333,8 +332,8 @@ class WpHttpTest extends DebugTestFramework
                 ],
                 'meta' => array(
                     'attribs' => array(
-                        'id' => $requestId,
                         'class' => [],
+                        'id' => $requestId,
                     ),
                     'channel' => 'general.http',
                     'icon' => 'fa fa-exchange',

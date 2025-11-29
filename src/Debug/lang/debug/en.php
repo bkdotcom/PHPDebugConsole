@@ -207,6 +207,7 @@ return array(
     'request.without.contentType' => 'It appears {contentTypeDetected} was received without a Content-Type header',
     'response' => 'Response',
     'response.body' => 'response body',
+    'response.body.contains.bom' => 'Response body contains a Byte Order Mark (BOM).  Ensure none of your php files have a BOM!',
     'response.body.empty' => 'Empty response body.  We may have been unable to capture output.',
     'response.body.large' => 'response too large ({contentLength}) to output',
     'response.body.not.logged' => 'Not logging response body for Content-Type "{contentType}"',

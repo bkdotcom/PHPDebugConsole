@@ -217,7 +217,7 @@ class Abstracter extends AbstractComponent
      *
      * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      */
-    public function getAbstraction($val, $method = null, $typeInfo = array(), $hist = array())
+    public function getAbstraction($val, $method = null, $typeInfo = [], $hist = array())
     {
         list($type, $typeMore) = $typeInfo ?: $this->type->getType($val);
         switch ($type) {

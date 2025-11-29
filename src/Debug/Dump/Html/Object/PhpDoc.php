@@ -92,7 +92,7 @@ class PhpDoc
         return '<dd class="phpdoc phpdoc-' . $tagName . '">'
             . '<span class="phpdoc-tag">' . $this->valDumper->dump($tagName, array(
                 'tagName' => null,
-                'type' => Type::TYPE_STRING,
+                'type' => Type::TYPE_STRING, // pass so dumper doesn't need to infer
             )) . '</span>'
             . '<span class="t_operator">:</span> '
             . $value

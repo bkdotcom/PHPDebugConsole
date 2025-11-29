@@ -563,9 +563,7 @@ class BasicTest extends DebugTestFramework
                         array(
                             array(
                                 'attribs' => array(
-                                    'class' => array(
-                                        'testaroo',
-                                    ),
+                                    'class' => ['testaroo'],
                                 ),
                                 'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,

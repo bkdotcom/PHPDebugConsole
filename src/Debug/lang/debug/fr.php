@@ -207,6 +207,7 @@ return array(
     'request.without.contentType' => 'Il semble que {contentTypeDetected} ait été reçu sans en-tête Content-Type',
     'response' => 'Réponse',
     'response.body' => 'corps de la réponse',
+    'response.body.contains.bom' => 'Le corps de la réponse contient une marque d\'ordre des octets (BOM). Assurez-vous qu\'aucun de vos fichiers php n\'a un BOM !',
     'response.body.empty' => 'Corps de réponse vide. Nous n\'avons peut-être pas pu capturer la sortie.',
     'response.body.large' => 'réponse trop grande ({contentLength}) pour être affichée',
     'response.body.not.logged' => 'Corps de réponse non journalisé pour le Content-Type "{contentType}"',

@@ -21,6 +21,8 @@ use bdk\Debug\LogEntry;
 
 /**
  * Base output plugin
+ *
+ * @property-read Value $valDumper
  */
 class Base extends AbstractComponent
 {
@@ -67,7 +69,7 @@ class Base extends AbstractComponent
     /** @var Substitution */
     protected $substitution;
 
-    /** @var BaseValue */
+    /** @var Value */
     protected $valDumper;
 
     /** @var array */
@@ -145,7 +147,7 @@ class Base extends AbstractComponent
     /**
      * Get value dumper
      *
-     * @return BaseValue
+     * @return Value
      */
     protected function getValDumper()
     {

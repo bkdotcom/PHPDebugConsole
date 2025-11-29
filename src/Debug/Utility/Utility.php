@@ -11,6 +11,9 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
+use Error;
+use ErrorException;
+use Exception;
 use RuntimeException;
 
 /**
@@ -18,6 +21,37 @@ use RuntimeException;
  */
 class Utility
 {
+    /**
+     * Call function while suppressing errors/exceptions
+     *
+     * @param callable        $function        Closure/callable to call
+     * @param array           $args            (optional) arguments to pass to callable
+     * @param \Throwable|null $caughtException Gets set to any error/exception caught during call
+     *
+     * @return mixed Return value from called function
+     */
+    public static function callSuppressed(callable $function, array $args = [], &$caughtException = null)
+    {
+        $caughtException = null;
+        $return = null;
+        \set_error_handler(static function ($errno, $errstr, $errfile, $errline) use (&$caughtException) {
+            $isError = \in_array($errno, [E_USER_ERROR, E_RECOVERABLE_ERROR], true);
+            if ($isError && $caughtException === null) {
+                $caughtException = new ErrorException($errstr, 0, $errno, $errfile, $errline);
+            }
+            return true;
+        }, E_ALL);
+        try {
+            $return = \call_user_func_array($function, $args);
+        } catch (Error $e) {
+            $caughtException = $e;
+        } catch (Exception $e) {
+            $caughtException = $e;
+        }
+        \restore_error_handler();
+        return $return;
+    }
+
     /**
      * Emit headers queued for output directly using `header()`
      *
@@ -29,6 +63,7 @@ class Utility
      *                )
      *
      * @return void
+     *
      * @throws RuntimeException if headers already sent
      */
     public static function emitHeaders(array $headers)
@@ -135,7 +170,7 @@ class Utility
     /**
      * Returns sent/pending response headers
      *
-     * It is preferred to use PSR-7 (Http-Messaage) response interface over this method
+     * It is preferred to use PSR-7 (Http-Message) response interface over this method
      *
      * The keys represent the header name as it will be sent over the wire, and
      * each value is an array of strings associated with the header.

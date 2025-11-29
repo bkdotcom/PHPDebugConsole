@@ -11,6 +11,52 @@ use bdk\Debug\LogEntry;
  */
 class LogEntryTest extends DebugTestFramework
 {
+    public function testGetChannelName()
+    {
+        $logEntry = new LogEntry(
+            $this->debug->getChannel('php'),
+            'log',
+            array('string', true, false, null, 42)
+        );
+        self::assertSame('php', $logEntry->getChannelName());
+    }
+
+    public function testGetValues()
+    {
+        $logEntry = new LogEntry(
+            $this->debug->getChannel('php'),
+            'log',
+            array('string', true, false, null, 42),
+            array(
+                'icon' => ':php:',
+                'file' => '/fakepath/widget/test.php',
+                'id' => 'testId',
+            ),
+        );
+        self::assertSame(array(
+            'appendLog' => true,
+            'args' => array(
+                'string',
+                true,
+                false,
+                null,
+                42,
+            ),
+            'meta' => array(
+                'attribs' => array(
+                    'class' => [],
+                    'id' => 'testId',
+                ),
+                'channel' => 'general.php',
+                'file' => '/fakepathNew/widget/test.php',
+                'icon' => '<i class="fa" style="position:relative; top:2px; font-size:15px;">🐘</i>',
+            ),
+            'method' => 'log',
+            'numArgs' => 5,
+            'return' => null,
+        ), $logEntry->getValues());
+    }
+
     public function testAppendGroup()
     {
         // this test originally tested that 'id' 'appendGroup' value and get sanitized to a valid id
@@ -28,8 +74,8 @@ class LogEntryTest extends DebugTestFramework
         self::assertSame(array(
             'appendGroup' => 'foo bar',
             'attribs' => array(
+                'class' => [],
                 'id' => 'ding dong',
-                'class' => array(),
             ),
         ), $logEntry->getMeta());
         self::assertSame($this->debug, $logEntry->getSubject());

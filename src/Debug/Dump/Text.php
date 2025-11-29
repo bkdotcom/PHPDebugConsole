@@ -16,6 +16,8 @@ use bdk\Debug\LogEntry;
 
 /**
  * Output log entries as text
+ *
+ * @property-read Value $valDumper
  */
 class Text extends Base
 {
@@ -175,7 +177,7 @@ class Text extends Base
     /**
      * Get value dumper
      *
-     * @return \bdk\Debug\Dump\BaseValue
+     * @return Value
      */
     protected function getValDumper()
     {

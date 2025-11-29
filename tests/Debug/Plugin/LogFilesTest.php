@@ -123,7 +123,7 @@ class LogFilesTest extends DebugTestFramework
                                 'excludedDir' => array(
                                     array(
                                         'attribs' => array(
-                                            'class' => array('exclude-count'),
+                                            'class' => ['exclude-count'],
                                         ),
                                         'debug' => Abstracter::ABSTRACTION,
                                         'type' => 'string',
@@ -132,7 +132,7 @@ class LogFilesTest extends DebugTestFramework
                                 ),
                                 array(
                                     'attribs' => array(
-                                        'class' => array(),
+                                        'class' => [],
                                         'data-file' => '/var/www/bootstrap.php',
                                     ),
                                     'debug' => Abstracter::ABSTRACTION,
@@ -141,7 +141,7 @@ class LogFilesTest extends DebugTestFramework
                                 ),
                                 array(
                                     'attribs' => array(
-                                        'class' => array(),
+                                        'class' => [],
                                         'data-file' => '/var/www/index.php',
                                     ),
                                     'debug' => Abstracter::ABSTRACTION,
@@ -152,9 +152,7 @@ class LogFilesTest extends DebugTestFramework
                             'closure://function' => array(
                                 array(
                                     'attribs' => array(
-                                        'class' => array(
-                                            'exclude-count',
-                                        ),
+                                        'class' => ['exclude-count'],
                                     ),
                                     'debug' => Abstracter::ABSTRACTION,
                                     'type' => 'string',

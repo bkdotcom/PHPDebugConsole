@@ -168,7 +168,7 @@ class SoapClientTest extends DebugTestFramework
                     array(
                         'addQuotes' => false,
                         'attribs' => array(
-                            'class' => array('highlight', 'language-xml'),
+                            'class' => ['highlight', 'language-xml'],
                         ),
                         'debug' => Abstracter::ABSTRACTION,
                         'type' => Type::TYPE_STRING,
@@ -188,7 +188,7 @@ class SoapClientTest extends DebugTestFramework
                 ),
                 'meta' => array(
                     'attribs' => array(
-                        'class' => array('no-indent'),
+                        'class' => ['no-indent'],
                     ),
                     'channel' => 'general.Soap',
                     'redact' => true,
@@ -222,7 +222,7 @@ class SoapClientTest extends DebugTestFramework
                     array(
                         'addQuotes' => false,
                         'attribs' => array(
-                            'class' => array('highlight', 'language-xml'),
+                            'class' => ['highlight', 'language-xml'],
                         ),
                         'debug' => Abstracter::ABSTRACTION,
                         'type' => Type::TYPE_STRING,
@@ -240,7 +240,7 @@ class SoapClientTest extends DebugTestFramework
                 ),
                 'meta' => array(
                     'attribs' => array(
-                        'class' => array('no-indent'),
+                        'class' => ['no-indent'],
                     ),
                     'channel' => 'general.Soap',
                     'redact' => true,
@@ -382,7 +382,7 @@ class SoapClientTest extends DebugTestFramework
                     array(
                         'addQuotes' => false,
                         'attribs' => array(
-                            'class' => array('highlight', 'language-xml'),
+                            'class' => ['highlight', 'language-xml'],
                         ),
                         'debug' => Abstracter::ABSTRACTION,
                         'type' => Type::TYPE_STRING,
@@ -402,7 +402,7 @@ class SoapClientTest extends DebugTestFramework
                 ),
                 'meta' => array(
                     'attribs' => array(
-                        'class' => array('no-indent'),
+                        'class' => ['no-indent'],
                     ),
                     'channel' => 'general.Soap',
                     'redact' => true,
@@ -436,7 +436,7 @@ class SoapClientTest extends DebugTestFramework
                     array(
                         'addQuotes' => false,
                         'attribs' => array(
-                            'class' => array('highlight', 'language-xml'),
+                            'class' => ['highlight', 'language-xml'],
                         ),
                         'debug' => Abstracter::ABSTRACTION,
                         'type' => Type::TYPE_STRING,
@@ -455,7 +455,7 @@ class SoapClientTest extends DebugTestFramework
                 ),
                 'meta' => array(
                     'attribs' => array(
-                        'class' => array('no-indent'),
+                        'class' => ['no-indent'],
                     ),
                     'channel' => 'general.Soap',
                     'redact' => true,

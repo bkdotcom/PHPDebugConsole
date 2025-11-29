@@ -1,128 +1,136 @@
 <?xml version="1.0"?>
 <ruleset name="Slevomat Sniffs">
 
-    <!--
-        composer require slevomat/coding-standard - -dev
-    -->
-    <description>Selected Slevomat Coding Standard Sniffs (PHP 7.2+)</description>
+  <!--
+    composer require slevomat/coding-standard - -dev
+  -->
+  <description>Selected Slevomat Coding Standard Sniffs (PHP 7.2+)</description>
 
-    <!--
-    ComposerScripts::postUpdate will update this
-    -->
-    <config name="installed_paths" value="vendor/slevomat/coding-standard" />
+  <!--
+  ComposerScripts::postUpdate will update this
+  -->
+  <config name="installed_paths" value="vendor/slevomat/coding-standard" />
 
-    <rule ref="SlevomatCodingStandard.Arrays" />
+  <rule ref="SlevomatCodingStandard.Arrays" />
 
-    <rule ref="SlevomatCodingStandard.Classes.ClassStructure">
-        <properties>
-            <property name="groups" type="array">
-                <element value="uses" />
-                <element value="public constants" />
-                <element value="protected constants" />
-                <element value="private constants" />
-                <element value="enum cases" />
-                <element value="public static properties, public properties" />
-                <element value="protected properties, protected static properties, private properties, private static properties" />
-                <element value="constructor" />
-                <element value="destructor, magic methods" />
-                <element value="public methods, public static methods, static constructors, public abstract methods, public static abstract methods, public static final methods, public final methods" />
-                <element value="protected methods, protected static methods, private methods, private static methods, protected abstract methods, protected static abstract methods, protected static final methods, protected final methods" />
-            </property>
-        </properties>
-    </rule>
-    <rule ref="SlevomatCodingStandard.Classes.MethodSpacing" />
-    <rule ref="SlevomatCodingStandard.Classes.TraitUseDeclaration" />
-    <rule ref="SlevomatCodingStandard.Classes.UselessLateStaticBinding" />
+  <rule ref="SlevomatCodingStandard.Classes.ClassStructure">
+    <properties>
+      <property name="groups" type="array">
+        <element value="uses" />
+        <element value="public constants" />
+        <element value="protected constants" />
+        <element value="private constants" />
+        <element value="enum cases" />
+        <element value="public static properties, public properties" />
+        <element value="protected properties, protected static properties, private properties, private static properties" />
+        <element value="constructor" />
+        <element value="destructor, magic methods" />
+        <element value="public methods, public static methods, static constructors, public abstract methods, public static abstract methods, public static final methods, public final methods" />
+        <element value="protected methods, protected static methods, private methods, private static methods, protected abstract methods, protected static abstract methods, protected static final methods, protected final methods" />
+      </property>
+    </properties>
+  </rule>
+  <rule ref="SlevomatCodingStandard.Classes.MethodSpacing" />
+  <rule ref="SlevomatCodingStandard.Classes.TraitUseDeclaration" />
+  <rule ref="SlevomatCodingStandard.Classes.UselessLateStaticBinding" />
 
-    <rule ref="SlevomatCodingStandard.Commenting.ForbiddenComments">
-        <properties>
-            <property name="forbiddenCommentPatterns" type="array">
-                <element value="#\[\w*\s+description\]#" />
-                <element value="#^Undocumented \w+$#" />
-            </property>
-        </properties>
-    </rule>
+  <rule ref="SlevomatCodingStandard.Commenting.ForbiddenComments">
+    <properties>
+      <property name="forbiddenCommentPatterns" type="array">
+        <element value="#\[\w*\s+description\]#" />
+        <element value="#^Undocumented \w+$#" />
+      </property>
+    </properties>
+  </rule>
 
-    <rule ref="SlevomatCodingStandard.Complexity.Cognitive">
-        <properties>
-            <property name="warningThreshold" value="6" />
-            <property name="errorThreshold" value="10" />
-        </properties>
-    </rule>
+  <rule ref="SlevomatCodingStandard.Complexity.Cognitive">
+    <properties>
+      <property name="warningThreshold" value="6" />
+      <property name="errorThreshold" value="10" />
+    </properties>
+  </rule>
 
-    <rule ref="SlevomatCodingStandard.ControlStructures.LanguageConstructWithParentheses" />
-    <rule ref="SlevomatCodingStandard.ControlStructures.NewWithParentheses" />
-    <rule ref="SlevomatCodingStandard.ControlStructures.UselessIfConditionWithReturn" />
-    <rule ref="SlevomatCodingStandard.ControlStructures.UselessTernaryOperator" />
+  <rule ref="SlevomatCodingStandard.ControlStructures.LanguageConstructWithParentheses" />
+  <rule ref="SlevomatCodingStandard.ControlStructures.NewWithParentheses" />
+  <rule ref="SlevomatCodingStandard.ControlStructures.UselessIfConditionWithReturn" />
+  <rule ref="SlevomatCodingStandard.ControlStructures.UselessTernaryOperator" />
 
-    <rule ref="SlevomatCodingStandard.Exceptions.DeadCatch">
-        <exclude name="SlevomatCodingStandard.Exceptions.DeadCatch.CatchAfterThrowableCatch" />
-    </rule>
+  <rule ref="SlevomatCodingStandard.Exceptions.DeadCatch">
+    <exclude name="SlevomatCodingStandard.Exceptions.DeadCatch.CatchAfterThrowableCatch" />
+  </rule>
 
-    <rule ref="SlevomatCodingStandard.Functions.UnusedInheritedVariablePassedToClosure" />
-    <rule ref="SlevomatCodingStandard.Functions.UselessParameterDefaultValue" />
-    <rule ref="SlevomatCodingStandard.Functions.FunctionLength">
-        <properties>
-            <property name="maxLinesLength" value="25" />
-        </properties>
-    </rule>
-    <rule ref="SlevomatCodingStandard.Functions.DisallowTrailingCommaInCall" />
-    <rule ref="SlevomatCodingStandard.Functions.DisallowTrailingCommaInClosureUse" />
-    <rule ref="SlevomatCodingStandard.Functions.DisallowTrailingCommaInDeclaration" />
-    <rule ref="SlevomatCodingStandard.Functions.StaticClosure" />
-    <rule ref="SlevomatCodingStandard.Functions.StrictCall" />
+  <rule ref="SlevomatCodingStandard.Functions.UnusedInheritedVariablePassedToClosure" />
+  <rule ref="SlevomatCodingStandard.Functions.UselessParameterDefaultValue" />
+  <rule ref="SlevomatCodingStandard.Functions.FunctionLength">
+    <properties>
+      <property name="maxLinesLength" value="25" />
+    </properties>
+  </rule>
+  <rule ref="SlevomatCodingStandard.Functions.DisallowTrailingCommaInCall" />
+  <rule ref="SlevomatCodingStandard.Functions.DisallowTrailingCommaInClosureUse" />
+  <rule ref="SlevomatCodingStandard.Functions.DisallowTrailingCommaInDeclaration" />
+  <rule ref="SlevomatCodingStandard.Functions.StaticClosure" />
+  <rule ref="SlevomatCodingStandard.Functions.StrictCall" />
 
-    <rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses" />
-    <rule ref="SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions" />
-    <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses">
-        <properties>
-            <property name="searchAnnotations" value="true" />
-        </properties>
-    </rule>
-    <rule ref="SlevomatCodingStandard.Namespaces.UseDoesNotStartWithBackslash" />
-    <rule ref="SlevomatCodingStandard.Namespaces.UselessAlias" />
-    <rule ref="SlevomatCodingStandard.PHP.OptimizedFunctionsWithoutUnpacking" />
-    <rule ref="SlevomatCodingStandard.PHP.RequireExplicitAssertion" />
-    <rule ref="SlevomatCodingStandard.PHP.UselessParentheses" />
-    <rule ref="SlevomatCodingStandard.PHP.UselessSemicolon" />
-    <rule ref="SlevomatCodingStandard.Variables.DuplicateAssignmentToVariable" />
-    <rule ref="SlevomatCodingStandard.Variables.UnusedVariable" />
-    <rule ref="SlevomatCodingStandard.Variables.UselessVariable" />
+  <rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses" />
+  <rule ref="SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions" />
+  <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses">
+    <properties>
+      <property name="searchAnnotations" value="true" />
+    </properties>
+  </rule>
+  <rule ref="SlevomatCodingStandard.Namespaces.UseDoesNotStartWithBackslash" />
+  <rule ref="SlevomatCodingStandard.Namespaces.UselessAlias" />
+  <rule ref="SlevomatCodingStandard.PHP.OptimizedFunctionsWithoutUnpacking" />
+  <rule ref="SlevomatCodingStandard.PHP.RequireExplicitAssertion" />
+  <rule ref="SlevomatCodingStandard.PHP.UselessParentheses" />
+  <rule ref="SlevomatCodingStandard.PHP.UselessSemicolon" />
+  <rule ref="SlevomatCodingStandard.Variables.DuplicateAssignmentToVariable" />
+  <rule ref="SlevomatCodingStandard.Variables.UnusedVariable" />
+  <rule ref="SlevomatCodingStandard.Variables.UselessVariable" />
 
-    <rule ref="SlevomatCodingStandard.Files.FileLength">
-        <properties>
-            <property name="maxLinesLength" value="250" />
-        </properties>
-    </rule>
-    <!--
-    <rule ref="SlevomatCodingStandard.Classes.ClassLength">
-        <properties>
-            <property name="maxLinesLength" value="250" />
-        </properties>
-    </rule>
-    -->
+  <rule ref="SlevomatCodingStandard.Files.FileLength">
+    <properties>
+      <property name="maxLinesLength" value="250" />
+    </properties>
+  </rule>
+  <!--
+  <rule ref="SlevomatCodingStandard.Classes.ClassLength">
+    <properties>
+      <property name="maxLinesLength" value="250" />
+    </properties>
+  </rule>
+  -->
 
-    <!--
-    <rule ref="SlevomatCodingStandard.Functions.StaticClosure" />
+  <!--
+  <rule ref="SlevomatCodingStandard.Functions.StaticClosure" />
 
-    Rule seems to be broken on codacy..
-    Not necessary to catch here... will be caught by unit test
-    <rule ref="SlevomatCodingStandard.Files.TypeNameMatchesFileName">
-        <properties>
-            <property name="rootNamespaces" type="array">
-                <element key="src" value="bdk"/>
-            </property>
-        </properties>
-        <exclude-pattern>src/Backtrace/Backtrace.php</exclude-pattern>
-        <exclude-pattern>src/Debug/Debug.php</exclude-pattern>
-        <exclude-pattern>src/ErrorHandler/ErrorHandler.php</exclude-pattern>
-    </rule>
+  Rule seems to be broken on codacy..
+  Not necessary to catch here... will be caught by unit test
+  <rule ref="SlevomatCodingStandard.Files.TypeNameMatchesFileName">
+    <properties>
+      <property name="rootNamespaces" type="array">
+        <element key="src" value="bdk"/>
+      </property>
+    </properties>
+    <exclude-pattern>src/Backtrace/Backtrace.php</exclude-pattern>
+    <exclude-pattern>src/Debug/Debug.php</exclude-pattern>
+    <exclude-pattern>src/ErrorHandler/ErrorHandler.php</exclude-pattern>
+  </rule>
 
-    <rule ref="SlevomatCodingStandard.Commenting.ForbiddenAnnotations">
-        <property name="forbiddenAnnotations" type="array">
-            <element value="@author, @created, @version, @package, @copyright, @license, @throws" />
-        </property>
-    </rule>
-    -->
+  <rule ref="SlevomatCodingStandard.Commenting.ForbiddenAnnotations">
+    <property name="forbiddenAnnotations" type="array">
+      <element value="@author, @created, @version, @package, @copyright, @license, @throws" />
+    </property>
+  </rule>
+  -->
+
+  <rule ref="SlevomatCodingStandard.Files.FileLength">
+    <exclude-pattern>*/src/Debug/Dump/charData.php</exclude-pattern>
+  </rule>
+
+  <rule ref="SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys">
+    <exclude-pattern>*/src/Debug/Dump/charData.php</exclude-pattern>
+  </rule>
 
 </ruleset>

@@ -1,19 +1,18 @@
-<?php // phpcs:ignore SlevomatCodingStandard.Files.FileLength
+<?php
 
 /**
  * This file is generated automatically
  *
  * `composer run update-char-data`
  *
- * Built / Checked:  2025-11-08T22:13:35-06:00
+ * Built / Checked:  2025-11-21T08:45:32-06:00
  *
  * Source:
  *  url: https://www.unicode.org/Public/security/latest/confusables.txt
  *  date: 2025-07-22, 05:49:37 GMT
  *  version: 17.0.0
- *
- * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
  */
+
 return array(
     "\x00" => array(
         'abbr' => 'NUL',

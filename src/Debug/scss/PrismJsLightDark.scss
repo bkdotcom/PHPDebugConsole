@@ -22,7 +22,7 @@
 }
 
 .debug[data-theme=dark] {
-  --color: #6ae;
+  --color: var(--colorFg); // #6ae;
   --colorBg: #222;
   --textShadow: #000;
   --comment: #9ab;

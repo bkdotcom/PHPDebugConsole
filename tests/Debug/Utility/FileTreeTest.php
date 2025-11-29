@@ -34,9 +34,7 @@ class FileTreeTest extends TestCase
                 'excludedDir' => array(
                     array(
                         'attribs' => array(
-                            'class' => array(
-                                'exclude-count',
-                            ),
+                            'class' => ['exclude-count'],
                         ),
                         'debug' => Abstracter::ABSTRACTION,
                         'type' => 'string',

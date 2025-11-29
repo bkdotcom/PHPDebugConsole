@@ -207,6 +207,7 @@ return array(
     'request.without.contentType' => 'Parece que se recibió {contentTypeDetected} sin un encabezado Content-Type',
     'response' => 'Respuesta',
     'response.body' => 'cuerpo de la respuesta',
+    'response.body.contains.bom' => 'El cuerpo de la respuesta contiene una Marca de Orden de Bytes (BOM). ¡Asegúrese de que ninguno de sus archivos php tenga un BOM!',
     'response.body.empty' => 'Cuerpo de respuesta vacío. Es posible que no hayamos podido capturar la salida.',
     'response.body.large' => 'respuesta demasiado grande ({contentLength}) para mostrar',
     'response.body.not.logged' => 'No se registra el cuerpo de la respuesta para el Content-Type "{contentType}"',

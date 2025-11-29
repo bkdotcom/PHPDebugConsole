@@ -140,6 +140,7 @@ class ConfigTest extends DebugTestFramework
             'emailTo',
             'exitCheck',
             'extensionsCheck',
+            'filepathMap',
             'headerMaxAll',
             'headerMaxPer',
             'i18n',

@@ -207,6 +207,7 @@ return array(
     'request.without.contentType' => 'Es scheint, dass {contentTypeDetected} ohne Content-Type-Header empfangen wurde',
     'response' => 'Antwort',
     'response.body' => 'Antwortkörper',
+    'response.body.contains.bom' => 'Der Antwortkörper enthält ein Byte Order Mark (BOM). Stellen Sie sicher, dass keine Ihrer PHP-Dateien ein BOM haben!',
     'response.body.empty' => 'Leerer Antwortkörper. Wir konnten möglicherweise keine Ausgabe erfassen.',
     'response.body.large' => 'Antwort zu groß ({contentLength}) zum Ausgeben',
     'response.body.not.logged' => 'Antwortkörper für Content-Type "{contentType}" wird nicht protokolliert',

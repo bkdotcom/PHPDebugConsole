@@ -31,8 +31,8 @@ class UpdateCharData
         $parsedData = self::loadData();
         $charData = self::build($parsedData);
         $filepathOut = \realpath(__DIR__ . '/' . self::$filepathOut);
-        $php = '<?php // phpcs:ignore SlevomatCodingStandard.Files.FileLength' . "\n\n"
-            . self::buildComment() . "\n"
+        $php = '<?php' . "\n\n"
+            . self::buildComment() . "\n\n"
             . 'return ' . self::varExportPretty($charData) . ";\n";
         $php = \preg_replace_callback('/[\'"](.)[\'"] => /u', static function ($matches) {
             $char = $matches[1];
@@ -135,8 +135,6 @@ class UpdateCharData
             *  url: https://www.unicode.org/Public/security/latest/confusables.txt
             *  date: ' . self::$sourceMeta['date'] . '
             *  version: ' . self::$sourceMeta['version'] . '
-            *
-            * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
             */';
         return \preg_replace('/^[ ]{12}/m', ' ', $comment);
     }

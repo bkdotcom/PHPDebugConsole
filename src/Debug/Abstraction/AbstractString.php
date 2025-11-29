@@ -221,7 +221,7 @@ class AbstractString extends AbstractComponent
     private function getAbsFilepath(Abstraction $abs)
     {
         $docRoot = (string) $this->debug->serverRequest->getServerParam('DOCUMENT_ROOT');
-        $filePath = $abs['value'];
+        $filePath = $this->debug->filepathMap($abs['value']);
         $containsDocRoot = $docRoot && \strpos($filePath, $docRoot) === 0;
         $baseName = \basename($filePath);
         $pathRel = \substr($filePath, 0, 0 - \strlen($baseName));

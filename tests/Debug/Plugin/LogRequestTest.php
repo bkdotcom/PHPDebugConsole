@@ -59,7 +59,7 @@ class LogRequestTest extends DebugTestFramework
                 'php://input',
                 array(
                     'attribs' => array(
-                        'class' => array('highlight', 'language-json', 'no-quotes'),
+                        'class' => ['highlight', 'language-json', 'no-quotes'],
                     ),
                     'brief' => false,
                     'contentType' => ContentType::JSON,
@@ -119,7 +119,7 @@ class LogRequestTest extends DebugTestFramework
                     'php://input',
                     array(
                         'attribs' => array(
-                            'class' => array('highlight', 'language-json', 'no-quotes'),
+                            'class' => ['highlight', 'language-json', 'no-quotes'],
                         ),
                         'brief' => false,
                         'contentType' => ContentType::JSON,
@@ -300,7 +300,7 @@ class LogRequestTest extends DebugTestFramework
                         'X-Test' => [
                             array(
                                 'attribs' => array(
-                                    'class' => array('text-left'),
+                                    'class' => ['text-left'],
                                 ),
                                 'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
@@ -345,7 +345,7 @@ class LogRequestTest extends DebugTestFramework
                         'SESSIONID' => [
                             array(
                                 'attribs' => array(
-                                    'class' => array('text-left'),
+                                    'class' => ['text-left'],
                                 ),
                                 'brief' => false,
                                 'debug' => Abstracter::ABSTRACTION,
@@ -462,7 +462,7 @@ class LogRequestTest extends DebugTestFramework
                     // '(prettified)',
                     array(
                         'attribs' => array(
-                            'class' => array('highlight', 'language-json', 'no-quotes'),
+                            'class' => ['highlight', 'language-json', 'no-quotes'],
                         ),
                         'brief' => false,
                         'contentType' => ContentType::JSON,

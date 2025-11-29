@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * PhpUnit bootstrap file
+ */
+
 // backward compatibility
 $classMap = array(
     'PHPUnit_Framework_AssertionFailedError' => 'PHPUnit\Framework\AssertionFailedError',
@@ -37,9 +41,11 @@ ini_set('xdebug.show_exception_trace', 0);
 */
 
 if (\class_exists('OAuth') === false) {
+    /**
+     * Make phpunit coverage happy
+     */
     class OAuth
     {
-        // make phpunit coverage happy
     }
 }
 
@@ -65,11 +71,14 @@ $debug = \bdk\Debug::getInstance(array(
     ),
     'errorStatsFile' => __DIR__ . '/../tmp/error_stats.json',
     'exitCheck' => false,
+    'filepathMap' => array(
+        '/fakepath/' => '/fakepathNew/',
+    ),
     'fullyQualifyPhpDocType' => true,
     'i18n' => array(
         'domainFilepath' => array(
             'wordpress' => __DIR__ . '/../src/Debug/Framework/WordPress/lang/{locale}.php',
-        )
+        ),
     ),
     'logEnvInfo' => false,
     'logRequestInfo' => false,

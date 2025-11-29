@@ -95,6 +95,8 @@ class Prettify implements SubscriberInterface
      */
     public function prettify($string, $contentType)
     {
+        $string = \preg_replace('/^(' . Debug::BOM . ')+/', '', $string, -1, $count);
+        $bom = \str_repeat(Debug::BOM, $count);
         $event = $this->debug->rootInstance->eventManager->publish(
             Debug::EVENT_PRETTIFY,
             $this->debug,
@@ -104,9 +106,14 @@ class Prettify implements SubscriberInterface
             )
         );
         // event['value'] should be an Abstraction instance
-        return \is_string($event['value']) || ($event['value'] instanceof Abstraction && $event['value']['value'])
-            ? $event['value']
-            : $string;
+        if ($event['value'] instanceof Abstraction) {
+            $event['value']['value'] = $bom . $event['value']['value'];
+            return $event['value'];
+        }
+        if (\is_string($event['value'])) {
+            return $bom . $event['value'];
+        }
+        return $bom . $string;
     }
 
     /**

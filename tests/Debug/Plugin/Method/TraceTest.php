@@ -209,6 +209,11 @@ class TraceTest extends DebugTestFramework
                 'line' => 42,
                 'function' => 'Foo::bar',
             ),
+            array(
+                'file' => '/fakepath/to/otherfile.php',
+                'line' => 69,
+                'function' => 'dingus',
+            )
         );
         $metaExpect = array(
             'caption' => 'trace',
@@ -238,6 +243,7 @@ class TraceTest extends DebugTestFramework
                     $tableDataExpect = \array_map(static function (array $frame) {
                         return \array_values($frame);
                     }, $frames);
+                    $tableDataExpect[1][0] = \str_replace('/fakepath', '/fakepathNew', $tableDataExpect[1][0]);
                     $tableDataActual = \array_map(static function ($row) {
                         $row[0] = (string) $row[0];
                         $row[2] = (string) $row[2];
@@ -251,6 +257,7 @@ class TraceTest extends DebugTestFramework
                     [
                         \array_map(static function ($frame) {
                             $row = \array_values($frame);
+                            $row[0] = \str_replace('/fakepath', '/fakepathNew', $row[0]);
                             $fileAbsValues = (new Abstraction(Type::TYPE_STRING, array(
                                 'typeMore' => Type::TYPE_STRING_FILEPATH,
                                 'docRoot' => false,

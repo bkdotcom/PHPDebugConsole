@@ -1,212 +1,214 @@
 <?xml version="1.0"?>
 <ruleset name="PHPDebugConsole">
 
-    <description>PSR-12 plus commenting</description>
+  <description>PSR-12 plus commenting</description>
 
-    <autoload>./vendor/autoload.php</autoload>
+  <autoload>./vendor/autoload.php</autoload>
 
-    <exclude-pattern>*.js</exclude-pattern>
-    <exclude-pattern>*/src/Debug/css/*</exclude-pattern>
-    <exclude-pattern>*/src/Debug/node_modules/*</exclude-pattern>
-    <exclude-pattern>*/src/Psr7/*</exclude-pattern>
+  <exclude-pattern>*.js</exclude-pattern>
+  <exclude-pattern>*/src/Debug/css/*</exclude-pattern>
+  <exclude-pattern>*/src/Debug/node_modules/*</exclude-pattern>
+  <exclude-pattern>*/src/Psr7/*</exclude-pattern>
+
+  <!--
+  <rule ref="./phpcs.slevomat.xml" />
+  -->
+
+  <rule ref="./vendor/bdk/devutil/src/Sniffs">
+    <exclude name="bdk.Commenting.FunctionComment.EmptyThrows" />
+    <exclude name="bdk.Commenting.FunctionComment.ParamCommentFullStop" />
+    <exclude name="bdk.Commenting.FunctionComment.ParamCommentNotCapital" />
+    <exclude name="bdk.Commenting.FunctionComment.ScalarTypeHintMissing" />
+    <exclude name="bdk.Commenting.FunctionComment.ThrowsNoFullStop" />
+    <exclude name="bdk.Commenting.FunctionComment.ThrowsNotCapital" />
+    <exclude name="bdk.Commenting.FunctionComment.TypeHintMissing" />
+    <exclude name="bdk.Commenting.FunctionCommentThrowTag.WrongNumber" />
+    <exclude name="bdk.Operators.ComparisonOperatorUsage.!NotAllowed" />
+    <exclude name="bdk.Operators.ComparisonOperatorUsage.ImplicitTrue" />
+  </rule>
+
+  <rule ref="PSR12">
+    <exclude name="PSR12.Properties.ConstantVisibility.NotFound" />
+  </rule>
+
+  <rule ref="Generic">
+    <exclude name="Generic.Arrays.ArrayIndent.CloseBraceNotNewLine" />
+    <exclude name="Generic.Arrays.DisallowLongArraySyntax.Found" /> <!-- short array syntax = php 5.4 -->
+    <exclude name="Generic.Arrays.DisallowShortArraySyntax.Found" />
+    <exclude name="Generic.Classes.OpeningBraceSameLine.BraceOnNewLine" />
+    <exclude name="Generic.CodeAnalysis.AssignmentInCondition.FoundInWhileCondition" />
+    <exclude name="Generic.CodeAnalysis.EmptyStatement.DetectedCatch" />
+    <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass" />
+    <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassAfterLastUsed" />
+    <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterfaceAfterLastUsed" />
 
     <!--
-    <rule ref="./phpcs.slevomat.xml" />
+    <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterface" />
     -->
 
-    <rule ref="./vendor/bdk/devutil/src/Sniffs">
-        <exclude name="bdk.Commenting.FunctionComment.EmptyThrows" />
-        <exclude name="bdk.Commenting.FunctionComment.ParamCommentFullStop" />
-        <exclude name="bdk.Commenting.FunctionComment.ParamCommentNotCapital" />
-        <exclude name="bdk.Commenting.FunctionComment.ScalarTypeHintMissing" />
-        <exclude name="bdk.Commenting.FunctionComment.ThrowsNoFullStop" />
-        <exclude name="bdk.Commenting.FunctionComment.ThrowsNotCapital" />
-        <exclude name="bdk.Commenting.FunctionComment.TypeHintMissing" />
-        <exclude name="bdk.Commenting.FunctionCommentThrowTag.WrongNumber" />
-        <exclude name="bdk.Operators.ComparisonOperatorUsage.!NotAllowed" />
-        <exclude name="bdk.Operators.ComparisonOperatorUsage.ImplicitTrue" />
-    </rule>
+    <!-- Allow single-line doc comments. See https://github.com/squizlabs/PHP_CodeSniffer/issues/258. -->
+    <exclude name="Generic.Commenting.DocComment.ContentAfterOpen" />
+    <exclude name="Generic.Commenting.DocComment.ContentBeforeClose" />
+    <exclude name="Generic.Commenting.DocComment.LongNotCapital" />
+    <exclude name="Generic.Commenting.DocComment.MissingShort" />
+    <exclude name="Generic.Commenting.DocComment.ShortNotCapital" />
+    <exclude name="Generic.Commenting.DocComment.SpacingAfterTagGroup" />
 
-    <rule ref="PSR12">
-        <exclude name="PSR12.Properties.ConstantVisibility.NotFound" />
-    </rule>
+    <exclude name="Generic.Debug.ClosureLinter" /> <!-- deprecated -->
+    <exclude name="Generic.Debug.CSSLint" /> <!-- deprecated -->
+    <exclude name="Generic.Debug.ESLint" /> <!-- deprecated -->
+    <exclude name="Generic.Debug.JSHint" /> <!-- deprecated -->
 
-    <rule ref="Generic">
-        <exclude name="Generic.Arrays.ArrayIndent.CloseBraceNotNewLine" />
-        <exclude name="Generic.Arrays.DisallowLongArraySyntax.Found" /> <!-- short array syntax = php 5.4 -->
-        <exclude name="Generic.Arrays.DisallowShortArraySyntax.Found" />
-        <exclude name="Generic.Classes.OpeningBraceSameLine.BraceOnNewLine" />
-        <exclude name="Generic.CodeAnalysis.AssignmentInCondition.FoundInWhileCondition" />
-        <exclude name="Generic.CodeAnalysis.EmptyStatement.DetectedCatch" />
-        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass" />
-        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassAfterLastUsed" />
-        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterfaceAfterLastUsed" />
+    <exclude name="Generic.Files.EndFileNewline.NotFound" /> <!-- handled by PSR-12 -->
+    <exclude name="Generic.Files.EndFileNoNewline.Found" />
+    <exclude name="Generic.Files.InlineHTML.Found" />
+    <exclude name="Generic.Files.LineLength.TooLong" />
+    <exclude name="Generic.Files.LowercasedFilename.NotFound" />
+    <exclude name="Generic.Formatting.MultipleStatementAlignment.NotSameWarning" />
+    <exclude name="Generic.Formatting.NoSpaceAfterCast" /> <!-- deprecated -->
+    <exclude name="Generic.Formatting.SpaceAfterNot.Incorrect" />
+    <exclude name="Generic.Formatting.SpaceBeforeCast.NoSpace" />
+    <exclude name="Generic.Functions.CallTimePassByReference" /> <!-- deprecated -->
+    <exclude name="Generic.Functions.OpeningFunctionBraceKernighanRitchie.BraceOnNewLine" />
+    <exclude name="Generic.NamingConventions.CamelCapsFunctionName.ScopeNotCamelCaps" /> <!-- Handled by PSR-12 -->
+    <exclude name="Generic.PHP.ClosingPHPTag.NotFound" />
+    <exclude name="Generic.PHP.RequireStrictTypes.MissingDeclaration" />
+    <exclude name="Generic.PHP.Syntax.PHPSyntax" />
+    <exclude name="Generic.PHP.UpperCaseConstant.Found" />
+    <exclude name="Generic.Strings.UnnecessaryStringConcat.Found" />
+    <exclude name="Generic.WhiteSpace.ArbitraryParenthesesSpacing.SpaceBeforeClose" />
+    <exclude name="Generic.WhiteSpace.DisallowSpaceIndent.SpacesUsed" />
+    <exclude name="Generic.WhiteSpace.DisallowTabIndent.NonIndentTabsUsed" />
+    <exclude name="Generic.WhiteSpace.DisallowTabIndent.TabsUsed" />
+  </rule>
 
-        <!--
-        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterface" />
-        -->
+  <rule ref="Generic.PHP.NoSilencedErrors.Discouraged">
+    <exclude-pattern>FileStreamWrapper\.php</exclude-pattern>
+  </rule>
 
-        <!-- Allow single-line doc comments. See https://github.com/squizlabs/PHP_CodeSniffer/issues/258. -->
-        <exclude name="Generic.Commenting.DocComment.ContentAfterOpen" />
-        <exclude name="Generic.Commenting.DocComment.ContentBeforeClose" />
-        <exclude name="Generic.Commenting.DocComment.LongNotCapital" />
-        <exclude name="Generic.Commenting.DocComment.MissingShort" />
-        <exclude name="Generic.Commenting.DocComment.ShortNotCapital" />
-        <exclude name="Generic.Commenting.DocComment.SpacingAfterTagGroup" />
+  <rule ref="PEAR.Functions.ValidDefaultValue"/>
 
-        <exclude name="Generic.Debug.ClosureLinter" /> <!-- deprecated -->
-        <exclude name="Generic.Debug.CSSLint" /> <!-- deprecated -->
-        <exclude name="Generic.Debug.ESLint" /> <!-- deprecated -->
-        <exclude name="Generic.Debug.JSHint" /> <!-- deprecated -->
+  <rule ref="Squiz.Commenting">
+    <!-- BlockComment -->
+    <exclude name="Squiz.Commenting.BlockComment.NoCapital" />
+    <exclude name="Squiz.Commenting.BlockComment.NoEmptyLineAfter" />
+    <exclude name="Squiz.Commenting.BlockComment.NoEmptyLineBefore" />
+    <exclude name="Squiz.Commenting.BlockComment.WrongStart" />
 
-        <exclude name="Generic.Files.EndFileNewline.NotFound" /> <!-- handled by PSR-12 -->
-        <exclude name="Generic.Files.EndFileNoNewline.Found" />
-        <exclude name="Generic.Files.InlineHTML.Found" />
-        <exclude name="Generic.Files.LineLength.TooLong" />
-        <exclude name="Generic.Files.LowercasedFilename.NotFound" />
-        <exclude name="Generic.Formatting.MultipleStatementAlignment.NotSameWarning" />
-        <exclude name="Generic.Formatting.NoSpaceAfterCast" /> <!-- deprecated -->
-        <exclude name="Generic.Formatting.SpaceAfterNot.Incorrect" />
-        <exclude name="Generic.Formatting.SpaceBeforeCast.NoSpace" />
-        <exclude name="Generic.Functions.CallTimePassByReference" /> <!-- deprecated -->
-        <exclude name="Generic.Functions.OpeningFunctionBraceKernighanRitchie.BraceOnNewLine" />
-        <exclude name="Generic.NamingConventions.CamelCapsFunctionName.ScopeNotCamelCaps" /> <!-- Handled by PSR-12 -->
-        <exclude name="Generic.PHP.ClosingPHPTag.NotFound" />
-        <exclude name="Generic.PHP.RequireStrictTypes.MissingDeclaration" />
-        <exclude name="Generic.PHP.Syntax.PHPSyntax" />
-        <exclude name="Generic.PHP.UpperCaseConstant.Found" />
-        <exclude name="Generic.Strings.UnnecessaryStringConcat.Found" />
-        <exclude name="Generic.WhiteSpace.ArbitraryParenthesesSpacing.SpaceBeforeClose" />
-        <exclude name="Generic.WhiteSpace.DisallowSpaceIndent.SpacesUsed" />
-        <exclude name="Generic.WhiteSpace.DisallowTabIndent.NonIndentTabsUsed" />
-        <exclude name="Generic.WhiteSpace.DisallowTabIndent.TabsUsed" />
-    </rule>
-    <rule ref="Generic.PHP.NoSilencedErrors.Discouraged">
-        <exclude-pattern>FileStreamWrapper\.php</exclude-pattern>
-    </rule>
+    <!-- ClassComment -->
+    <exclude name="Squiz.Commenting.ClassComment.ShortFullStop" />
+    <exclude name="Squiz.Commenting.ClassComment.TagNotAllowed" />
 
-    <rule ref="PEAR.Functions.ValidDefaultValue"/>
+    <!-- ClosingDeclarationComment -->
+    <exclude name="Squiz.Commenting.ClosingDeclarationComment.Missing" />
 
-    <rule ref="Squiz.Commenting">
-        <!-- BlockComment -->
-        <exclude name="Squiz.Commenting.BlockComment.NoCapital" />
-        <exclude name="Squiz.Commenting.BlockComment.NoEmptyLineAfter" />
-        <exclude name="Squiz.Commenting.BlockComment.NoEmptyLineBefore" />
-        <exclude name="Squiz.Commenting.BlockComment.WrongStart" />
+    <!-- DocCommentAlignment -->
+    <!-- EmptyCatchComment -->
 
-        <!-- ClassComment -->
-        <exclude name="Squiz.Commenting.ClassComment.ShortFullStop" />
-        <exclude name="Squiz.Commenting.ClassComment.TagNotAllowed" />
+    <!-- FileComment -->
+    <exclude name="Squiz.Commenting.FileComment.AuthorTagOrder" />
+    <exclude name="Squiz.Commenting.FileComment.IncorrectAuthor" />
+    <exclude name="Squiz.Commenting.FileComment.IncorrectCopyright" />
+    <exclude name="Squiz.Commenting.FileComment.MissingPackageTag" />
+    <exclude name="Squiz.Commenting.FileComment.MissingSubpackageTag" />
+    <exclude name="Squiz.Commenting.FileComment.PackageTagOrder" />
+    <exclude name="Squiz.Commenting.FileComment.ShortFullStop" />
+    <exclude name="Squiz.Commenting.FileComment.SpacingAfterOpen" /> <!-- conflicts with PSR12 -->
+    <exclude name="Squiz.Commenting.FileComment.SubpackageTagOrder" />
 
-        <!-- ClosingDeclarationComment -->
-        <exclude name="Squiz.Commenting.ClosingDeclarationComment.Missing" />
-
-        <!-- DocCommentAlignment -->
-        <!-- EmptyCatchComment -->
-
-        <!-- FileComment -->
-        <exclude name="Squiz.Commenting.FileComment.AuthorTagOrder" />
-        <exclude name="Squiz.Commenting.FileComment.IncorrectAuthor" />
-        <exclude name="Squiz.Commenting.FileComment.IncorrectCopyright" />
-        <exclude name="Squiz.Commenting.FileComment.MissingPackageTag" />
-        <exclude name="Squiz.Commenting.FileComment.MissingSubpackageTag" />
-        <exclude name="Squiz.Commenting.FileComment.PackageTagOrder" />
-        <exclude name="Squiz.Commenting.FileComment.ShortFullStop" />
-        <exclude name="Squiz.Commenting.FileComment.SpacingAfterOpen" /> <!-- conflicts with PSR12 -->
-        <exclude name="Squiz.Commenting.FileComment.SubpackageTagOrder" />
-
-        <!-- FunctionComment -->
-        <!--
-            FunctionComment refuses to acknowledge @inheritdoc
-            And insists on boolean / integer vs bool / int
-        -->
-        <exclude name="Squiz.Commenting.FunctionComment" />
-
-        <!-- FunctionCommentThrowTag -->
-        <exclude name="Squiz.Commenting.FunctionCommentThrowTag.Missing" />
-        <exclude name="Squiz.Commenting.FunctionCommentThrowTag.WrongNumber" />
-
-        <!-- InlineComment -->
-        <exclude name="Squiz.Commenting.InlineComment.DocBlock" />
-        <exclude name="Squiz.Commenting.InlineComment.InvalidEndChar" />
-        <exclude name="Squiz.Commenting.InlineComment.NotCapital" />
-        <exclude name="Squiz.Commenting.InlineComment.SpacingAfter" />
-        <exclude name="Squiz.Commenting.InlineComment.SpacingBefore" />
-        <exclude name="Squiz.Commenting.InlineComment.WrongStyle" />
-
-        <!-- LongConditionClosingComment -->
-        <!--
-            refuses to acknowledge @inheritdoc
-        -->
-        <exclude name="Squiz.Commenting.LongConditionClosingComment.Missing" />
-
-        <!-- PostStatementComment -->
-        <exclude name="Squiz.Commenting.PostStatementComment.AnnotationFound" />
-        <exclude name="Squiz.Commenting.PostStatementComment.Found" />
-
-        <!-- VariableComment -->
-        <exclude name="Squiz.Commenting.VariableComment.IncorrectVarType" />
-        <exclude name="Squiz.Commenting.VariableComment.Missing" />
-        <exclude name="Squiz.Commenting.VariableComment.TagNotAllowed" />
-        <exclude name="Squiz.Commenting.VariableComment.WrongStyle" />
-    </rule>
-    <rule ref="Squiz.Commenting.FileComment.Missing">
-        <severity>4</severity>
-    </rule>
-    <rule ref="Squiz.Commenting.BlockComment.FirstLineIndent">
-        <severity>4</severity>
-    </rule>
-    <rule ref="Squiz.Commenting.BlockComment.LineIndent">
-        <severity>4</severity>
-    </rule>
-    <rule ref="Squiz.Commenting.FileComment.MissingCopyrightTag">
-        <severity>4</severity>
-    </rule>
-    <rule ref="Squiz.Commenting.FileComment.MissingAuthorTag">
-        <severity>4</severity>
-    </rule>
-    <rule ref="Squiz.Commenting.FunctionComment.ShortNotCapital">
-        <severity>4</severity>
-    </rule>
-    <rule ref="Squiz.Commenting.FunctionComment.ParamCommentNotCapital">
-        <severity>4</severity>
-    </rule>
-
-    <rule ref="Squiz.Functions">
-        <exclude name="Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine" /> <!-- handled by Generic.Functions -->
-        <exclude name="Squiz.Functions.MultiLineFunctionDeclaration.NewlineBeforeOpenBrace" />
-    </rule>
-
-    <rule ref="Squiz.Operators">
-        <!-- ComparisonOperatorUsage sniff is too broad -->
-        <exclude name="Squiz.Operators.ComparisonOperatorUsage" />
-    </rule>
-
-    <rule ref="Squiz.PHP">
-        <exclude name="Squiz.PHP.DisallowInlineIf" />
-        <exclude name="Squiz.PHP.DisallowBooleanStatement" />
-        <exclude name="Squiz.PHP.DisallowComparisonAssignment" />
-    </rule>
-    <rule ref="Squiz.PHP.CommentedOutCode">
-        <properties>
-            <property name="maxPercentage" value="70" />
-        </properties>
-    </rule>
-    <rule ref="Squiz.PHP.DiscouragedFunctions">
-        <properties>
-            <property name="forbiddenFunctions" type="array">
-                <element key="create_function" value="null" />
-                <element key="delete" value="unset" />
-                <element key="print" value="echo" />
-                <element key="sizeof" value="count" />
-            </property>
-        </properties>
-    </rule>
-
-    <rule ref="Squiz.Scope" />
-    <rule ref="Squiz.Strings.DoubleQuoteUsage" />
+    <!-- FunctionComment -->
     <!--
-    <rule ref="Zend.Debug.CodeAnalyzer"/>
+      FunctionComment refuses to acknowledge @inheritdoc
+      And insists on boolean / integer vs bool / int
     -->
+    <exclude name="Squiz.Commenting.FunctionComment" />
+
+    <!-- FunctionCommentThrowTag -->
+    <exclude name="Squiz.Commenting.FunctionCommentThrowTag.Missing" />
+    <exclude name="Squiz.Commenting.FunctionCommentThrowTag.WrongNumber" />
+
+    <!-- InlineComment -->
+    <exclude name="Squiz.Commenting.InlineComment.DocBlock" />
+    <exclude name="Squiz.Commenting.InlineComment.InvalidEndChar" />
+    <exclude name="Squiz.Commenting.InlineComment.NotCapital" />
+    <exclude name="Squiz.Commenting.InlineComment.SpacingAfter" />
+    <exclude name="Squiz.Commenting.InlineComment.SpacingBefore" />
+    <exclude name="Squiz.Commenting.InlineComment.WrongStyle" />
+
+    <!-- LongConditionClosingComment -->
+    <!--
+      refuses to acknowledge @inheritdoc
+    -->
+    <exclude name="Squiz.Commenting.LongConditionClosingComment.Missing" />
+
+    <!-- PostStatementComment -->
+    <exclude name="Squiz.Commenting.PostStatementComment.AnnotationFound" />
+    <exclude name="Squiz.Commenting.PostStatementComment.Found" />
+
+    <!-- VariableComment -->
+    <exclude name="Squiz.Commenting.VariableComment.IncorrectVarType" />
+    <exclude name="Squiz.Commenting.VariableComment.Missing" />
+    <exclude name="Squiz.Commenting.VariableComment.TagNotAllowed" />
+    <exclude name="Squiz.Commenting.VariableComment.WrongStyle" />
+  </rule>
+
+  <rule ref="Squiz.Commenting.FileComment.Missing">
+    <severity>4</severity>
+  </rule>
+  <rule ref="Squiz.Commenting.BlockComment.FirstLineIndent">
+    <severity>4</severity>
+  </rule>
+  <rule ref="Squiz.Commenting.BlockComment.LineIndent">
+    <severity>4</severity>
+  </rule>
+  <rule ref="Squiz.Commenting.FileComment.MissingCopyrightTag">
+    <severity>4</severity>
+  </rule>
+  <rule ref="Squiz.Commenting.FileComment.MissingAuthorTag">
+    <severity>4</severity>
+  </rule>
+  <rule ref="Squiz.Commenting.FunctionComment.ShortNotCapital">
+    <severity>4</severity>
+  </rule>
+  <rule ref="Squiz.Commenting.FunctionComment.ParamCommentNotCapital">
+    <severity>4</severity>
+  </rule>
+
+  <rule ref="Squiz.Functions">
+    <exclude name="Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine" /> <!-- handled by Generic.Functions -->
+    <exclude name="Squiz.Functions.MultiLineFunctionDeclaration.NewlineBeforeOpenBrace" />
+  </rule>
+
+  <rule ref="Squiz.Operators">
+    <!-- ComparisonOperatorUsage sniff is too broad -->
+    <exclude name="Squiz.Operators.ComparisonOperatorUsage" />
+  </rule>
+
+  <rule ref="Squiz.PHP">
+    <exclude name="Squiz.PHP.DisallowInlineIf" />
+    <exclude name="Squiz.PHP.DisallowBooleanStatement" />
+    <exclude name="Squiz.PHP.DisallowComparisonAssignment" />
+  </rule>
+  <rule ref="Squiz.PHP.CommentedOutCode">
+    <properties>
+      <property name="maxPercentage" value="70" />
+    </properties>
+  </rule>
+  <rule ref="Squiz.PHP.DiscouragedFunctions">
+    <properties>
+      <property name="forbiddenFunctions" type="array">
+        <element key="create_function" value="null" />
+        <element key="delete" value="unset" />
+        <element key="print" value="echo" />
+        <element key="sizeof" value="count" />
+      </property>
+    </properties>
+  </rule>
+
+  <rule ref="Squiz.Scope" />
+  <rule ref="Squiz.Strings.DoubleQuoteUsage" />
+  <!--
+  <rule ref="Zend.Debug.CodeAnalyzer"/>
+  -->
 
 </ruleset>

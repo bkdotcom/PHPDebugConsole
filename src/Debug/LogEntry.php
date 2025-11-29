@@ -116,16 +116,11 @@ class LogEntry extends Event implements JsonSerializable
     public function export()
     {
         // phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
-        $return = array(
+        return array(
             'method' => $this->values['method'],
             'args' => $this->values['args'],
-            'meta' => $this->values['meta'],
+            'meta' => $this->getMeta(),
         );
-        if ($this->subject->parentInstance) {
-            $return['meta']['channel'] = $this->getChannelKey();
-        }
-        \ksort($return['meta']);
-        return $return;
     }
 
     /**
@@ -164,7 +159,12 @@ class LogEntry extends Event implements JsonSerializable
     public function getMeta($key = null, $default = null)
     {
         if ($key === null) {
-            return $this->values['meta'];
+            $meta = $this->values['meta'];
+            if ($this->subject->parentInstance) {
+                $meta['channel'] = $this->getChannelKey();
+            }
+            \ksort($meta);
+            return $meta;
         }
         return \array_key_exists($key, $this->values['meta'])
             ? $this->values['meta'][$key]
@@ -177,7 +177,7 @@ class LogEntry extends Event implements JsonSerializable
     public function getValues()
     {
         $values = parent::getValues();
-        \ksort($values['meta']);
+        $values['meta'] = $this->getMeta(); // sorted and with 'channel' key added if applicable
         return $values;
     }
 
@@ -311,6 +311,9 @@ class LogEntry extends Event implements JsonSerializable
         if (isset($values['meta']) === false) {
             return;
         }
+        if (isset($values['meta']['file'])) {
+            $this->values['meta']['file'] = $this->subject->filepathMap($values['meta']['file']);
+        }
         if (isset($values['meta']['icon']) && \preg_match('/^:(.+):$/', $values['meta']['icon'], $matches)) {
             $this->values['meta']['icon'] = $this->subject->getCfg('icons.' . $matches[1], Debug::CONFIG_DEBUG);
         }
@@ -341,6 +344,7 @@ class LogEntry extends Event implements JsonSerializable
         } elseif (\is_string($meta['attribs']['class'])) {
             $meta['attribs']['class'] = \explode(' ', $meta['attribs']['class']);
         }
+        \ksort($meta['attribs']);
         $this->values['meta'] = $meta;
     }
 

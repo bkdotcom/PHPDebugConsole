@@ -17,6 +17,50 @@ class UtilityTest extends DebugTestFramework
 {
     use ExpectExceptionTrait;
 
+    public function testCallSuppressed()
+    {
+        $exception = null;
+        $result = Utility::callSuppressed(static function ($a, $b) {
+            return $a . ' ' . $b;
+        }, ['foo', 'bar'], $exception);
+        self::assertSame('foo bar', $result);
+        self::assertNull($exception);
+
+        $result = Utility::callSuppressed(static function () {
+            throw new \Exception('it broke');
+        }, [], $exception);
+        self::assertNull($result);
+        self::assertInstanceOf('Exception', $exception);
+        self::assertSame('it broke', $exception->getMessage());
+
+        $result = Utility::callSuppressed([__CLASS__, 'staticMethod'], ['foo', 'bar'], $exception);
+        self::assertSame('"foo", "bar"', $result);
+        self::assertNull($exception);
+
+        $result = Utility::callSuppressed([__CLASS__, 'staticMethod'], ['foo', 'bar', true], $exception);
+        self::assertNull($result);
+        self::assertInstanceOf('Exception', $exception);
+        self::assertSame('it broke', $exception->getMessage());
+
+        $result = Utility::callSuppressed([__CLASS__, 'staticMethod'], ['foo', 'bar', false, true], $exception);
+        self::assertSame('"foo", "bar", false, true', $result);
+        self::assertInstanceOf('ErrorException', $exception);
+        self::assertSame('error message', $exception->getMessage());
+    }
+
+    public static function staticMethod($a, $b, $throw = false, $error = false)
+    {
+        if ($throw) {
+            throw new \Exception('it broke');
+        }
+        if ($error) {
+            \user_error('error message', E_USER_ERROR);
+        }
+        return \implode(', ', \array_map(static function ($val) {
+            return \json_encode($val);
+        }, \func_get_args()));
+    }
+
     public function testEmitHeaders()
     {
         Utility::emitHeaders(array());

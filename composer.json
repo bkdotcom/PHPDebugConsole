@@ -38,11 +38,11 @@
     }
   },
   "replace": {
-    "bdk/backtrace": "2.2.3",
+    "bdk/backtrace": "2.2.4",
     "bdk/curl-http-message": "1.0",
     "bdk/errorhandler": "3.3.4",
     "bdk/promise": "1.0",
-    "bdk/pubsub": "3.2.1",
+    "bdk/pubsub": "3.2.2",
     "bdk/slack": "1.0",
     "bdk/teams": "1.0"
   },

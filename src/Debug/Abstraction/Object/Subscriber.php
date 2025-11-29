@@ -18,11 +18,9 @@ use bdk\Debug\Abstraction\Object\PropertiesDom;
 use bdk\Debug\Data;
 use bdk\Debug\Utility\PhpDoc;
 use bdk\PubSub\SubscriberInterface;
-use Error;
 use Exception;
 use mysqli;
 use ReflectionFunction;
-use RuntimeException;
 use UnitEnum;
 
 /**
@@ -207,26 +205,16 @@ class Subscriber implements SubscriberInterface
     private function onStartMysqli(Abstraction $abs)
     {
         /*
-            test if stat() throws an error (ie "Property access is not allowed yet")
+            stat() may throw an error (ie "mysqli object is not fully initialized")
             if so, don't collect property values
         */
-        $haveError = false;
-        \set_error_handler(static function () use (&$haveError) {
-            $haveError = true;
-            return true;
-        }, E_ALL);
-        try {
+        $this->abstractObject->debug->utility->callSuppressed(static function () use ($abs) {
             $mysqli = $abs->getSubject();
             $mysqli->stat();
-        } catch (Error $e) {
-            $haveError = true;
-        } catch (RuntimeException $e) {
-            $haveError = true;
-        }
-        if ($haveError) {
+        }, [], $exception);
+        if ($exception) {
             $abs['collectPropertyValues'] = false;
         }
-        \restore_error_handler();
     }
 
     /**

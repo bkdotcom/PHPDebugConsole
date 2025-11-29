@@ -229,6 +229,23 @@ class DebugTest extends DebugTestFramework
         getCfg tested in ConfigTest
     */
 
+    public function testFilepathMap()
+    {
+        // filepathMap set in bootstrap
+        $fileAbs = $this->debug->abstracter->crateWithVals('/fakepath/foo/file.php', array(
+            'type' => Type::TYPE_STRING,
+            'typeMore' => Type::TYPE_STRING_FILEPATH,
+        ));
+        self::assertSame(array(
+            'baseName' => 'file.php',
+            'docRoot' => false,
+            'pathCommon' => '',
+            'pathRel' => '/fakepathNew/foo/',
+            'type' => Type::TYPE_STRING,
+            'typeMore' => Type::TYPE_STRING_FILEPATH,
+        ), $fileAbs->getValues());
+    }
+
     public function testMeta()
     {
         /*

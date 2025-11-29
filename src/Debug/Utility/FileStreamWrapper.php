@@ -11,6 +11,7 @@
 namespace bdk\Debug\Utility;
 
 use bdk\Debug\Utility\Php;
+use bdk\Debug\Utility;
 
 /**
  * Generic stream-wrapper which publishes Debug::EVENT_STREAM_WRAP when file is required/included
@@ -522,17 +523,15 @@ class FileStreamWrapper extends FileStreamWrapperBase
                 : \stat($path);
         }
         // quiet mode
-        // Temporary error handler to discard errors in silent mode
-        // phpcs:ignore Squiz.WhiteSpace.ScopeClosingBrace
-        \set_error_handler(static function () {});
-        try {
-            $result = $isLink
+        // discard errors in silent mode
+        $result = Utility::callSuppressed(static function () use ($isLink, $path) {
+            return $isLink
                 ? \lstat($path)
                 : \stat($path);
-        } catch (\Exception $e) {
+        }, [], $exception);
+        if ($exception) {
             $result = false;
         }
-        \restore_error_handler();
         return $result;
     }
 }

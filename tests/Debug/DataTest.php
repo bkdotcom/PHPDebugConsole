@@ -53,8 +53,8 @@ class DataTest extends DebugTestFramework
                 'args' => array('group inside summary'),
                 'meta' => array(
                     'attribs' => array(
+                        'class' => [],
                         'id' => 'groupId',
-                        'class' => array(),
                     ),
                 ),
             ),
@@ -85,8 +85,8 @@ class DataTest extends DebugTestFramework
                 'args' => array('my group'),
                 'meta' => array(
                     'attribs' => array(
+                        'class' => [],
                         'id' => 'groupId',
-                        'class' => array(),
                     ),
                 ),
             ),
@@ -96,8 +96,8 @@ class DataTest extends DebugTestFramework
                 'meta' => array(
                     'appendGroup' => 'groupId',
                     'attribs' => array(
+                        'class' => [],
                         'id' => 'logEntryId',
-                        'class' => array(),
                     ),
                 ),
             ),

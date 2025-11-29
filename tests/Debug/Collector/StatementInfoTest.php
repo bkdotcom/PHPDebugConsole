@@ -83,8 +83,8 @@ class StatementInfoTest extends DebugTestFramework
                 "args": ["SELECT `first_name`, `last_name`, `password` FROM `users` (\u2026) WHERE u.username = 'bkent'\u2026"],
                 "meta": {
                     "attribs": {
-                        "id": "statementInfo1",
-                        "class": []
+                        "class": [],
+                        "id": "statementInfo1"
                     },
                     "boldLabel": false, "icon": "fa fa-list-ul"
                 }
@@ -219,8 +219,8 @@ EOD;
                 "args": ["SELECT `first_name`, `last_name`, `password` FROM `users` (\u2026) WHERE u.username = 'bkent'\u2026"],
                 "meta": {
                     "attribs": {
-                        "id": "statementInfo1",
-                        "class": []
+                        "class": [],
+                        "id": "statementInfo1"
                     },
                     "boldLabel": false,
                     "icon": "fa fa-list-ul"

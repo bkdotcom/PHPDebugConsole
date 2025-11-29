@@ -91,11 +91,7 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                             'request body',
                             array(
                                 'attribs' => array(
-                                    'class' => array(
-                                        'highlight',
-                                        'language-json',
-                                        'no-quotes',
-                                    ),
+                                    'class' => ['highlight', 'language-json', 'no-quotes'],
                                 ),
                                 'brief' => false,
                                 'contentType' => 'application/json; charset=utf-8',
@@ -196,8 +192,8 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                             'icon' => 'fa fa-exchange',
                             'redact' => true,
                             'attribs' => array(
+                                'class' => [],
                                 'id' => $id,
-                                'class' => array(),
                             ),
                             'channel' => 'general.CurlHttpMessage',
                         ),

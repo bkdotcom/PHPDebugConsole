@@ -88,6 +88,8 @@ use bdk\Debug\Abstraction\Abstracter;
  */
 class Debug extends AbstractDebug
 {
+    const BOM = "\xef\xbb\xbf";
+
     const CLEAR_ALERTS = 1;
     const CLEAR_LOG = 2;
     const CLEAR_LOG_ERRORS = 4;
@@ -153,6 +155,7 @@ class Debug extends AbstractDebug
                                 //   (default set in constructor)
         'exitCheck' => true,
         'extensionsCheck' => ['curl', 'mbString'],
+        'filepathMap' => array(),
         'headerMaxAll' => 250000,
         'headerMaxPer' => null,
         'i18n' => array(
@@ -186,7 +189,7 @@ class Debug extends AbstractDebug
             'user' => 'fa fa-user-o',
             'warning' => 'fa fa-warning',
         ),
-        'key' => null, // secodary to password option... this is a plaintext password used to enable log collection/output
+        'key' => null, // secondary to password option... this is a plaintext password used to enable log collection/output
         'logEnvInfo' => array(  // may be set by passing a list
             'errorReporting' => true,
             'files' => true,
@@ -308,6 +311,24 @@ class Debug extends AbstractDebug
             self::$instance->setCfg($cfg, self::CONFIG_NO_RETURN);
         }
         return self::$instance;
+    }
+
+    /**
+     * Map file path according to filepathMap config
+     *
+     * @param string|null $filePath File path
+     *
+     * @return string|null
+     */
+    public function filepathMap($filePath)
+    {
+        foreach ($this->cfg['filepathMap'] as $pathFrom => $pathTo) {
+            if (\strpos($filePath, $pathFrom) === 0) {
+                $filePath = $pathTo . \substr($filePath, \strlen($pathFrom));
+                break;
+            }
+        }
+        return $filePath;
     }
 
     /**

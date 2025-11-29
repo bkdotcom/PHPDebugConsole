@@ -46,6 +46,9 @@ class MethodParams
         'type' => null,
     );
 
+    /** @var array<string,array> */
+    private $phpDocParamsByName = array();
+
     /**
      * Constructor
      *
@@ -87,21 +90,15 @@ class MethodParams
      *
      * @return array
      */
-    public function getParams(Abstraction $abs, ReflectionMethod $refMethod, $phpDoc = array())
+    public function getParams(Abstraction $abs, ReflectionMethod $refMethod, array $phpDoc = array())
     {
         $this->abs = $abs;
-        $phpDocParams = isset($phpDoc['param'])
-            ? $phpDoc['param']
-            : array();
-        $phpDocParamsByName = array();
-        foreach ($phpDocParams as $info) {
-            $phpDocParamsByName[$info['name']] = $info;
-        }
-        $params = $this->getParamsReflection($refMethod, $phpDocParamsByName);
+        $this->setPhpDocParamsByName($phpDoc);
+        $params = $this->getParamsReflection($refMethod);
         /*
             Iterate over params only defined via phpDoc
         */
-        $phpDocCount = \count($phpDocParams);
+        $phpDocCount = \count($this->phpDocParamsByName);
         for ($i = \count($params); $i < $phpDocCount; $i++) {
             $phpDocParam = $phpDoc['param'][$i];
             $params[] = $this->buildValues(array(
@@ -139,44 +136,54 @@ class MethodParams
     }
 
     /**
-     * Get parameter info from reflection
+     * Get parameter info via reflection & phpDoc
      *
-     * @param ReflectionMethod $refMethod          ReflectionMethod instance
-     * @param array            $phpDocParamsByName Method's parsed phpDoc comment
+     * @param ReflectionParameter $refParam ReflectionParameter instance
      *
      * @return array
      */
-    private function getParamsReflection(ReflectionMethod $refMethod, array $phpDocParamsByName)
+    private function getParamReflection(ReflectionParameter $refParam)
     {
-        $params = array();
-        $collectAttribute = $this->abs['cfgFlags'] & AbstractObject::PARAM_ATTRIBUTE_COLLECT;
-        \set_error_handler(static function () {
-            // suppressing "Use of undefined constant STDERR" type notice
-            // encountered on
-            //    $refParameter->getDefaultValue()
-            //    $refParameter->__toString()
+        $name = $refParam->getName();
+        $phpDocParam = $this->phpDocParam($name);
+        return $this->buildValues(array(
+            'attributes' => $this->abs['cfgFlags'] & AbstractObject::PARAM_ATTRIBUTE_COLLECT
+                ? $this->helper->getAttributes($refParam)
+                : array(),
+            'defaultValue' => $this->getParamDefaultVal($refParam),
+            'desc' => $phpDocParam['desc'],
+            'isOptional' => $refParam->isOptional(),
+            'isPassedByReference' => $refParam->isPassedByReference(),
+            'isPromoted' =>  PHP_VERSION_ID >= 80000 && $refParam->isPromoted(),
+            'isVariadic' => PHP_VERSION_ID >= 50600
+                ? $refParam->isVariadic() || $phpDocParam['isVariadic']
+                : $phpDocParam['isVariadic'],
+            'name' => $name,
+            'type' => $this->helper->getType($phpDocParam['type'], $refParam),
+        ));
+    }
+
+    /**
+     * Get method's parameters via reflection
+     *
+     * @param ReflectionMethod $refMethod ReflectionMethod instance
+     *
+     * @return array
+     */
+    private function getParamsReflection(ReflectionMethod $refMethod)
+    {
+        // suppress any error/exception encountered during reflection
+        // ie "Use of undefined constant STDERR" type notice
+        // encountered on
+        //    $refParameter->getDefaultValue()
+        //    $refParameter->__toString()
+        return $this->abstracter->debug->utility->callSuppressed(function () use ($refMethod) {
+            $params = array();
+            foreach ($refMethod->getParameters() as $refParameter) {
+                $params[] = $this->getParamReflection($refParameter);
+            }
+            return $params;
         });
-        foreach ($refMethod->getParameters() as $refParameter) {
-            $name = $refParameter->getName();
-            $phpDocParam = $this->phpDocParam($name, $phpDocParamsByName);
-            $params[] = $this->buildValues(array(
-                'attributes' => $collectAttribute
-                    ? $this->helper->getAttributes($refParameter)
-                    : array(),
-                'defaultValue' => $this->getParamDefaultVal($refParameter),
-                'desc' => $phpDocParam['desc'],
-                'isOptional' => $refParameter->isOptional(),
-                'isPassedByReference' => $refParameter->isPassedByReference(),
-                'isPromoted' =>  PHP_VERSION_ID >= 80000 && $refParameter->isPromoted(),
-                'isVariadic' => PHP_VERSION_ID >= 50600
-                    ? $refParameter->isVariadic() || $phpDocParam['isVariadic']
-                    : $phpDocParam['isVariadic'],
-                'name' => $name,
-                'type' => $this->helper->getType($phpDocParam['type'], $refParameter),
-            ));
-        }
-        \restore_error_handler();
-        return $params;
     }
 
     /**
@@ -256,18 +263,22 @@ class MethodParams
     /**
      * Get PhpDoc param info
      *
-     * @param string $name               Param name
-     * @param array  $phpDocParamsByName Params defined in PhpDoc
+     * @param string $name Param name
      *
      * @return array
      */
-    private function phpDocParam($name, array $phpDocParamsByName)
+    private function phpDocParam($name)
     {
-        return \array_merge(array(
-            'desc' => '',
-            'isVariadic' => false,
-            'type' => null,
-        ), isset($phpDocParamsByName[$name]) ? $phpDocParamsByName[$name] : array());
+        return \array_merge(
+            array(
+                'desc' => '',
+                'isVariadic' => false,
+                'type' => null,
+            ),
+            isset($this->phpDocParamsByName[$name])
+                ? $this->phpDocParamsByName[$name]
+                : array()
+        );
     }
 
     /**
@@ -305,5 +316,24 @@ class MethodParams
             return $this->phpDocConstant($defaultValue, $className, $matches);
         }
         return \trim($defaultValue, '\'"');
+    }
+
+    /**
+     * Set $this->setPhpDocParamsByName
+     *
+     * @param array $phpDoc Method's parsed PhpDoc
+     *
+     * @return void
+     */
+    private function setPhpDocParamsByName(array $phpDoc)
+    {
+        $phpDocParams = isset($phpDoc['param'])
+            ? $phpDoc['param']
+            : array();
+        $phpDocParamsByName = array();
+        foreach ($phpDocParams as $info) {
+            $phpDocParamsByName[$info['name']] = $info;
+        }
+        $this->phpDocParamsByName = $phpDocParamsByName;
     }
 }

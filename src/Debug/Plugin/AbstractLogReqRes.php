@@ -10,6 +10,7 @@
 
 namespace bdk\Debug\Plugin;
 
+use bdk\Debug;
 use bdk\HttpMessage\Utility\ContentType;
 use Psr\Http\Message\StreamInterface;
 
@@ -64,6 +65,26 @@ class AbstractLogReqRes
         if ($requestMethod === 'POST' && \in_array($contentTypeUser, $formTypes, true)) {
             $message .= "\n" . $this->debug->i18n->trans('request.use.php.input');
         }
+        $this->debug->warn($message, $this->debug->meta(array(
+            'file' => null,
+            'line' => null,
+        )));
+    }
+
+    /**
+     * Display warning if body contains BOM
+     *
+     * @param string $content Response body
+     *
+     * @return void
+     */
+    protected function assertNoBomInContent($content)
+    {
+        $haveBom = \preg_match('/^' . Debug::BOM . '/', $content) === 1;
+        if ($haveBom === false) {
+            return;
+        }
+        $message = $this->debug->i18n->trans('response.body.contains.bom');
         $this->debug->warn($message, $this->debug->meta(array(
             'file' => null,
             'line' => null,

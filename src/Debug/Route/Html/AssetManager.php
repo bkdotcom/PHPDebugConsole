@@ -118,7 +118,7 @@ class AssetManager
             $content = $asset;
             // isFile "safely" checks if the value is an existing regular file
             if ($this->debug->utility->isFile($asset)) {
-                $content = \ltrim(\file_get_contents($asset), "\xef\xbb\xbf");
+                $content = \preg_replace('/^(' . Debug::BOM . ')+/', '', \file_get_contents($asset));
             }
             if ($content === false) {
                 $content = '/* PHPDebugConsole: unable to read file ' . $asset . ' */';

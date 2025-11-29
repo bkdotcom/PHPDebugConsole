@@ -62,6 +62,7 @@ class Highlight implements AssetProviderInterface
                         $target.find(".highlight").filter(":visible").removeClass("highlight").each(function () {
                             var $high = $(this)
                             var $pre
+                            var $ws = null
                             var classes = $high.attr("class").split(" ")
                             var classesPre = []
                             var lang
@@ -81,6 +82,8 @@ class Highlight implements AssetProviderInterface
                                         classesPre.push(classes[i]);
                                     }
                                 }
+                                $ws = $high.find("> .char-ws") // ie BOM
+                                $ws.remove()
                                 $high.wrapInner(\'<pre><code class="\'+lang+\'"></code></pre>\')
                                 $pre = $high.find("pre").addClass(classesPre)
                                 $.each($high[0].attributes, function () {
@@ -104,6 +107,7 @@ class Highlight implements AssetProviderInterface
                             }
                             setTimeout(function () {
                                 Prism.highlightElement($pre.find("> code")[0])
+                                $pre.find("> code").prepend($ws)
                             }, 100)
                         })
                     })

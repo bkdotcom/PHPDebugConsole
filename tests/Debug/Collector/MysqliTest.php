@@ -157,7 +157,7 @@ EOD;
                 "method": "groupCollapsed",
                 "args": ["INSERT INTO `bob`\u2026"],
                 "meta": {
-                    "attribs": {"id": "statementInfo1", "class":[]},
+                    "attribs": {"class":[], "id": "statementInfo1"},
                     "boldLabel": false, "channel": "general.mysqli", "icon": "fa fa-database"
                 }
             },
@@ -246,7 +246,7 @@ EOD;
                 "method": "groupCollapsed",
                 "args": ["SELECT CURRENT_USER();SELECT `t` from `bob`\u2026"],
                 "meta": {
-                    "attribs": {"id": "statementInfo1", "class":[]},
+                    "attribs": {"class":[], "id": "statementInfo1"},
                     "boldLabel": false, "channel": "general.mysqli", "icon": "fa fa-database"
                 }
             },
@@ -345,7 +345,7 @@ EOD;
                 "method": "groupCollapsed",
                 "args": ["INSERT INTO `bob`\u2026"],
                 "meta": {
-                    "attribs": {"id": "statementInfo1", "class":[]},
+                    "attribs": {"class":[], "id": "statementInfo1"},
                     "boldLabel": false, "channel": "general.mysqli", "icon": "fa fa-database"
                 }
             },
@@ -412,7 +412,7 @@ EOD;
                 "method": "groupCollapsed",
                 "args": ["SELECT * from `bob`"],
                 "meta": {
-                    "attribs": {"id": "statementInfo1", "class":[]},
+                    "attribs": {"class":[], "id": "statementInfo1"},
                     "boldLabel": false, "channel": "general.mysqli", "icon": "fa fa-database"
                 }
             },
@@ -656,7 +656,7 @@ EOD;
                     "method": "groupCollapsed",
                     "args": ["INSERT INTO `bob`\u2026"],
                     "meta": {
-                        "attribs": {"id": "statementInfo1", "class":[]},
+                        "attribs": {"class":[], "id": "statementInfo1"},
                         "boldLabel": false, "channel": "general.mysqli", "icon": "fa fa-database"
                     }
                 },
@@ -731,7 +731,7 @@ EOD;
                 "method": "groupCollapsed",
                 "args": ["INSERT INTO `bob`…"],
                 "meta": {
-                    "attribs": {"id": "statementInfo1", "class":[]},
+                    "attribs": {"class":[], "id": "statementInfo1"},
                     "boldLabel": false,
                     "channel": "general.mysqli",
                     "icon": "fa fa-database"

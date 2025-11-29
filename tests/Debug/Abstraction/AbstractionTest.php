@@ -97,12 +97,12 @@ class AbstractionTest extends TestCase
             'attribs' => array(),
         ));
         $this->assertSame(array(
-            'class' => array(),
+            'class' => [],
         ), $abs['attribs']);
 
         $abs['attribs'] = array('class' => 'foo bar');
         $this->assertSame(array(
-            'class' => array('foo', 'bar'),
+            'class' => ['foo', 'bar'],
         ), $abs['attribs']);
     }
 }

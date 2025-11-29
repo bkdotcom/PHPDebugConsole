@@ -10,6 +10,8 @@
 
 namespace bdk\Debug\Utility;
 
+use bdk\Debug;
+use bdk\Debug\Utility;
 use bdk\Debug\Utility\ArrayUtil;
 use bdk\Debug\Utility\StringUtilHelperTrait;
 use bdk\HttpMessage\Utility\ContentType;
@@ -127,6 +129,8 @@ class StringUtil
         if ($contentType !== ContentType::TXT) {
             return $contentType;
         }
+        // remove one or more BOM from start of string
+        $val = \preg_replace('/^(' . Debug::BOM . ')+/', '', $val);
         if (self::isJson($val)) {
             return ContentType::JSON;
         }
@@ -260,11 +264,8 @@ class StringUtil
             $isSerialized = \preg_match('/[OC]:\d+:"((?!stdClass)[^"])*":\d+:/', $matches[1]) !== 1;
         }
         if ($isSerialized) {
-            \set_error_handler(static function () {
-                // ignore unserialize errors
-            });
-            $isSerialized = \unserialize($val) !== false;
-            \restore_error_handler();
+            $unserialized = Utility::callSuppressed('unserialize', [$val]);
+            $isSerialized = \in_array($unserialized, [false, null], true) === false;
         }
         return $isSerialized;
     }

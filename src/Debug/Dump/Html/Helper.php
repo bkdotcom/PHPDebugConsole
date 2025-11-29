@@ -163,7 +163,7 @@ class Helper
             \array_merge(array(
                 'sanitize' => false, // phpDoc parser sanitized by removing non-whitelisted html tags & attributes
                 'tagName' => null,
-                'type' => Type::TYPE_STRING,
+                'type' => Type::TYPE_STRING, // pass so dumper doesn't need to infer
                 'visualWhiteSpace' => false,
             ), $opts)
         );

@@ -293,6 +293,7 @@ class InternalEventsTest extends DebugTestFramework
                 ),
             ),
             'meta' => array(
+                'channel' => 'general.phpError',
                 'errorCat' => 'warning',
                 'errorType' => E_USER_WARNING,
                 'file' => $file,

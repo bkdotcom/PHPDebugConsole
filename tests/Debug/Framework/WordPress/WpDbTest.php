@@ -62,8 +62,8 @@ class WpDbTest extends DebugTestFramework
                 ),
                 'meta' => array(
                     'attribs' => array(
+                        'class' => [],
                         'id' => 'statementInfo1',
-                        'class' => array(),
                     ),
                     'boldLabel' => false,
                     'channel' => 'general.db',
@@ -75,7 +75,7 @@ class WpDbTest extends DebugTestFramework
                 'args' => array(
                     array(
                         'attribs' => array(
-                            'class' => array( 'highlight','language-sql','no-quotes' )
+                            'class' => ['highlight', 'language-sql', 'no-quotes'],
                         ),
                         'brief' => false,
                         'contentType' => 'application/sql',

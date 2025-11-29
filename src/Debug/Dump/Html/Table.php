@@ -10,6 +10,7 @@
 
 namespace bdk\Debug\Dump\Html;
 
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html as Dumper;
 
 /**
@@ -17,7 +18,7 @@ use bdk\Debug\Dump\Html as Dumper;
  */
 class Table
 {
-    /** @var Dumper */
+    /** @var \bdk\Debug */
     protected $debug;
 
     /** @var Dumper */
@@ -137,7 +138,10 @@ class Table
      */
     private function buildCaption()
     {
-        $caption = \htmlspecialchars((string) $this->options['caption']);
+        $caption = $this->dumper->valDumper->dump((string) $this->options['caption'], array(
+            'tagName' => null,
+            'type' => Type::TYPE_STRING, // pass so dumper doesn't need to infer
+        ));
         if (!$this->options['tableInfo']['class']) {
             return $caption
                 ? '<caption>' . $caption . '</caption>' . "\n"

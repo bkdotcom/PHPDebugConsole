@@ -44,7 +44,7 @@ It is installable and autoloadable via [Composer](https://getcomposer.org/) as [
 ```json
 {
     "require": {
-        "bdk/debug": "^3.4",
+        "bdk/debug": "^3.5",
     }
 }
 ```
@@ -106,7 +106,8 @@ $monolog->critical('all your base are belong to them');
 
 ![Supported PHP versions](https://img.shields.io/static/v1?label=PHP&message=5.4%20-%208.5&color=blue)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/bkdotcom/PHPDebugConsole/phpunit.yml.svg?branch=master&logo=github)
-[![Codacy Score](https://img.shields.io/codacy/grade/e950849edfd9463b993386080d39875e/master.svg?logo=codacy)](https://app.codacy.com/gh/bkdotcom/PHPDebugConsole/dashboard)
+[![Maintainability](https://img.shields.io/badge/A-B?style=flat&logo=codeclimate&label=Maintainability&labelColor=5b5b5b&color=4cc71e)](https://qlty.sh/gh/bkdotcom/projects/PHPDebugConsole)
+[![Coverage](https://img.shields.io/badge/98%25-B?style=flat&logo=codeclimate&label=Coverage&labelColor=5b5b5b&color=4cc71e)](https://qlty.sh/gh/bkdotcom/projects/PHPDebugConsole)
 
 ## Changelog
 

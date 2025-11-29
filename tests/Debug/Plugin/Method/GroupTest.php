@@ -826,9 +826,7 @@ class GroupTest extends DebugTestFramework
             'args' => [
                 array(
                     'attribs' => array(
-                        'class' => array(
-                            'return-label',
-                        ),
+                        'class' => ['return-label'],
                     ),
                     'brief' => false,
                     'debug' => Abstracter::ABSTRACTION,

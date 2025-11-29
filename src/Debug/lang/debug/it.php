@@ -207,6 +207,7 @@ return array(
     'request.without.contentType' => 'Sembra che {contentTypeDetected} sia stato ricevuto senza un\'intestazione Content-Type',
     'response' => 'Risposta',
     'response.body' => 'corpo della risposta',
+    'response.body.contains.bom' => 'Il corpo della risposta contiene una Marca di Ordine dei Byte (BOM). Assicurati che nessuno dei tuoi file php abbia un BOM!',
     'response.body.empty' => 'Corpo della risposta vuoto. Potremmo non essere stati in grado di catturare l\'output.',
     'response.body.large' => 'risposta troppo grande ({contentLength}) per essere visualizzata',
     'response.body.not.logged' => 'Non si registra il corpo della risposta per il Content-Type "{contentType}"',

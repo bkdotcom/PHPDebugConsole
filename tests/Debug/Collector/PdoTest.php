@@ -146,8 +146,8 @@ EOD;
                 ),
                 'meta' => array(
                     'attribs' => array(
+                        'class' => [],
                         'id' => 'statementInfo1',
-                        'class' => array(),
                     ),
                     'boldLabel' => false,
                     'channel' => 'general.pdo',
@@ -159,7 +159,7 @@ EOD;
                 'args' => array(
                     array(
                         'attribs' => array(
-                            'class' => array('highlight', 'language-sql', 'no-quotes'),
+                            'class' => ['highlight', 'language-sql', 'no-quotes'],
                         ),
                         'brief' => false,
                         'contentType' => ContentType::SQL,
@@ -173,7 +173,7 @@ EOD;
                 ),
                 'meta' => array(
                     'attribs' => array(
-                        'class' => array('no-indent'),
+                        'class' => ['no-indent'],
                     ),
                     'channel' => 'general.pdo',
                 ),
@@ -301,8 +301,8 @@ EOD;
                 "args": ["DELETE FROM `bob`"],
                 "meta": {
                     "attribs": {
-                        "id": "statementInfo1",
-                        "class": []
+                        "class": [],
+                        "id": "statementInfo1"
                     },
                     "boldLabel": false, "channel": "general.pdo", "icon": "fa fa-database"
                 }

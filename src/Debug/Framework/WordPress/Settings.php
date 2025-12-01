@@ -269,7 +269,7 @@ class Settings extends AbstractComponent implements AssetProviderInterface, Subs
     private function initControlBuilder()
     {
         $groupValues = \get_option(self::GROUP_NAME);
-        $haveGroupValues = \is_array($groupValues);
+        $haveGroupValues = \is_array($groupValues) && !empty($groupValues);
         $groupValues = $groupValues ?: array();
         $this->controlBuilder = new ControlBuilder(array(
             'getValue' => function (array $control) use ($groupValues) {

@@ -35,13 +35,13 @@ return array(
             'html' => \_x('HTML (appended to page output)', 'settings.control.route.option.html', 'debug-console-php'),
             'chromeLogger' => \_x('chromeLogger (browser plugin)', 'settings.control.route.option.chromeLogger', 'debug-console-php'),
             'firephp' => \_x('FirePHP (browser plugin)', 'settings.control.route.option.firephp', 'debug-console-php'),
-            'script' => \_x('Script (output to develoepr console)', 'settings.control.route.option.script', 'debug-console-php'),
+            'script' => \_x('Script (output to developer console)', 'settings.control.route.option.script', 'debug-console-php'),
             'serverLog' => \_x('Server Log (browser plugin)', 'settings.control.route.option.serverLog', 'debug-console-php'),
         ),
         'type' => 'select',
     ),
     'wordpress' => array(
-        'default' => ['cache', 'db', 'hooks', 'http', 'core', 'shortcodes'],
+        'default' => ['core', 'cache', 'db', 'hooks', 'http', 'shortcodes'],
         'label' => 'WordPress',
         'options' => array( // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
             'core' => array(

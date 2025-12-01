@@ -12,7 +12,7 @@ foreach ($files as $filepath) {
     $helper->rename($filepath, $filepathNew);
 }
 
-// move LICENSE and README.md to vendor/bdk/DEBUG
+// move LICENSE and README.md to vendor/bdk/Debug
 $files = [
     $baseDir . '/LICENSE',
     $baseDir . '/README.md',
@@ -25,8 +25,8 @@ foreach ($files as $filepath) {
 // move wordpress plugin files to root/src
 $files = \glob($baseDir . '/vendor/bdk/Debug/FrameWork/WordPress/*');
 foreach ($files as $filepath) {
-    $new = $baseDir . '/src/' . \basename($filepath);
-    $helper->rename($filepath, $new);
+    $filepathNew = $baseDir . '/src/' . \basename($filepath);
+    $helper->rename($filepath, $filepathNew);
 }
 
 // move main plugin files to root

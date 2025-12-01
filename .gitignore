@@ -2,6 +2,7 @@
 /src/Debug/.sass-cache
 /src/Debug/coverage
 /src/Debug/node_modules
+/src/Debug/Framework/WordPress/assets/.svn
 /vendor
 .phpunit.result.cache
 composer.lock

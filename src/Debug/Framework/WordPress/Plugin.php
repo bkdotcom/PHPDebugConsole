@@ -19,10 +19,10 @@ class Plugin
         'collect' => true,  // start with collection on as we bootstrap
         'emailFunc' => 'wp_mail',
         'logEnvInfo' => array(
-            'errorReporting' => false,
+            'errorReporting' => true,
             'files' => false,
-            'phpInfo' => false,
-            'serverVals' => false,
+            'phpInfo' => true,
+            'serverVals' => true,
             'session' => false,
         ),
         'plugins' => array(

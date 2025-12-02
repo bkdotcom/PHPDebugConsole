@@ -35,6 +35,7 @@ class RejectedPromise extends Promise
                 'You cannot create a RejectedPromise with a promise.'
             );
         }
+
         $this->result = $reason;
         $this->state = self::REJECTED;
     }

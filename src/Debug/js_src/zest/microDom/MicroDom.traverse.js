@@ -17,6 +17,14 @@ function getArgs (args) {
   return argsObj
 }
 
+function collectWhile (el, predicate) {
+  const collected = []
+  while (el = predicate(el)) {
+    collected.push(el)
+  }
+  return collected
+}
+
 /**
  * @param {*} filter
  * @param {bool} inclTextNodes (false)
@@ -70,28 +78,28 @@ function next (...args) {
 function nextAll (...args) {
   args = getArgs(args)
   return this.alter((el) => {
-    const collected = []
-    while (el = args.inclTextNodes ? el.nextSibling : el.nextElementSibling) {
-      collected.push(el)
-    }
-    return collected
+    return collectWhile(el, (currentEl) => {
+      return args.inclTextNodes
+        ? currentEl.nextSibling
+        : currentEl.nextElementSibling
+    })
   }, args.filter)
 }
 
 function nextUntil (selector, ...args) {
   args = getArgs(args)
   return this.alter((el) => {
-    const collected = []
-    while (
-      (el = args.inclTextNodes ? el.nextSibling : el.nextElementSibling)
-      && (
-        el.nodeType !== Node.ELEMENT_NODE
-        || customSelectors.matches(el, selector) === false
+    return collectWhile(el, (currentEl) => {
+      const sibling = args.inclTextNodes
+        ? currentEl.nextSibling
+        : currentEl.nextElementSibling
+      return sibling && (
+        sibling.nodeType !== Node.ELEMENT_NODE
+        || customSelectors.matches(sibling, selector) === false
       )
-    ) {
-      collected.push(el)
-    }
-    return collected
+        ? sibling
+        : null
+    })
   }, args.filter)
 }
 
@@ -101,24 +109,23 @@ function parent (filter) {
 
 function parents (filter) {
   return this.alter((el) => {
-    const collected = []
-    while ((el = el.parentNode) && el !== document) {
-      collected.push(el)
-    }
-    return collected
+    return collectWhile(el, (currentEl) => {
+      const parent = currentEl.parentNode
+      return parent && parent.nodeType !== Node.DOCUMENT_NODE
+        ? parent
+        : null
+    })
   }, filter)
 }
 
 function parentsUntil (selector, filter) {
   return this.alter((el) => {
-    const collected = []
-    while ((el = el.parentNode) && customSelectors.matches(el, selector) === false) {
-      collected.push(el)
-      if (el.nodeName === 'BODY') {
-        break
-      }
-    }
-    return collected
+    return collectWhile(el, (currentEl) => {
+      const parent = currentEl.parentNode
+      return parent && !(currentEl instanceof HTMLHtmlElement) && customSelectors.matches(parent, selector) === false
+        ? parent
+        : null
+    })
   }, filter)
 }
 
@@ -140,11 +147,11 @@ function prev (...args) {
 function prevAll (...args) {
   args = getArgs(args)
   return this.alter((el) => {
-    const collected = []
-    while (el = args.inclTextNodes ? el.previousSibling : el.previousElementSibling) {
-      collected.push(el)
-    }
-    return collected
+    return collectWhile(el, (currentEl) => {
+      return args.inclTextNodes
+        ? currentEl.previousSibling
+        : currentEl.previousElementSibling
+    })
   }, args.filter)
 }
 
@@ -155,17 +162,17 @@ function prevAll (...args) {
 function prevUntil (selector, ...args) {
   args = getArgs(args)
   return this.alter((el) => {
-    const collected = []
-    while (
-      (el = args.inclTextNodes ? el.previousSibling : el.previousElementSibling)
-      && (
-        el.nodeType !== Node.ELEMENT_NODE
-        || customSelectors.matches(el, selector) === false
+    return collectWhile(el, (currentEl) => {
+      const sibling = args.inclTextNodes
+        ? currentEl.previousSibling
+        : currentEl.previousElementSibling
+      return sibling && (
+        sibling.nodeType !== Node.ELEMENT_NODE
+        || customSelectors.matches(sibling, selector) === false
       )
-    ) {
-      collected.push(el)
-    }
-    return collected
+        ? sibling
+        : null
+    })
   }, args.filter)
 }
 

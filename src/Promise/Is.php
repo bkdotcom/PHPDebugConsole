@@ -63,4 +63,16 @@ final class Is
     {
         return $promise->getState() === PromiseInterface::REJECTED;
     }
+
+    /**
+     * Is the value an object with a 'then' method
+     *
+     * @param mixed $value Value to check
+     *
+     * @return bool
+     */
+    public static function thenable($value)
+    {
+        return \is_object($value) && \method_exists($value, 'then');
+    }
 }

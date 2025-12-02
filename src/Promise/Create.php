@@ -11,6 +11,7 @@ namespace bdk\Promise;
 
 use ArrayIterator;
 use bdk\Promise;
+use bdk\Promise\Is;
 use bdk\Promise\Exception\RejectionException;
 use bdk\Promise\PromiseInterface;
 use Exception;
@@ -35,7 +36,7 @@ final class Create
             return $value;
         }
 
-        $isThenable = \is_object($value) && \method_exists($value, 'then');
+        $isThenable = Is::thenable($value);
         if ($isThenable === false) {
             return new FulfilledPromise($value);
         }

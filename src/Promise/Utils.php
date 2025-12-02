@@ -311,23 +311,4 @@ final class Utils
             return $results;
         });
     }
-
-    /**
-     * Gets the type name of a variable in a way that is suitable for debugging
-     *
-     * @param mixed $value Value to inspect
-     *
-     * @return string
-     */
-    protected static function getDebugType($value)
-    {
-        if (\is_object($value)) {
-            return \get_class($value);
-        }
-        return \strtr(\strtolower(\gettype($value)), array(
-            'boolean' => 'bool',
-            'double' => 'float',
-            'integer' => 'int',
-        ));
-    }
 }

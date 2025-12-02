@@ -10,9 +10,8 @@
 namespace bdk\Promise;
 
 use bdk\Promise;
-use Exception;
+use bdk\Promise\Is;
 use InvalidArgumentException;
-use Throwable;
 
 /**
  * A promise that has been rejected.
@@ -31,7 +30,7 @@ class RejectedPromise extends Promise
      */
     public function __construct($reason)
     {
-        if (\is_object($reason) && \method_exists($reason, 'then')) {
+        if (Is::thenable($reason)) {
             throw new InvalidArgumentException(
                 'You cannot create a RejectedPromise with a promise.'
             );
@@ -49,30 +48,8 @@ class RejectedPromise extends Promise
         \bdk\Promise\Utils::assertType($onRejected, 'callable|null', 'onRejected');
 
         // Return self if there is no onRejected function.
-        if (!$onRejected) {
-            return $this;
-        }
-        [$onFulfilled]; // suppress unused
-
-        $queue = self::queue();
-        $result = $this->result;
-        $promise = new Promise([$queue, 'run']);
-        $queue->add(static function () use ($promise, $result, $onRejected) {
-            if ($promise->isSettled()) {
-                return;
-            }
-            try {
-                // Return a resolved promise if onRejected does not throw.
-                $promise->resolve($onRejected($result));
-            } catch (Throwable $e) {
-                // onRejected threw, so return a rejected promise.
-                $promise->reject($e);
-            } catch (Exception $e) {
-                // onRejected threw, so return a rejected promise.
-                $promise->reject($e);
-            }
-        });
-
-        return $promise;
+        return $onRejected
+            ? $this->addQueuedCallback($onRejected)
+            : $this;
     }
 }

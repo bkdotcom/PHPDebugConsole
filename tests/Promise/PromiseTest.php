@@ -16,6 +16,7 @@ use RuntimeException;
 use UnexpectedValueException;
 
 /**
+ * @covers bdk\Promise\AbstractPromise
  * @covers bdk\Promise
  */
 class PromiseTest extends TestCase

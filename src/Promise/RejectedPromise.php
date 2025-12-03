@@ -9,8 +9,7 @@
 
 namespace bdk\Promise;
 
-use bdk\Promise;
-use bdk\Promise\Is;
+use bdk\Promise\AbstractResolvedPromise;
 use InvalidArgumentException;
 
 /**
@@ -19,7 +18,7 @@ use InvalidArgumentException;
  * Thening off of this promise will invoke the onRejected callback
  * immediately and ignore other callbacks.
  */
-class RejectedPromise extends Promise
+class RejectedPromise extends AbstractResolvedPromise
 {
     /**
      * Constructor
@@ -30,27 +29,6 @@ class RejectedPromise extends Promise
      */
     public function __construct($reason)
     {
-        if (Is::thenable($reason)) {
-            throw new InvalidArgumentException(
-                'You cannot create a RejectedPromise with a promise.'
-            );
-        }
-
-        $this->result = $reason;
-        $this->state = self::REJECTED;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function then($onFulfilled = null, $onRejected = null)
-    {
-        \bdk\Promise\Utils::assertType($onFulfilled, 'callable|null', 'onFulfilled');
-        \bdk\Promise\Utils::assertType($onRejected, 'callable|null', 'onRejected');
-
-        // Return self if there is no onRejected function.
-        return $onRejected
-            ? $this->addQueuedCallback($onRejected)
-            : $this;
+        parent::__construct(self::REJECTED, $reason);
     }
 }

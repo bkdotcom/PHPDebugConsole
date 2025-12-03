@@ -10,6 +10,7 @@ use Exception;
 use PHPUnit\Framework\TestCase;
 
 /**
+ * @covers bdk\Promise\AbstractResolvedPromise
  * @covers bdk\Promise\RejectedPromise
  */
 class RejectedPromiseTest extends TestCase

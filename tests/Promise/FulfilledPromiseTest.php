@@ -6,10 +6,10 @@ use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Promise;
 use bdk\Promise\FulfilledPromise;
 use Exception;
-use LogicException;
 use PHPUnit\Framework\TestCase;
 
 /**
+ * @covers bdk\Promise\AbstractResolvedPromise
  * @covers bdk\Promise\FulfilledPromise
  */
 class FulfilledPromiseTest extends TestCase

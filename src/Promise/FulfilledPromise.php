@@ -9,8 +9,7 @@
 
 namespace bdk\Promise;
 
-use bdk\Promise;
-use bdk\Promise\Is;
+use bdk\Promise\AbstractResolvedPromise;
 use InvalidArgumentException;
 
 /**
@@ -19,7 +18,7 @@ use InvalidArgumentException;
  * Thening off of this promise will invoke the onFulfilled callback
  * immediately and ignore other callbacks.
  */
-class FulfilledPromise extends Promise
+class FulfilledPromise extends AbstractResolvedPromise
 {
     /**
      * Constructor
@@ -30,27 +29,6 @@ class FulfilledPromise extends Promise
      */
     public function __construct($value)
     {
-        if (Is::thenable($value)) {
-            throw new InvalidArgumentException(
-                'You cannot create a FulfilledPromise with a promise.'
-            );
-        }
-
-        $this->result = $value;
-        $this->state = self::FULFILLED;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function then($onFulfilled = null, $onRejected = null)
-    {
-        \bdk\Promise\Utils::assertType($onFulfilled, 'callable|null', 'onFulfilled');
-        \bdk\Promise\Utils::assertType($onRejected, 'callable|null', 'onRejected');
-
-        // Return self if there is no onFulfilled function.
-        return $onFulfilled
-            ? $this->addQueuedCallback($onFulfilled)
-            : $this;
+        parent::__construct(self::FULFILLED, $value);
     }
 }

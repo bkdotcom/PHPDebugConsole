@@ -43,7 +43,6 @@ function nodeNameIs(el, name) {
 // parse/split selector into chunks
 // chunks contains any custom pseudo-selectors at the end of the chunk
 function parseSelector (selector) {
-
   // Replace string-based pseudo-selectors in the selector
   Object.entries(pseudoSelectors).forEach(([name, mixed]) => {
     if (typeof mixed === 'string') {
@@ -57,45 +56,48 @@ function parseSelector (selector) {
   // Rejoin parts such that parts end with custom pseudo-selectors
   const rejoinedParts = []
   for (let i = 0; i < parts.length; i++) {
-    if (i > 0 && /^[>+~]$/.test(parts[i])) {
-      const combined = parts[i] + ' ' + parts[i + 1]
-      containsCustomPseudoSelectors(rejoinedParts[rejoinedParts.length - 1]) === false
-        ? rejoinedParts[rejoinedParts.length - 1] += ' ' + combined
-        : rejoinedParts.push(combined)
-      i++  // Skip the next part as it has been joined
-    } else {
+    if (i < 1 || /^[>+~]$/.test(parts[i]) === false) {
       rejoinedParts.push(parts[i])
+      continue
     }
+    const combined = parts[i] + ' ' + parts[i + 1]
+    containsCustomPseudoSelectors(rejoinedParts[rejoinedParts.length - 1]) === false
+      ? rejoinedParts[rejoinedParts.length - 1] += ' ' + combined
+      : rejoinedParts.push(combined)
+    i++  // Skip the next part as it has been joined
   }
 
-  return rejoinedParts.map(part => {
-    const parts = part.split(REGEX_PSEUDO_SELECTORS)
-    const customPseudoSelectors = Object.keys(pseudoSelectors)
-    var baseSelector = parts.shift()
-    var pseudosCustom = []
-    var pseudosStandard = []
-    for (const part of parts) {
-      customPseudoSelectors.includes(part)
-        ? pseudosCustom.push(part)
-        : pseudosStandard.push(part)
-      }
-    if (pseudosStandard.length > 0) {
-      // Add standard pseudo-selectors to the baseSelector
-      baseSelector += pseudosStandard.map(p => `:${p}`).join('')
-    } else if (baseSelector && /[>+~]\s*$/.test(baseSelector)) {
-      // baseSelector ends with a CSS combinator -> append "*"
-      baseSelector += ' *'
-    } else if (baseSelector && /^\s*[>+~]/.test(baseSelector)) {
-      // baseSelector starts with a CSS combinator -> prepend ":scope"
-      baseSelector = ':scope ' + baseSelector
-    } else if (baseSelector === '') {
-      baseSelector = '*'
+  return rejoinedParts.map(partMap)
+}
+
+// For a given part, separate base selector and custom pseudo-selectors
+function partMap (part) {
+  const parts = part.split(REGEX_PSEUDO_SELECTORS)
+  const customPseudoSelectors = Object.keys(pseudoSelectors)
+  var baseSelector = parts.shift()
+  var pseudosCustom = []
+  var pseudosStandard = []
+  for (const part of parts) {
+    customPseudoSelectors.includes(part)
+      ? pseudosCustom.push(part)
+      : pseudosStandard.push(part)
     }
-    return {
-      baseSelector: baseSelector.trim(),
-      pseudoParts: pseudosCustom,
-    }
-  })
+  if (pseudosStandard.length > 0) {
+    // Add standard pseudo-selectors to the baseSelector
+    baseSelector += pseudosStandard.map(p => `:${p}`).join('')
+  } else if (baseSelector && /[>+~]\s*$/.test(baseSelector)) {
+    // baseSelector ends with a CSS combinator -> append "*"
+    baseSelector += ' *'
+  } else if (baseSelector && /^\s*[>+~]/.test(baseSelector)) {
+    // baseSelector starts with a CSS combinator -> prepend ":scope"
+    baseSelector = ':scope ' + baseSelector
+  } else if (baseSelector === '') {
+    baseSelector = '*'
+  }
+  return {
+    baseSelector: baseSelector.trim(),
+    pseudoParts: pseudosCustom,
+  }
 }
 
 // for the given element, perform a query or match

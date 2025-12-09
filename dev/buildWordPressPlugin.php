@@ -6,8 +6,6 @@ require $baseDir . '/vendor/autoload.php';
 $helper = new WpBuildHelper($baseDir);
 $version = \bdk\Debug::VERSION;
 
-
-
 echo 'Move src/* to vendor/bdk' . "\n";
 $files = \glob($baseDir . '/src/*');
 foreach ($files as $filepath) {
@@ -28,7 +26,14 @@ foreach ($files as $filepath) {
 \clearstatcache();
 
 echo 'move wordpress plugin files to src' . "\n";
-$files = \glob($baseDir . '/vendor/bdk/Debug/FrameWork/WordPress/*');
+
+$files = \glob($baseDir . '/vendor/bdk/Debug/*');
+echo 'Debug files: ' . \print_r($files, true) . "\n";
+
+$files = \glob($baseDir . '/vendor/bdk/Debug/Framework/*');
+echo 'Framework files: ' . \print_r($files, true) . "\n";
+
+$files = \glob($baseDir . '/vendor/bdk/Debug/Framework/WordPress/*');
 echo 'wordpress files: ' . \print_r($files, true) . "\n";
 foreach ($files as $filepath) {
     $filepathNew = $baseDir . '/src/' . \basename($filepath);
@@ -130,7 +135,11 @@ class WpBuildHelper
         ));
         echo \sprintf('rename %s -> %s', $paths[0], $paths[1]) . "\n";
         if ($this->touchFileSystem) {
+            \set_error_handler(static function ($errno, $errstr) {
+                echo '  ' . $errstr . "\n";
+            });
             \rename($old, $new);
+            \restore_error_handler();
         }
     }
 

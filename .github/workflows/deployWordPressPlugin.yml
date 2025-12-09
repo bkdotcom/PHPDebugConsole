@@ -7,7 +7,7 @@ permissions:
   id-token: write
 jobs:
   tag:
-    name: New tag
+    name: Push New Release
     runs-on: ubuntu-latest
     steps:
     - name: Checkout

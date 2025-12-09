@@ -6,14 +6,16 @@ require $baseDir . '/vendor/autoload.php';
 $helper = new WpBuildHelper($baseDir);
 $version = \bdk\Debug::VERSION;
 
-// move src/* to vendor/bdk
+
+
+echo 'Move src/* to vendor/bdk' . "\n";
 $files = \glob($baseDir . '/src/*');
 foreach ($files as $filepath) {
     $filepathNew = $baseDir . '/vendor/bdk/' . \basename($filepath);
     $helper->rename($filepath, $filepathNew);
 }
 
-// move LICENSE and README.md to vendor/bdk/Debug
+echo 'move LICENSE and README.md to vendor/bdk/Debug' . "\n";
 $files = [
     $baseDir . '/LICENSE',
     $baseDir . '/README.md',
@@ -23,14 +25,17 @@ foreach ($files as $filepath) {
     $helper->rename($filepath, $filepathNew);
 }
 
-// move wordpress plugin files to root/src
+\clearstatcache()
+
+echo 'move wordpress plugin files to src' . "\n";
 $files = \glob($baseDir . '/vendor/bdk/Debug/FrameWork/WordPress/*');
+echo 'wordpress files: ' . \print_r($files, true) . "\n";
 foreach ($files as $filepath) {
     $filepathNew = $baseDir . '/src/' . \basename($filepath);
     $helper->rename($filepath, $filepathNew);
 }
 
-// move main plugin files to root
+echo 'move plugin entry point to root' . "\n";
 $files = [
     $baseDir . '/src/debug-console-php.php',
     $baseDir . '/src/readme.txt',
@@ -40,7 +45,7 @@ foreach ($files as $filepath) {
     $helper->rename($filepath, $filepathNew);
 }
 
-// remove files we don't need for wordpress plugin
+echo 'Remove non-wordpress frameworks' . "\n";
 $files = [
     $baseDir . '/vendor/bdk/Debug/Framework',
 ];

@@ -4,6 +4,7 @@ $baseDir = \realpath(__DIR__ . '/..');
 require $baseDir . '/vendor/autoload.php';
 
 $helper = new WpBuildHelper($baseDir);
+$version = \bdk\Debug::VERSION;
 
 // move src/* to vendor/bdk
 $files = \glob($baseDir . '/src/*');
@@ -31,8 +32,8 @@ foreach ($files as $filepath) {
 
 // move main plugin files to root
 $files = [
-    $baseDir . '/src/debug-console-php.php',
-    $baseDir . '/src/readme.txt',
+    $baseDir . '/vendor/bdk/Debug/FrameWork/WordPress/debug-console-php.php',
+    $baseDir . '/vendor/bdk/Debug/FrameWork/WordPress/readme.txt',
 ];
 foreach ($files as $filepath) {
     $filepathNew = $baseDir . '/' . \basename($filepath);
@@ -50,7 +51,7 @@ foreach ($files as $filepath) {
 // update debug-console-php.php
 $filepath = $baseDir . '/debug-console-php.php';
 $helper->edit($filepath, [
-    ['/^(\s*\* Version: ).*$/m', '${1}' . \bdk\Debug::VERSION],
+    ['/^(\s*\* Version: ).*$/m', '${1}' . $version],
     // ['/^(\$pathBase = ).*$/m', '$1__DIR__;'],
     // ['#\'/src/Debug/Autoloader.php\'#', '\'/vendor/bdk/Debug/Autoloader.php\''],
     // ['/^(\$autoloader->addPsr4\(.*?, )__DIR__(\);)/m', '$1\$pathBase . \'/src\'$2'],

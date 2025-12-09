@@ -1,8 +1,7 @@
 name: Push WordPress Plugin to SVN
 on:
-  push:
-    tags:
-      - "*"
+  release:
+    types: [published]
   workflow_dispatch:
 permissions:
   id-token: write

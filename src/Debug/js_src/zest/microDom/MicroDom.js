@@ -73,7 +73,7 @@ export default class MicroDom extends Array {
 
   after( ...args ) {
     return this.each((el, i) => {
-      const elementsNew = helper.argsToElements(args, el, i)
+      const elementsNew = helper.argsToElements(args, false, el, i)
       elementsNew.reverse()
       for (const elNew of elementsNew) {
         el.after(elNew)
@@ -82,7 +82,7 @@ export default class MicroDom extends Array {
   }
   append( ...args ) {
     return this.each((el, i) => {
-      const elementsNew = helper.argsToElements(args, el, i)
+      const elementsNew = helper.argsToElements(args, false, el, i)
       for (const elNew of elementsNew) {
         el.append(elNew)
       }
@@ -90,7 +90,7 @@ export default class MicroDom extends Array {
   }
   before( ...args ) {
     return this.each((el, i) => {
-      const elementsNew = helper.argsToElements(args, el, i)
+      const elementsNew = helper.argsToElements(args, false, el, i)
       for (const elNew of elementsNew) {
         el.before(elNew)
       }
@@ -147,7 +147,7 @@ export default class MicroDom extends Array {
   }
   prepend( ...args ) {
     return this.each((el, i) => {
-      const elementsNew = helper.argsToElements(args, el, i)
+      const elementsNew = helper.argsToElements(args, false, el, i)
       elementsNew.reverse()
       for (const elNew of elementsNew) {
         el.prepend(elNew)
@@ -166,7 +166,7 @@ export default class MicroDom extends Array {
   }
   replaceWith( ...args ) {
     return this.each((el, i) => {
-      const elementsNew = helper.argsToElements(args, el, i)
+      const elementsNew = helper.argsToElements(args, false, el, i)
       el.replaceWith(...elementsNew)
     })
   }
@@ -219,8 +219,8 @@ export default class MicroDom extends Array {
       if (typeof mixed === 'function') {
         mixed = mixed.call(el, el, i)
       }
-      // mixed can be a string, MicroDom instance, or a DOM element
-      const elements = helper.argsToElements([mixed])
+      // mixed can be a string (but not css selector), MicroDom instance, or a DOM element
+      const elements = helper.argsToElements([mixed], false)
       const wrapperElement = elements[0].cloneNode(true)
       const wrapperElementDeepest = helper.findDeepest(wrapperElement)
       el.replaceWith(wrapperElement)
@@ -232,8 +232,8 @@ export default class MicroDom extends Array {
       if (typeof mixed === 'function') {
         mixed = mixed.call(el, el, i)
       }
-      // mixed can be a string, MicroDom instance, or a DOM element
-      const elements = helper.argsToElements([mixed])
+      // mixed can be a string (but not css selector), MicroDom instance, or a DOM element
+      const elements = helper.argsToElements([mixed], false)
       const wrapperElement = elements[0].cloneNode(true)
       const wrapperElementDeepest = helper.findDeepest(wrapperElement)
       // Move the element's children (incl text/comment nodes) into the wrapper

@@ -38,7 +38,7 @@ describe('MicroDom core methods', () => {
   test('add method', () => {
     const $div1 = zest('#div1');
     // Add element by selector
-    const $combined = $div1.add('#div2');
+    const $combined = $div1.add(zest('#div2'));
     expect($combined.length).toBe(2);
     expect($combined[1].id).toBe('div2');
 
@@ -62,7 +62,7 @@ describe('MicroDom core methods', () => {
     expect($addArray.length).toBe(3);
 
     // Should remove duplicates
-    const $noDupes = $div1.add('#div1');
+    const $noDupes = $div1.add(zest('#div1'));
     expect($noDupes.length).toBe(1);
   });
 

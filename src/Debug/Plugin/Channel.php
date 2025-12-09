@@ -54,7 +54,7 @@ class Channel implements SubscriberInterface
      *
      * @since 2.3
      */
-    public function getChannel($path, $config = array())
+    public function getChannel($path, array $config = array())
     {
         $path = $this->normalizePath($path);
         $key = \array_shift($path);
@@ -144,7 +144,7 @@ class Channel implements SubscriberInterface
      *
      * @return array
      */
-    public function getPropagateValues($cfg)
+    public function getPropagateValues(array $cfg)
     {
         $cfg = \array_diff_key($cfg, \array_flip([
             'errorHandler',
@@ -226,7 +226,7 @@ class Channel implements SubscriberInterface
      *
      * @return array
      */
-    private function createChannel($key, $config)
+    private function createChannel($key, array $config)
     {
         $cfg = $this->debug->getCfg(null, Debug::CONFIG_INIT);
         $channelKeyCur = $cfg['debug']['channelKey'];
@@ -274,7 +274,7 @@ class Channel implements SubscriberInterface
      *
      * @return Debug new or existing `Debug` instance
      */
-    private function upsertChannel($key, $path, $config)
+    private function upsertChannel($key, $path, array $config)
     {
         $curChannelKey = $this->debug->getCfg('channelKey', Debug::CONFIG_DEBUG);
         if (!isset($this->channels[$curChannelKey][$key])) {

@@ -9,7 +9,7 @@ function filter (mixed, notFilter = false) {
     } else if (typeof mixed === 'function') {
       isMatch = mixed.call(el, el, i)
     } else {
-      isMatch = helper.argsToElements([mixed]).includes(el)
+      isMatch = helper.argsToElements([mixed], true).includes(el)
     }
     if (notFilter) {
       isMatch = !isMatch
@@ -46,6 +46,7 @@ function is (mixed) {
     }
     return false
   }
+  // Node, NodeList, function, iterable
   const elements = helper.argsToElements([mixed])
   for (let el of this) {
     for (let i = 0, len = elements.length; i < len; i++) {

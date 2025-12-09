@@ -54,13 +54,16 @@ const getDisplayValue = function (el) {
  *
  * accepts text/html/css-selector, Node, NodeList, function, iterable
  */
-export const argsToElements = function (args, el, index) {
+export const argsToElements = function (args, acceptSelector, el, index) {
   const elements = []
   args = Array.from(args) // shallow copy so not affecting original
   while (args.length) {
     const arg = args.shift()
     if (typeof arg === 'string') {
-      let elementsAppend = isCssSelector(arg)
+      let elementsAppend = false
+      if (acceptSelector) {
+        elementsAppend = isCssSelector(arg)
+      }
       if (elementsAppend === false) {
         elementsAppend = createElements(arg)
       }
@@ -174,6 +177,7 @@ function hash (str) {
 }
 */
 
+// return found elements or false
 const isCssSelector = function (val)
 {
   if (val.includes('<')) {

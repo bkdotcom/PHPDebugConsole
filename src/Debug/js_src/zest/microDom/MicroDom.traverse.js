@@ -48,7 +48,7 @@ function find(mixed) {
   if (typeof mixed === 'string') {
     return this.alter((el) => customSelectors.querySelectorAll(mixed, el))
   }
-  const elements = helper.argsToElements([mixed])
+  const elements = helper.argsToElements([mixed], true)
   return this.alter((el) => {
     const collected = []
     for (const el2 of elements) {

@@ -215,13 +215,16 @@ var zest = (function () {
    *
    * accepts text/html/css-selector, Node, NodeList, function, iterable
    */
-  const argsToElements = function (args, el, index) {
+  const argsToElements = function (args, acceptSelector, el, index) {
     const elements = [];
     args = Array.from(args); // shallow copy so not affecting original
     while (args.length) {
       const arg = args.shift();
       if (typeof arg === 'string') {
-        let elementsAppend = isCssSelector(arg);
+        let elementsAppend = false;
+        if (acceptSelector) {
+          elementsAppend = isCssSelector(arg);
+        }
         if (elementsAppend === false) {
           elementsAppend = createElements(arg);
         }
@@ -335,6 +338,7 @@ var zest = (function () {
   }
   */
 
+  // return found elements or false
   const isCssSelector = function (val)
   {
     if (val.includes('<')) {
@@ -807,7 +811,7 @@ var zest = (function () {
       } else if (typeof mixed === 'function') {
         isMatch = mixed.call(el, el, i);
       } else {
-        isMatch = argsToElements([mixed]).includes(el);
+        isMatch = argsToElements([mixed], true).includes(el);
       }
       if (notFilter) {
         isMatch = !isMatch;
@@ -844,6 +848,7 @@ var zest = (function () {
       }
       return false
     }
+    // Node, NodeList, function, iterable
     const elements = argsToElements([mixed]);
     for (let el of this) {
       for (let i = 0, len = elements.length; i < len; i++) {
@@ -1061,7 +1066,7 @@ var zest = (function () {
     if (typeof mixed === 'string') {
       return this.alter((el) => querySelectorAll(mixed, el))
     }
-    const elements = argsToElements([mixed]);
+    const elements = argsToElements([mixed], true);
     return this.alter((el) => {
       const collected = [];
       for (const el2 of elements) {
@@ -1491,7 +1496,7 @@ var zest = (function () {
 
     after( ...args ) {
       return this.each((el, i) => {
-        const elementsNew = argsToElements(args, el, i);
+        const elementsNew = argsToElements(args, false, el, i);
         elementsNew.reverse();
         for (const elNew of elementsNew) {
           el.after(elNew);
@@ -1500,7 +1505,7 @@ var zest = (function () {
     }
     append( ...args ) {
       return this.each((el, i) => {
-        const elementsNew = argsToElements(args, el, i);
+        const elementsNew = argsToElements(args, false, el, i);
         for (const elNew of elementsNew) {
           el.append(elNew);
         }
@@ -1508,7 +1513,7 @@ var zest = (function () {
     }
     before( ...args ) {
       return this.each((el, i) => {
-        const elementsNew = argsToElements(args, el, i);
+        const elementsNew = argsToElements(args, false, el, i);
         for (const elNew of elementsNew) {
           el.before(elNew);
         }
@@ -1565,7 +1570,7 @@ var zest = (function () {
     }
     prepend( ...args ) {
       return this.each((el, i) => {
-        const elementsNew = argsToElements(args, el, i);
+        const elementsNew = argsToElements(args, false, el, i);
         elementsNew.reverse();
         for (const elNew of elementsNew) {
           el.prepend(elNew);
@@ -1584,7 +1589,7 @@ var zest = (function () {
     }
     replaceWith( ...args ) {
       return this.each((el, i) => {
-        const elementsNew = argsToElements(args, el, i);
+        const elementsNew = argsToElements(args, false, el, i);
         el.replaceWith(...elementsNew);
       })
     }
@@ -1637,8 +1642,8 @@ var zest = (function () {
         if (typeof mixed === 'function') {
           mixed = mixed.call(el, el, i);
         }
-        // mixed can be a string, MicroDom instance, or a DOM element
-        const elements = argsToElements([mixed]);
+        // mixed can be a string (but not css selector), MicroDom instance, or a DOM element
+        const elements = argsToElements([mixed], false);
         const wrapperElement = elements[0].cloneNode(true);
         const wrapperElementDeepest = findDeepest(wrapperElement);
         el.replaceWith(wrapperElement);
@@ -1650,8 +1655,8 @@ var zest = (function () {
         if (typeof mixed === 'function') {
           mixed = mixed.call(el, el, i);
         }
-        // mixed can be a string, MicroDom instance, or a DOM element
-        const elements = argsToElements([mixed]);
+        // mixed can be a string (but not css selector), MicroDom instance, or a DOM element
+        const elements = argsToElements([mixed], false);
         const wrapperElement = elements[0].cloneNode(true);
         const wrapperElementDeepest = findDeepest(wrapperElement);
         // Move the element's children (incl text/comment nodes) into the wrapper

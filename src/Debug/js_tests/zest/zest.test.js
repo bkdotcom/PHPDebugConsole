@@ -380,9 +380,20 @@ describe('helper.elInitMicroDomInfo function', () => {
 });
 
 describe('helper.argsToElements function', () => {
-  test('converts string selectors to elements', () => {
+  test('does not convert selectors to elements (default)', () => {
     document.body.innerHTML = '<div id="test"></div>';
     const elements = helper.argsToElements(['.non-existent', '#test']);
+
+    expect(elements.length).toBe(2);
+    expect(elements[0].nodeType).toBe(Node.TEXT_NODE);
+    expect(elements[0].textContent).toBe('.non-existent');
+    expect(elements[1].nodeType).toBe(Node.TEXT_NODE);
+    expect(elements[1].textContent).toBe('#test');
+  });
+
+  test('converts css selectors to elements', () => {
+    document.body.innerHTML = '<div id="test"></div>';
+    const elements = helper.argsToElements(['.non-existent', '#test'], true);
 
     expect(elements.length).toBe(1);
     expect(elements[0].id).toBe('test');
@@ -441,7 +452,7 @@ describe('helper.argsToElements function', () => {
       div1,
       '<div id="test2"></div>',
       '#test3'
-    ]);
+    ], true);
 
     expect(elements.length).toBe(3);
     expect(elements[0]).toBe(div1);

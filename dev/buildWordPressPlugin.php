@@ -32,8 +32,8 @@ foreach ($files as $filepath) {
 
 // move main plugin files to root
 $files = [
-    $baseDir . '/vendor/bdk/Debug/FrameWork/WordPress/debug-console-php.php',
-    $baseDir . '/vendor/bdk/Debug/FrameWork/WordPress/readme.txt',
+    $baseDir . '/src/debug-console-php.php',
+    $baseDir . '/src/readme.txt',
 ];
 foreach ($files as $filepath) {
     $filepathNew = $baseDir . '/' . \basename($filepath);
@@ -42,7 +42,7 @@ foreach ($files as $filepath) {
 
 // remove files we don't need for wordpress plugin
 $files = [
-    $baseDir . '/vendor/bdk//Debug/Framework',
+    $baseDir . '/vendor/bdk/Debug/Framework',
 ];
 foreach ($files as $filepath) {
     $helper->unlink($filepath);

@@ -7,7 +7,7 @@ permissions:
   id-token: write
 jobs:
   tag:
-    name: Push New Release
+    name: Build And Push
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -43,6 +43,8 @@ jobs:
     - name: WordPress Plugin Deploy
       uses: 10up/action-wordpress-plugin-deploy@stable
       env:
+        ASSETS_DIR: src/Debug/Framework/WordPress/assets
+        BUILD_DIR: wordpress-build
         SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
         SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
         SLUG: debug-console-php

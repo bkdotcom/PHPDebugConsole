@@ -106,6 +106,10 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
             ? $this->files
             : $this->debug->php->getIncludedFiles();
 
+        $files = \array_map(function ($file) {
+            return $this->debug->filepathMap($file);
+        }, $files);
+
         $countIncluded = \count($files);
         $files = $this->filter($files);
         $countLogged = \count($files);

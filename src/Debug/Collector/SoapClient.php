@@ -13,6 +13,7 @@ namespace bdk\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
+use bdk\Debug\Collector\SoapClient\CompatTrait;
 use DOMDocument;
 use Exception;
 use ReflectionClass;
@@ -28,6 +29,8 @@ use SoapFault;
  */
 class SoapClient extends SoapClientBase
 {
+    use CompatTrait;
+
     /** @var Debug */
     private $debug;
 
@@ -99,32 +102,6 @@ class SoapClient extends SoapClientBase
             throw $exception;
         }
         return $return;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    #[\ReturnTypeWillChange]
-    public function __doRequest($request, $location, $action, $version, $oneWay = 0, $uriParserClass = null)
-    {
-        $exception = null;
-        try {
-            $xmlResponse = PHP_VERSION_ID >= 80500
-                ? parent::__doRequest($request, $location, $action, $version, $oneWay, $uriParserClass)
-                : parent::__doRequest($request, $location, $action, $version, $oneWay);
-        } catch (SoapFault $e) {
-            // we'll rethrow bellow
-        }
-        $this->setLastRequest($request);
-        $this->setLastResponse($xmlResponse);
-        if ($this->isViaCall() === false) {
-            // __doRequest called directly
-            $this->logReqRes($action, $exception, true);
-        }
-        if ($exception) {
-            throw $exception;
-        }
-        return $xmlResponse;
     }
 
     /**
@@ -237,6 +214,44 @@ class SoapClient extends SoapClientBase
                 );
         }
         return $this->dom->saveXML();
+    }
+
+    /**
+     * Handle __doRequest
+     *
+     * @param string      $request        The XML SOAP request.
+     * @param string      $location       The URL to request.
+     * @param string      $action         The SOAP action.
+     * @param int         $version        The SOAP version.
+     * @param bool        $oneWay         If set to true, this method returns nothing.
+     *                                      Use this where a response is not expected.
+     * @param string|null $uriParserClass (PHP 8.5+) URI parser class
+     *
+     * @return string|null The XML SOAP response.
+     *
+     * @throws Exception
+     */
+    #[\ReturnTypeWillChange]
+    private function doDoRequest($request, $location, $action, $version, $oneWay = false, $uriParserClass = null)
+    {
+        $exception = null;
+        try {
+            $xmlResponse = PHP_VERSION_ID >= 80500
+                ? parent::__doRequest($request, $location, $action, $version, $oneWay, $uriParserClass)
+                : parent::__doRequest($request, $location, $action, $version, $oneWay);
+        } catch (SoapFault $e) {
+            // we'll rethrow bellow
+        }
+        $this->setLastRequest($request);
+        $this->setLastResponse($xmlResponse);
+        if ($this->isViaCall() === false) {
+            // __doRequest called directly
+            $this->logReqRes($action, $exception, true);
+        }
+        if ($exception) {
+            throw $exception;
+        }
+        return $xmlResponse;
     }
 
     /**

@@ -90,7 +90,7 @@ class Helper
         }
         return $withKeys
             ? $return
-            : array_values($return);
+            : \array_values($return);
     }
 
     public function resetContainerValue($name)

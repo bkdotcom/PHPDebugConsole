@@ -83,6 +83,9 @@
     <testsuite name="Slack">
       <directory>tests/Slack</directory>
     </testsuite>
+    <testsuite name="Table">
+      <directory>tests/Table</directory>
+    </testsuite>
     <testsuite name="Teams">
       <directory>tests/Teams</directory>
     </testsuite>

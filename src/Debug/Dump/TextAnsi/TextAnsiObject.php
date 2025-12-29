@@ -12,6 +12,7 @@ namespace bdk\Debug\Dump\TextAnsi;
 
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Text\TextObject;
 use bdk\Debug\Dump\TextAnsi\Value as ValDumper;
 
@@ -32,7 +33,7 @@ class TextAnsiObject extends TextObject
      */
     public function dump(ObjectAbstraction $abs)
     {
-        $className = $this->valDumper->markupIdentifier($abs['className'], 'className');
+        $className = $this->valDumper->markupIdentifier($abs['className'], Type::TYPE_IDENTIFIER_CLASSNAME);
         $str = $this->dumpSpecialCases($abs, $className);
         if ($str) {
             return $str;

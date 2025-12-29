@@ -374,14 +374,14 @@ abstract class AbstractValue extends AbstractComponent
      * Split identifier into classname, operator, & name.
      *
      * classname may be namespace\classname
-     * identifier = classname, constant function, or property
+     * identifier = className, const, method, or property
      *
      * @param string|array $val  classname or classname(::|->)name (method/property/const)
-     * @param string       $what ("classname"), "const", or "method"
+     * @param string       $what (Type::TYPE_IDENTIFIER_CLASSNAME), Type::TYPE_IDENTIFIER_CONST, or Type::TYPE_IDENTIFIER_METHOD
      *
      * @return array
      */
-    protected function parseIdentifier($val, $what = 'className')
+    protected function parseIdentifier($val, $what = Type::TYPE_IDENTIFIER_CLASSNAME)
     {
         $parts = \array_fill_keys(['classname', 'name', 'namespace', 'operator'], '');
         $parts['classname'] = $val;
@@ -394,7 +394,7 @@ abstract class AbstractValue extends AbstractComponent
             $parts['classname'] = $matches[1];
             $parts['operator'] = $matches[2];
             $parts['name'] = $matches[3];
-        } elseif (\in_array($what, ['const', 'method', 'function'], true)) {
+        } elseif (\in_array($what, [Type::TYPE_IDENTIFIER_CONST, Type::TYPE_IDENTIFIER_METHOD, 'function'], true)) {
             \preg_match('/^(.+\\\\)?(.+)$/', $val, $matches);
             $parts['classname'] = '';
             $parts['namespace'] = $matches[1];

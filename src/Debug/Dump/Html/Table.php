@@ -149,7 +149,7 @@ class Table
         }
         $class = $this->dumper->valDumper->markupIdentifier(
             $this->options['tableInfo']['class'],
-            'className',
+            Type::TYPE_IDENTIFIER_CLASSNAME,
             'span',
             array(
                 'title' => $this->options['tableInfo']['summary'],
@@ -233,7 +233,7 @@ class Table
             'tagName' => null,
         ));
         if (!empty($colInfo['class'])) {
-            $label .= ' ' . $this->dumper->valDumper->markupIdentifier($colInfo['class'], 'className');
+            $label .= ' ' . $this->dumper->valDumper->markupIdentifier($colInfo['class'], Type::TYPE_IDENTIFIER_CLASSNAME);
         }
         return $this->debug->html->buildTag('th', array(
             'class' => $type[0] !== 'string'
@@ -263,7 +263,7 @@ class Table
         */
         if ($this->options['tableInfo']['haveObjRow']) {
             $str .= $rowInfo['class']
-                ? $this->dumper->valDumper->markupIdentifier($rowInfo['class'], 'className', 'td', array(
+                ? $this->dumper->valDumper->markupIdentifier($rowInfo['class'], Type::TYPE_IDENTIFIER_CLASSNAME, 'td', array(
                     'title' => $rowInfo['summary'],
                 ))
                 : '<td class="t_undefined"></td>';

@@ -15,6 +15,7 @@ use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html\Helper;
 use bdk\Debug\Dump\Html\Value as ValDumper;
 use bdk\Debug\Utility\Html as HtmlUtil;
@@ -97,7 +98,7 @@ abstract class AbstractSection
         return '<dd class="heading">'
             . $this->debug->i18n->trans('object.inherited-from')
             . ' '
-            . $this->valDumper->markupIdentifier($className, 'className')
+            . $this->valDumper->markupIdentifier($className, Type::TYPE_IDENTIFIER_CLASSNAME)
             . '</dd>' . "\n";
     }
 

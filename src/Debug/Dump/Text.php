@@ -280,7 +280,7 @@ class Text extends Base
         ), $logEntry['meta']);
         $label = \array_shift($args);
         $label = $meta['isFuncName']
-            ? $this->valDumper->markupIdentifier($label, 'method')
+            ? $this->valDumper->markupIdentifier($label, Type::TYPE_IDENTIFIER_METHOD)
             : $this->valDumper->dump($label, array('addQuotes' => false));
         foreach ($args as $k => $v) {
             $args[$k] = $this->valDumper->dump($v);

@@ -78,7 +78,7 @@ class Value extends TextValue
      *
      * @return string
      */
-    public function markupIdentifier($val, $what = 'className')
+    public function markupIdentifier($val, $what = Type::TYPE_IDENTIFIER_CLASSNAME)
     {
         $parts = $this->parseIdentifier($val, $what);
         $escapeReset = $this->escapeReset;

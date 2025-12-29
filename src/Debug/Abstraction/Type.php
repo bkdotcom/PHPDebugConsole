@@ -43,7 +43,6 @@ class Type
         "typeMore" values
         (no constants for "true" & "false")
     */
-    const TYPE_ABSTRACTION = 'abstraction';
     const TYPE_RAW = 'raw'; // raw object or array
     const TYPE_FLOAT_INF = "\x00inf\x00";
     const TYPE_FLOAT_NAN = "\x00nan\x00";

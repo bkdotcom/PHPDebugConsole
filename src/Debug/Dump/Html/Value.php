@@ -128,14 +128,15 @@ class Value extends BaseValue
      * if namespaced additionally wrap namespace in span.namespace
      *
      * @param string|array $val     classname or classname(::|->)name (method/property/const)
-     * @param string       $what    ("className"), "const", or "function" - specify what we're marking if ambiguous
+     * @param string       $what    (Type::TYPE_IDENTIFIER_CLASSNAME), Type::TYPE_IDENTIFIER_CONST, or Type::TYPE_IDENTIFIER_METHOD
+     *                                specify what we're marking if ambiguous
      * @param string       $tagName ("span") html tag to use
      * @param array        $attribs (optional) additional html attributes for classname span (such as title)
      * @param bool         $wbr     (false) whether to add a <wbr /> after the classname
      *
      * @return string html snippet
      */
-    public function markupIdentifier($val, $what = 'className', $tagName = 'span', $attribs = array(), $wbr = false)
+    public function markupIdentifier($val, $what = Type::TYPE_IDENTIFIER_CLASSNAME, $tagName = 'span', $attribs = array(), $wbr = false)
     {
         $parts = \array_map([$this->string, 'dump'], $this->parseIdentifier($val, $what));
         $class = 'classname';
@@ -215,7 +216,7 @@ class Value extends BaseValue
         }
         return '<span class="t_type">callable</span> '
             . '<span class="t_identifier" data-type-more="callable">'
-            . $this->markupIdentifier($abs['value'], 'callable')
+            . $this->markupIdentifier($abs['value'], Type::TYPE_IDENTIFIER_METHOD)
             . '</span>';
     }
 

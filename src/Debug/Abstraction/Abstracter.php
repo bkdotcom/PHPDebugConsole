@@ -283,7 +283,7 @@ class Abstracter extends AbstractComponent
         if ($type === Type::TYPE_BOOL) {
             return false;
         }
-        if (\in_array($typeMore, [Type::TYPE_ABSTRACTION, Type::TYPE_STRING_NUMERIC], true)) {
+        if (\in_array($typeMore, [Type::TYPE_STRING_NUMERIC], true)) {
             return false;
         }
         return $typeMore

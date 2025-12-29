@@ -10,6 +10,7 @@
 
 namespace bdk\Debug\Dump\Html;
 
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html as Dumper;
 use bdk\Debug\LogEntry;
 
@@ -115,7 +116,7 @@ class Group
     {
         $label = \array_shift($args);
         $label = $meta['isFuncName']
-            ? $this->dumper->valDumper->markupIdentifier($label, 'method')
+            ? $this->dumper->valDumper->markupIdentifier($label, Type::TYPE_IDENTIFIER_METHOD)
             : \preg_replace('#^<span class="t_string">(.+)</span>$#s', '$1', $this->dumper->valDumper->dump($label));
 
         $labelAttribs = array(

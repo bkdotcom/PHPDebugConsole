@@ -50,7 +50,7 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
      *
      * @param array $cfg Configuration
      */
-    public function __construct($cfg = array())
+    public function __construct(array $cfg = array())
     {
         $this->cfg = array(
             'errorStatsFile' => __DIR__ . '/error_stats.json',
@@ -251,7 +251,7 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
      *
      * @return void
      */
-    protected function postSetCfg($cfg = array(), $prev = array())
+    protected function postSetCfg(array $cfg = array(), array $prev = array())
     {
         if (isset($cfg['errorStatsFile']) && $cfg['errorStatsFile'] !== $prev['errorStatsFile']) {
             $this->dataRead();

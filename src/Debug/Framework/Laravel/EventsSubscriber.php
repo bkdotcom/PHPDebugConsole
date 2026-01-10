@@ -63,7 +63,7 @@ class EventsSubscriber
      *
      * @return void
      */
-    public function onWildcardEvent($name = null, $payload = array())
+    public function onWildcardEvent($name = null, array $payload = array())
     {
         $groupParams = [$name];
         if (\preg_match('/^(\S+):\s+(\S+)$/', $name, $matches)) {

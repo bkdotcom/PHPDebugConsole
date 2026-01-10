@@ -97,7 +97,7 @@ class Container implements ArrayAccess
      * @param array $values The parameters or objects
      * @param array $cfg    Config options
      */
-    public function __construct($values = array(), $cfg = array())
+    public function __construct(array $values = array(), array $cfg = array())
     {
         $this->factories = new SplObjectStorage();
         $this->protected = new SplObjectStorage();
@@ -457,7 +457,7 @@ class Container implements ArrayAccess
      *
      * @return $this
      */
-    public function setValues($values)
+    public function setValues(array $values)
     {
         foreach ($values as $key => $value) {
             $this->offsetSet($key, $value);

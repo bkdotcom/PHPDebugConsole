@@ -100,7 +100,7 @@ abstract class AbstractValue extends AbstractComponent
      *
      * @return mixed
      */
-    public function dump($val, $opts = array())
+    public function dump($val, array $opts = array())
     {
         $opts = $this->getPerValueOptions($val, $opts);
         if ($opts['typeMore'] === Type::TYPE_RAW) {

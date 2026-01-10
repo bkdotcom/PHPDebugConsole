@@ -315,7 +315,7 @@ class ValueStore implements ArrayAccess, IteratorAggregate, JsonSerializable, Se
      *
      * @psalm-suppress PossiblyUnusedParam
      */
-    protected function onSet($values = array())
+    protected function onSet(array $values = array())
     {
     }
 }

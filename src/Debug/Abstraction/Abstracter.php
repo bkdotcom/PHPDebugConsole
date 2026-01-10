@@ -117,7 +117,7 @@ class Abstracter extends AbstractComponent
      * @param Debug               $debug debug instance
      * @param array<string,mixed> $cfg   config options
      */
-    public function __construct(Debug $debug, $cfg = array())
+    public function __construct(Debug $debug, array $cfg = array())
     {
         $this->debug = $debug;  // we need debug instance so we can bubble events up channels
         $this->cfg['objectsExclude'][] = __NAMESPACE__;
@@ -150,7 +150,7 @@ class Abstracter extends AbstractComponent
      *
      * @return mixed
      */
-    public function crate($mixed, $method = null, $hist = array())
+    public function crate($mixed, $method = null, array $hist = array())
     {
         $typeInfo = self::needsAbstraction($mixed);
         if (!$typeInfo) {
@@ -169,7 +169,7 @@ class Abstracter extends AbstractComponent
      *
      * @return Abstraction
      */
-    public function crateWithVals($mixed, $values = array())
+    public function crateWithVals($mixed, array $values = array())
     {
         /*
             Note: this->crateValues is the raw values passed to this method
@@ -217,7 +217,7 @@ class Abstracter extends AbstractComponent
      *
      * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      */
-    public function getAbstraction($val, $method = null, $typeInfo = [], $hist = array())
+    public function getAbstraction($val, $method = null, array $typeInfo = [], array $hist = array())
     {
         list($type, $typeMore) = $typeInfo ?: $this->type->getType($val);
         switch ($type) {
@@ -317,7 +317,7 @@ class Abstracter extends AbstractComponent
     /**
      * {@inheritDoc}
      */
-    protected function postSetCfg($cfg = array(), $prev = array())
+    protected function postSetCfg(array $cfg = array(), array $prev = array())
     {
         $debugClass = \get_class($this->debug);
         if (!\array_intersect(['*', $debugClass], $this->cfg['objectsExclude'])) {

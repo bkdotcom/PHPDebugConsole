@@ -24,7 +24,7 @@ use ReflectionFunction;
 use UnitEnum;
 
 /**
- * Internal subscriber to ABSTRACT_START and ABSTRACT_END events
+ * Internal subscriber to OBJ_ABSTRACT_START and OBJ_ABSTRACT_END events
  */
 class Subscriber implements SubscriberInterface
 {

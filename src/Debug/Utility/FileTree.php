@@ -28,7 +28,7 @@ class FileTree
      *
      * @return array
      */
-    public function filesToTree($files, $excludedCounts = array(), $condense = false)
+    public function filesToTree(array $files, array $excludedCounts = array(), $condense = false)
     {
         $tree = array();
         foreach ($files as $filepath) {

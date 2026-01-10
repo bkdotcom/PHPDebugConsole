@@ -355,7 +355,7 @@ abstract class AbstractRoute extends AbstractComponent implements RouteInterface
      *
      * @return bool
      */
-    protected function testChannelKeyMatch($channelKey, $channelKeys = array())
+    protected function testChannelKeyMatch($channelKey, array $channelKeys = array())
     {
         foreach ($channelKeys as $channelKeyTest) {
             if ($this->testChannelKey($channelKey, $channelKeyTest)) {

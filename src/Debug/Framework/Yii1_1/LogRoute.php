@@ -65,7 +65,7 @@ class LogRoute extends CLogRoute
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct($debug = null, $opts = array())
+    public function __construct($debug = null, array $opts = array())
     {
         \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
 

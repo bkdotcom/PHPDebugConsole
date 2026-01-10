@@ -53,7 +53,7 @@ abstract class AbstractClient
      *
      * @throws InvalidArgumentException
      */
-    public function __construct($options = array())
+    public function __construct(array $options = array())
     {
         $cookieJarDefault = \tempnam(\sys_get_temp_dir(), 'curlHttpMessageCookies_') . '.txt';
         $this->isTempCookieJar = isset($options['curl'][CURLOPT_COOKIEJAR]) === false;
@@ -112,7 +112,7 @@ abstract class AbstractClient
      *
      * @return PromiseInterface
      */
-    public function get($uri, $headers = array())
+    public function get($uri, array $headers = array())
     {
         return $this->request('GET', $uri, array(
             'headers' => $headers,

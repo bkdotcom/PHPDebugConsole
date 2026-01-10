@@ -51,7 +51,7 @@ class LogEntry extends Event implements JsonSerializable
      * @param array  $defaultArgs default arguments (key/value array)
      * @param array  $argsToMeta  move specified keys to meta
      */
-    public function __construct(Debug $subject, $method, $args = array(), $meta = array(), $defaultArgs = array(), $argsToMeta = array())
+    public function __construct(Debug $subject, $method, array $args = [], array $meta = array(), array $defaultArgs = array(), array $argsToMeta = [])
     {
         $this->subject = $subject;
         $this->values = array(
@@ -306,7 +306,7 @@ class LogEntry extends Event implements JsonSerializable
      *
      * @return void
      */
-    protected function onSet($values = array())
+    protected function onSet(array $values = array())
     {
         if (isset($values['meta']) === false) {
             return;

@@ -23,7 +23,7 @@ class CurlHttpMessageMiddleware extends AbstractAsyncMiddleware
     /**
      * {@inheritDoc}
      */
-    public function __construct($cfg = array(), $debug = null)
+    public function __construct(array $cfg = array(), $debug = null)
     {
         \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
 

@@ -285,7 +285,7 @@ class Utility
      * Convenience wrapper for Debug's trans method
      *
      * @param string $str    string to translate
-     * @param array  $args   optional arguments
+     * @param array  $args   optional arguments (may omit param)
      * @param string $domain optional domain (defaults to defaultDomain)
      *
      * @return string

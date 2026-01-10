@@ -161,7 +161,7 @@ class AbstractComponent
      *
      * @return void
      */
-    protected function postSetCfg($cfg = array(), $prev = array())
+    protected function postSetCfg(array $cfg = array(), array $prev = array())
     {
     }
 }

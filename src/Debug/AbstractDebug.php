@@ -55,7 +55,7 @@ abstract class AbstractDebug
      *
      * @param array $cfg config
      */
-    public function __construct($cfg = array())
+    public function __construct(array $cfg = array())
     {
         if (!isset(self::$instance)) {
             // self::getInstance() will always return initial/first instance

@@ -100,7 +100,7 @@ class Value extends BaseValue
      *
      * @return string
      */
-    public function dump($val, $opts = array())
+    public function dump($val, array $opts = array())
     {
         $opts = $this->getPerValueOptions($val, $opts);
         $this->optionStackPush($opts); // sets optionsCurrent
@@ -136,7 +136,7 @@ class Value extends BaseValue
      *
      * @return string html snippet
      */
-    public function markupIdentifier($val, $what = Type::TYPE_IDENTIFIER_CLASSNAME, $tagName = 'span', $attribs = array(), $wbr = false)
+    public function markupIdentifier($val, $what = Type::TYPE_IDENTIFIER_CLASSNAME, $tagName = 'span', array $attribs = array(), $wbr = false)
     {
         $parts = \array_map([$this->string, 'dump'], $this->parseIdentifier($val, $what));
         $class = 'classname';

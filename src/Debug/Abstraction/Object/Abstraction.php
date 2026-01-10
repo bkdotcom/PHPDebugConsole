@@ -49,7 +49,7 @@ class Abstraction extends BaseAbstraction
      * @param ValueStore $inherited Inherited values
      * @param array      $values    Abstraction values
      */
-    public function __construct(ValueStore $inherited, $values = array())
+    public function __construct(ValueStore $inherited, array $values = array())
     {
         $this->inherited = $inherited;
         parent::__construct(Type::TYPE_OBJECT, $values);

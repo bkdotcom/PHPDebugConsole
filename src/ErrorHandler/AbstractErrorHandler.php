@@ -276,7 +276,7 @@ abstract class AbstractErrorHandler extends AbstractComponent
      *
      * @return void
      */
-    protected function postSetCfg($cfg = array(), $prev = array())
+    protected function postSetCfg(array $cfg = array(), array $prev = array())
     {
         if (isset($this->emailer) && isset($cfg['emailer'])) {
             $this->emailer->setCfg($cfg['emailer']);

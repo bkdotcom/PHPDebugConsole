@@ -2,6 +2,7 @@
 
 namespace bdk\Table;
 
+use bdk\Debug\Utility\ArrayUtil;
 use bdk\Table\Element;
 use bdk\Table\TableRow;
 
@@ -37,7 +38,6 @@ class Table extends Element
      */
     public function __construct(array $children = array())
     {
-        $this->setTbody();
         $this->setChildren($children);
     }
 
@@ -140,6 +140,10 @@ class Table extends Element
      */
     public function setCaption($caption)
     {
+        if ($caption === null) {
+            $this->caption = null;
+            return $this;
+        }
         if (!($caption instanceof Element)) {
             $caption = new Element('caption', $caption);
         }
@@ -160,6 +164,10 @@ class Table extends Element
         $this->thead = null;
         $this->setTbody();
         $this->tfoot = null;
+        if (ArrayUtil::isList($children) === false) {
+            $this->setProperties($children);
+            return $this;
+        }
         \array_walk($children, function ($child) {
             $tagName = $child instanceof Element ? $child->getTagname() : null;
             if (\in_array($tagName, ['caption', 'thead', 'tbody', 'tfoot'], true)) {
@@ -181,6 +189,10 @@ class Table extends Element
      */
     public function setFooter($footer)
     {
+        if ($footer === null) {
+            $this->tfoot = null;
+            return $this;
+        }
         $footerRow = $this->tableRow($footer);
         $this->tfoot = (new Element('tfoot'))
             ->setParent($this)
@@ -197,6 +209,10 @@ class Table extends Element
      */
     public function setHeader($header)
     {
+        if ($header === null) {
+            $this->thead = null;
+            return $this;
+        }
         $headerRow = $this->tableRow($header);
         $cells = $headerRow->getCells();
         foreach ($cells as $cell) {

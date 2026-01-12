@@ -2,6 +2,8 @@
 
 namespace bdk\Table;
 
+use bdk\Debug\Utility\ArrayUtil;
+use bdk\Debug\Utility\Html;
 use bdk\Debug\Utility\PhpType;
 use bdk\Table\Element;
 use bdk\Table\Factory;
@@ -37,10 +39,7 @@ class TableCell extends Element
     {
         $propertyNames = \array_keys(\get_object_vars($this));
         if (\is_array($value) && \array_intersect(\array_keys($value), $propertyNames)) {
-            foreach ($value as $key => $val) {
-                $method = 'set' . \ucfirst($key);
-                $this->$method($val);
-            }
+            $this->setProperties($value);
             return;
         }
         $this->setValue($value);
@@ -69,6 +68,38 @@ class TableCell extends Element
         $value = \call_user_func(self::$valDumper, $this);
         $this->buildingHtml = false;
         return $value;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getOuterHtml()
+    {
+        // find the table this cell belongs to
+        // and access column meta data
+        // merge in any attribs
+        $table = null;
+        $parent = $this->getParent();
+        while ($parent !== null) {
+            if ($parent instanceof Table) {
+                $table = $parent;
+                break;
+            }
+            $parent = $parent->getParent();
+        }
+        $innerHtml = $this->getHtml();
+        $attribs = $this->getAttribs();
+        if ($table !== null) {
+            $index = $this->getIndex();
+            $columnsMeta = \array_replace(array(
+                $index => array(),
+            ), $table->getMeta('columns', array()));
+            $columnMeta = \array_merge(array(
+                'attribs' => array(),
+            ), $columnsMeta[$index]);
+            $attribs = ArrayUtil::mergeDeep($columnMeta['attribs'], $attribs);
+        }
+        return Html::buildTag($this->getTagName(), $attribs, $innerHtml);
     }
 
     /**

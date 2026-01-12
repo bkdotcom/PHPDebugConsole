@@ -27,15 +27,15 @@ class Factory
             self::KEY_INDEX => '',
             self::KEY_SCALAR => 'value',
         ),
-        'columns' => [],
+        'columnMeta' => array(), // key => meta array
+        'columns' => [], // list of keys
+        'getValInfo' => null, // callable to get type info
         'totalCols' => [],
     );
 
     /** @var array<string, mixed> */
     private $meta = array(
         'class' => null,
-        // 'haveObjectRow' => false,
-        // 'isIndexed' => true,
         'columns' => array(
             // array(
             //    'class' => null,
@@ -43,6 +43,8 @@ class Factory
             //    'total' => null,
             // )
         ),
+        'haveObjectRow' => false, // temporary (not store in table's meta)
+        // 'isIndexed' => true,
         // 'rows' => array(), // key => array(class)
     );
 
@@ -80,9 +82,7 @@ class Factory
         // data is now array of arrays,
         //  keys/cols not yet determined
         //  keys/cols not necessarily in consistent order
-        $keys = $this->options['columns']
-            ? \array_merge([self::KEY_INDEX], $this->options['columns'])
-            : $this->determineColumnKeys();
+        $keys = $this->columnKeys();
         $this->initMeta($keys);
         $this->processRows($keys);
         $this->addHeader();
@@ -138,124 +138,6 @@ class Factory
     }
 
     /**
-     * Initialize temporary meta info
-     *
-     * @param array $keys column keys
-     *
-     * @return void
-     */
-    private function initMeta(array $keys = [])
-    {
-        if (empty($keys)) {
-            $this->meta = array(
-                'class' => null, // if table derived from object, store class name here
-                'columns' => array(
-                    // array(
-                    //    'class' => null,
-                    //    'key' => int|string,
-                    //    'total' => null,
-                    // )
-                ),
-                // 'haveObjectRow' => false,
-                // 'isIndexed' => true,
-                // 'rows' => array(),
-            );
-        }
-        foreach ($keys as $key) {
-            $this->meta['columns'][] = array(
-                'class' => null, // if all values in column are objects of same class, store class name here
-                'key' => $key,
-                'total' => null,
-            );
-        }
-    }
-
-    /**
-     * Get object values as key->value array
-     *
-     * @param object $obj Object
-     *
-     * @return array
-     */
-    private function getObjectValues($obj)
-    {
-        $vals = array();
-        foreach ($obj as $k => $v) {
-            $vals[$k] = $v;
-        }
-        return $vals;
-    }
-
-    /**
-     * Get object values as key->value array while specifying keys
-     *
-     * @param object $obj  Object
-     * @param array  $keys Keys to retrieve
-     *
-     * @return array
-     */
-    private function getObjectValuesKeys($obj, $keys = [])
-    {
-        $vals = array();
-        foreach ($keys as $key) {
-            try {
-                $vals[$key] = $obj->{$key};
-            } catch (\Throwable $e) {
-                $vals[$key] = self::VAL_UNDEFINED;
-            }
-        }
-        return $vals;
-    }
-
-    /**
-     * Get row values
-     *
-     * @param mixed      $row Row (object, array, or scalar value)
-     * @param int|string $key Row's index/key
-     *
-     * @return array key->value array
-     */
-    private function getRowValues($row, $key)
-    {
-        $isObject = false;
-        $type = PhpType::getDebugType($row, 0, $isObject);
-        if ($type === 'array') {
-            return \array_replace(array(
-                self::KEY_INDEX => $key,
-            ), $row);
-        }
-        if ($isObject) {
-            // object (but not UnitEnum or Closure)
-            $values = $this->options['columns']
-                ? $this->getObjectValuesKeys($row, $this->options['columns'])
-                : $this->getObjectValues($row);
-            // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
-            return \array_replace(array(
-                self::KEY_INDEX => $key,
-                self::KEY_CLASS_NAME => \get_class($row),
-            ), $values);
-        }
-        return array(self::KEY_SCALAR => $row);
-    }
-
-    /**
-     * Determine column keys and their order
-     *
-     * @return list<array-key>
-     */
-    private function determineColumnKeys()
-    {
-        $colKeys = array();
-        foreach ($this->data as $row) {
-            $curRowKeys = \array_keys($row);
-            if ($curRowKeys !== $colKeys) {
-                $colKeys = self::colKeysMerge($curRowKeys, $colKeys);
-            }
-        }
-        return $colKeys;
-    }
-
-    /**
      * Merge current row's keys with merged keys
      *
      * @param list<array-key> $curRowKeys current row's keys
@@ -287,6 +169,181 @@ class Factory
     }
 
     /**
+     * Return table's column keys
+     *
+     * @return list<array-key>
+     */
+    private function columnKeys()
+    {
+        $indexAndClassKeys = \array_filter([
+            self::KEY_INDEX,
+            $this->meta['haveObjectRow'] ? self::KEY_CLASS_NAME : null,
+        ]);
+        if ($this->options['columns']) {
+            return \array_merge(
+                $indexAndClassKeys,
+                $this->options['columns']
+            );
+        }
+        $colKeys = array();
+        foreach ($this->data as $row) {
+            $curRowKeys = \array_keys($row);
+            if ($curRowKeys !== $colKeys) {
+                $colKeys = self::colKeysMerge($curRowKeys, $colKeys);
+            }
+        }
+        return $colKeys;
+    }
+
+    /**
+     * Initialize temporary meta info
+     *
+     * @param array $keys column keys
+     *
+     * @return void
+     */
+    private function initMeta(array $keys = [])
+    {
+        if (empty($keys)) {
+            $this->meta = array(
+                'class' => null, // if table derived from object, store class name here
+                'columns' => array(
+                    // array(
+                    //    'class' => null,
+                    //    'key' => int|string,
+                    //    'total' => null,
+                    // )
+                ),
+                'haveObjectRow' => false,
+                // 'isIndexed' => true,
+                // 'rows' => array(),
+            );
+        }
+        foreach ($keys as $key) {
+            $columnMeta = isset($this->options['columnMeta'][$key]) && \is_array($this->options['columnMeta'][$key])
+                ? $this->options['columnMeta'][$key]
+                : array();
+            $columnMeta = \array_merge(array(
+                'class' => null, // if all values in column are objects of same class, store class name here
+                'key' => $key,
+                'total' => null,
+            ), $columnMeta);
+            \ksort($columnMeta);
+            $this->meta['columns'][] = $columnMeta;
+        }
+    }
+
+    /**
+     * Get row values
+     *
+     * @param mixed      $row Row (object, array, or scalar value)
+     * @param int|string $key Row's index/key
+     *
+     * @return array key->value array
+     */
+    private function getRowValues($row, $key)
+    {
+        $valInfo = $this->getValInfo($row, true);
+        if ($valInfo['type'] === 'array') {
+            return \array_replace(array(
+                self::KEY_INDEX => $key,
+            ), $row);
+        }
+        if ($valInfo['type'] === 'object' && $valInfo['iterable']) {
+            $values = $this->options['columns']
+                ? $this->getObjectValuesKeys($row, $this->options['columns'])
+                : $this->getObjectValues($row);
+            // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
+            return \array_replace(array(
+                self::KEY_INDEX => $key,
+                self::KEY_CLASS_NAME => $valInfo['className'],
+            ), $values);
+        }
+        if ($valInfo['type'] === 'object') {
+            // treat object as a single value
+            // Closure, DateTime, UnitEnum
+            // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
+            return array(
+                self::KEY_INDEX => $key,
+                self::KEY_CLASS_NAME => $valInfo['className'],
+                self::KEY_SCALAR => $row,
+            );
+        }
+        return array(
+            self::KEY_INDEX => $key,
+            self::KEY_SCALAR => $row,
+        );
+    }
+
+    /**
+     * Get object values as key->value array
+     *
+     * @param object $obj Object
+     *
+     * @return array
+     */
+    private function getObjectValues($obj)
+    {
+        $vals = array();
+        foreach ($obj as $k => $v) {
+            $vals[$k] = $v;
+        }
+        return $vals;
+    }
+
+    /**
+     * Get object values as key->value array while specifying keys
+     *
+     * @param object $obj  Object
+     * @param array  $keys Keys to retrieve
+     *
+     * @return array
+     */
+    private function getObjectValuesKeys($obj, $keys = [])
+    {
+        $valsAll = $this->getObjectValues($obj);
+        \set_error_handler(static function ($type, $message) {
+            throw new \Exception($message);
+        });
+        $vals = array();
+        foreach ($keys as $key) {
+            try {
+                $vals[$key] = \array_key_exists($key, $valsAll)
+                    ? $valsAll[$key]
+                    : $obj->{$key};
+            } catch (\Throwable $e) {
+                $vals[$key] = self::VAL_UNDEFINED;
+            }
+        }
+        \restore_error_handler();
+        return $vals;
+    }
+
+    /**
+     * Get value type
+     *
+     * @param mixed $value Value to get type of
+     * @param bool  $isRow Does value represent a row
+     *
+     * @return array
+     */
+    private function getValInfo($value, $isRow = false)
+    {
+        if (\is_callable($this->options['getValInfo'])) {
+            return \call_user_func($this->options['getValInfo'], $value);
+        }
+        $isObject = false;
+        $type = PhpType::getDebugType($value, $isRow ? 0 : Php::ENUM_AS_OBJECT, $isObject);
+        return array(
+            'className' => $type,
+            'iterable' => $isObject,
+            'type' => $isObject
+                ? 'object'
+                : $type,
+        );
+    }
+
+    /**
      * Convert data to array of arrays
      *
      * @return void
@@ -297,9 +354,15 @@ class Factory
             $this->meta['class'] = \get_class($this->data);
             $this->data = $this->getObjectValues($this->data);
         }
-        // $data is now array of unknowns (objects, arrays, or scalar)
+        if (\is_array($this->data) === false) {
+            // @todo store error?
+            $this->data = [];
+        }
+        // $data is now array of unknowns (objects, arrays, or scalars)
         foreach ($this->data as $key => $row) {
-            $this->data[$key] = $this->getRowValues($row, $key);
+            $values = $this->getRowValues($row, $key);
+            $this->meta['haveObjectRow'] = $this->meta['haveObjectRow'] || isset($values[self::KEY_CLASS_NAME]);
+            $this->data[$key] = $values;
         }
     }
 
@@ -348,10 +411,9 @@ class Factory
             if ($columnClass === false || \in_array($val, [self::VAL_UNDEFINED, null], true)) {
                 return;
             }
-            $isObject = false;
-            $type = PhpType::getDebugType($val, Php::ENUM_AS_OBJECT, $isObject);
-            $this->meta['columns'][$i]['class'] = $isObject && \in_array($columnClass, [$type, null], true)
-                ? $type
+            $valInfo = $this->getValInfo($val, false);
+            $this->meta['columns'][$i]['class'] = $valInfo['type'] === 'object' && \in_array($columnClass, [$valInfo['className'], null], true)
+                ? $valInfo['className']
                 : false;
         });
         $this->updateTotals($values);
@@ -366,11 +428,12 @@ class Factory
      */
     private function updateTotals(array $values)
     {
-        $indexes = \array_intersect(\array_keys($values), $this->options['totalCols']);
-        foreach ($indexes as $i => $key) {
-            $val = $values[$key];
-            if (\is_numeric($val)) {
-                $this->meta['columns'][$i]['total'] += $val;
+        $keys = \array_column($this->meta['columns'], 'key'); // index to key mapping
+        $indexes = \array_keys(\array_intersect($keys, $this->options['totalCols']));
+        foreach ($indexes as $i) {
+            $value = $values[$i];
+            if (\is_numeric($value)) {
+                $this->meta['columns'][$i]['total'] += $value;
             }
         }
     }

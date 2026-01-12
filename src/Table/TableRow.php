@@ -30,10 +30,22 @@ class TableRow extends Element
             $this->setChildren($children);
             return;
         }
-        foreach ($children as $key => $val) {
-            $method = 'set' . \ucfirst($key);
-            $this->$method($val);
-        }
+        $this->setProperties($children);
+    }
+
+    /**
+     * Append cell to row
+     *
+     * @param mixed|TableCell $cell Table cell
+     *
+     * @return $this
+     */
+    public function appendCell($cell)
+    {
+        $cell = $cell instanceof TableCell
+            ? $cell
+            : new TableCell($cell);
+        return $this->appendChild($cell);
     }
 
     /**
@@ -63,13 +75,11 @@ class TableRow extends Element
      */
     public function setChildren(array $children)
     {
-        $this->children = \array_map(function ($child) {
-            if (($child instanceof Element) === false) {
-                $child = new TableCell($child);
-            }
-            $child->setParent($this);
-            return $child;
-        }, \array_values($children));
-        return $this;
+        $children = \array_map(static function ($child) {
+            return $child instanceof Element
+                ? $child
+                : new TableCell($child);
+        }, $children);
+        return parent::setChildren($children);
     }
 }

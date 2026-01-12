@@ -191,6 +191,51 @@ class ElementTest extends TestCase
     }
 
     /**
+     * Test addClass with array of classname => bool
+     */
+    public function testAddClassWithBooleanArray()
+    {
+        $element = new Element('div');
+
+        // Add classes conditionally based on boolean values
+        $element->addClass([
+            'active' => true,
+            'disabled' => false,
+            'highlight' => true,
+        ]);
+
+        // Only classes with true values should be added
+        self::assertSame(['class' => ['active', 'highlight']], $element->getAttribs());
+
+        // Test with existing classes
+        $element->addClass([
+            'disabled' => true,
+            'active' => false,  // Should remove active
+        ]);
+
+        // 'active' should be removed, 'disabled' added
+        self::assertSame(['class' => ['disabled', 'highlight']], $element->getAttribs());
+    }
+
+    /**
+     * Test addClass with mixed array (indexed and associative)
+     */
+    public function testAddClassWithMixedArray()
+    {
+        $element = new Element('div');
+        $element->addClass('existing');
+
+        // Mix of indexed (always add) and associative (conditional)
+        $element->addClass([
+            'always-added',
+            'conditional-true' => true,
+            'conditional-false' => false,
+        ]);
+
+        self::assertSame(['class' => ['always-added', 'conditional-true', 'existing']], $element->getAttribs());
+    }
+
+    /**
      * Test removeClass
      */
     public function testRemoveClass()

@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
  * PHPUnit tests for bdk\Table\Table
  *
  * @covers \bdk\Table\Table
+ * @covers \bdk\Table\TableCell
  */
 class TableTest extends TestCase
 {
@@ -62,6 +63,74 @@ class TableTest extends TestCase
         self::assertCount(2, $rows);
         self::assertInstanceOf(self::CLASS_TABLE_ROW, $rows[0]);
         self::assertInstanceOf(self::CLASS_TABLE_ROW, $rows[1]);
+    }
+
+    /**
+     * Test constructor with key/value array
+     */
+    public function testConstructorWithKeyValueArray()
+    {
+        $table = new Table([
+            'caption' => 'My Table',
+            'footer' => ['Total', '2', ''],
+            'header' => ['Name', 'Age', 'Email'],
+            'meta' => [
+                'tableType' => 'user-data',
+                'version' => 2,
+            ],
+            'rows' => [
+                ['John', '25', 'john@example.com'],
+                ['Jane', '30', 'jane@example.com'],
+            ],
+        ]);
+
+        // Verify caption
+        $caption = $table->getCaption();
+        self::assertInstanceOf(self::CLASS_ELEMENT, $caption);
+        self::assertSame('My Table', $caption->getHtml());
+
+        // Verify header
+        $header = $table->getHeader();
+        self::assertInstanceOf(self::CLASS_TABLE_ROW, $header);
+        $headerCells = $header->getCells();
+        self::assertCount(3, $headerCells);
+        self::assertSame('th', $headerCells[0]->getTagName());
+
+        // Verify rows
+        $rows = $table->getRows();
+        self::assertCount(2, $rows);
+        self::assertInstanceOf(self::CLASS_TABLE_ROW, $rows[0]);
+
+        // Verify footer
+        $footer = $table->getFooter();
+        self::assertInstanceOf(self::CLASS_TABLE_ROW, $footer);
+        $footerCells = $footer->getCells();
+        self::assertCount(3, $footerCells);
+
+        // Verify meta
+        self::assertSame('user-data', $table->getMeta('tableType'));
+        self::assertSame(2, $table->getMeta('version'));
+    }
+
+    /**
+     * Test constructor with partial key/value array
+     */
+    public function testConstructorWithPartialKeyValueArray()
+    {
+        $table = new Table([
+            'header' => ['Col1', 'Col2'],
+            'meta' => ['status' => 'draft'],
+            'rows' => [
+                ['A', 'B'],
+                ['C', 'D'],
+            ],
+        ]);
+
+        self::assertNull($table->getCaption());
+        self::assertNotNull($table->getHeader());
+        self::assertCount(2, $table->getRows());
+        self::assertNull($table->getFooter());
+        self::assertSame('draft', $table->getMeta('status'));
     }
 
     /**
@@ -211,6 +280,24 @@ class TableTest extends TestCase
     }
 
     /**
+     * Test setCaption with null
+     */
+    public function testSetCaptionWithNull()
+    {
+        $table = new Table();
+
+        // Set a caption first
+        $table->setCaption('Initial Caption');
+        self::assertNotNull($table->getCaption());
+
+        // Now set it to null
+        $result = $table->setCaption(null);
+
+        self::assertSame($table, $result);
+        self::assertNull($table->getCaption());
+    }
+
+    /**
      * Test setHeader with array
      */
     public function testSetHeaderWithArray()
@@ -268,6 +355,24 @@ class TableTest extends TestCase
     }
 
     /**
+     * Test setHeader with null
+     */
+    public function testSetHeaderWithNull()
+    {
+        $table = new Table();
+
+        // Set a header first
+        $table->setHeader(['Col1', 'Col2', 'Col3']);
+        self::assertNotNull($table->getHeader());
+
+        // Now set it to null
+        $result = $table->setHeader(null);
+
+        self::assertSame($table, $result);
+        self::assertNull($table->getHeader());
+    }
+
+    /**
      * Test setFooter with array
      */
     public function testSetFooterWithArray()
@@ -311,6 +416,24 @@ class TableTest extends TestCase
 
         $footer = $table->getFooter();
         self::assertInstanceOf(self::CLASS_TABLE_ROW, $footer);
+    }
+
+    /**
+     * Test setFooter with null
+     */
+    public function testSetFooterWithNull()
+    {
+        $table = new Table();
+
+        // Set a footer first
+        $table->setFooter(['Total', '100']);
+        self::assertNotNull($table->getFooter());
+
+        // Now set it to null
+        $result = $table->setFooter(null);
+
+        self::assertSame($table, $result);
+        self::assertNull($table->getFooter());
     }
 
     /**
@@ -409,6 +532,93 @@ class TableTest extends TestCase
         self::assertNull($table->getHeader());
         self::assertNull($table->getFooter());
         self::assertCount(1, $table->getRows());
+    }
+
+    /**
+     * Test setChildren with key/value array
+     */
+    public function testSetChildrenWithKeyValueArray()
+    {
+        $table = new Table();
+
+        // Initially empty
+        self::assertNull($table->getCaption());
+        self::assertNull($table->getHeader());
+        self::assertCount(0, $table->getRows());
+        self::assertNull($table->getFooter());
+
+        // Set all parts via key/value array
+        $result = $table->setChildren([
+            'caption' => 'Updated Table',
+            'footer' => ['Total', '$3.50', '35'],
+            'header' => ['Product', 'Price', 'Quantity'],
+            'meta' => [
+                'category' => 'products',
+                'updated' => '2026-01-12',
+            ],
+            'rows' => [
+                ['Apple', '$1.00', '10'],
+                ['Orange', '$2.00', '5'],
+                ['Banana', '$0.50', '20'],
+            ],
+        ]);
+
+        self::assertSame($table, $result);
+
+        // Verify all parts were set
+        $caption = $table->getCaption();
+        self::assertInstanceOf(self::CLASS_ELEMENT, $caption);
+        self::assertSame('Updated Table', $caption->getHtml());
+
+        $header = $table->getHeader();
+        self::assertInstanceOf(self::CLASS_TABLE_ROW, $header);
+        self::assertCount(3, $header->getCells());
+
+        $rows = $table->getRows();
+        self::assertCount(3, $rows);
+
+        $footer = $table->getFooter();
+        self::assertInstanceOf(self::CLASS_TABLE_ROW, $footer);
+        self::assertCount(3, $footer->getCells());
+
+        // Verify meta
+        self::assertSame('products', $table->getMeta('category'));
+        self::assertSame('2026-01-12', $table->getMeta('updated'));
+    }
+
+    /**
+     * Test setChildren with key/value array replaces existing parts
+     */
+    public function testSetChildrenWithKeyValueArrayReplacesExisting()
+    {
+        $table = new Table();
+
+        // Set initial data
+        $table->setCaption('Old Caption');
+        $table->setHeader(['Old1', 'Old2']);
+        $table->appendRow(['OldA', 'OldB']);
+        $table->setFooter(['OldF1', 'OldF2']);
+        $table->setMeta('oldKey', 'oldValue');
+
+        // Replace with new data via key/value array
+        $table->setChildren([
+            'caption' => 'New Caption',
+            'meta' => ['newKey' => 'newValue'],
+            'rows' => [
+                ['NewA', 'NewB'],
+            ],
+        ]);
+
+        // Caption and rows are set
+        self::assertSame('New Caption', $table->getCaption()->getHtml());
+        self::assertCount(1, $table->getRows());
+
+        // Header and footer are reset (not provided in the array)
+        self::assertNull($table->getHeader());
+        self::assertNull($table->getFooter());
+
+        // Meta is updated with new value
+        self::assertSame('newValue', $table->getMeta('newKey'));
     }
 
     /**

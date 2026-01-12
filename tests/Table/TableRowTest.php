@@ -5,12 +5,12 @@ namespace bdk\Test\Table;
 use bdk\Table\Element;
 use bdk\Table\TableCell;
 use bdk\Table\TableRow;
-// use bdk\Test\Debug\DebugTestFramework;
 use PHPUnit\Framework\TestCase;
 
 /**
  * PHPUnit tests for bdk\Table\TableRow
  *
+ * @covers \bdk\Table\Element
  * @covers \bdk\Table\TableRow
  */
 class TableRowTest extends TestCase
@@ -146,6 +146,71 @@ class TableRowTest extends TestCase
         $row->setCells(['New 1', 'New 2']);
 
         self::assertCount(2, $row->getCells());
+    }
+
+    /**
+     * Test appendCell with value
+     */
+    public function testAppendCellWithValue()
+    {
+        $row = new TableRow(['A', 'B']);
+
+        self::assertCount(2, $row->getCells());
+
+        $result = $row->appendCell('C');
+
+        self::assertSame($row, $result);
+        self::assertCount(3, $row->getCells());
+
+        $cells = $row->getCells();
+        self::assertInstanceOf(self::CLASS_TABLE_CELL, $cells[2]);
+    }
+
+    /**
+     * Test appendCell with TableCell object
+     */
+    public function testAppendCellWithTableCell()
+    {
+        $row = new TableRow(['A', 'B']);
+
+        $cell = new TableCell('C');
+        $result = $row->appendCell($cell);
+
+        self::assertSame($row, $result);
+        self::assertCount(3, $row->getCells());
+
+        $cells = $row->getCells();
+        self::assertSame($cell, $cells[2]);
+        self::assertSame($row, $cell->getParent());
+    }
+
+    /**
+     * Test appendCell to empty row
+     */
+    public function testAppendCellToEmptyRow()
+    {
+        $row = new TableRow();
+
+        self::assertCount(0, $row->getCells());
+
+        $row->appendCell('First Cell');
+
+        self::assertCount(1, $row->getCells());
+    }
+
+    /**
+     * Test appendCell multiple times
+     */
+    public function testAppendCellMultipleTimes()
+    {
+        $row = new TableRow();
+
+        $row->appendCell('A')
+            ->appendCell('B')
+            ->appendCell('C')
+            ->appendCell('D');
+
+        self::assertCount(4, $row->getCells());
     }
 
     /**

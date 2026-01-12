@@ -54,10 +54,7 @@ class Element implements JsonSerializable, Serializable
         }
         if (\is_array($childrenOrHtml)) {
             // associative array of properties
-            foreach ($childrenOrHtml as $key => $val) {
-                $method = 'set' . \ucfirst($key);
-                $this->$method($val);
-            }
+            $this->setProperties($childrenOrHtml);
             return;
         }
         $this->setHtml($childrenOrHtml);
@@ -99,12 +96,7 @@ class Element implements JsonSerializable, Serializable
      */
     public function __unserialize(array $data)
     {
-        foreach ($data as $key => $val) {
-            $method = 'set' . \ucfirst($key);
-            if (\method_exists($this, $method)) {
-                $this->$method($val);
-            }
-        }
+        $this->setProperties($data);
     }
 
     /**
@@ -145,8 +137,7 @@ class Element implements JsonSerializable, Serializable
                 return $child->getOuterHtml() . "\n";
             }, $children));
             $innerHtml = \str_replace("\n", "\n  ", $innerHtml);
-            $innerHtml = \substr($innerHtml, 0, -2);
-            return $innerHtml;
+            return \substr($innerHtml, 0, -2);
         }
         return $this->html;
     }
@@ -235,20 +226,14 @@ class Element implements JsonSerializable, Serializable
     /**
      * Add class(es) to element
      *
-     * @param string|list<string> $class Class(es) to add
+     * @param string|array $class Class(es) to add
      *
      * @return $this
      */
     public function addClass($class)
     {
-        $newClasses = $this->normalizeClass($class);
-        $classesBefore = [];
-        if ($this->buildingHtml && isset($this->defaults['attribs']['class'])) {
-            $classesBefore = $this->defaults['attribs']['class'];
-        } elseif (isset($this->attribs['class'])) {
-            $classesBefore = $this->attribs['class'];
-        }
-        $classesAfter = \array_merge($classesBefore, $newClasses);
+        list($newClasses, $classesBefore) = $this->normalizeClass($class);
+        $classesAfter = $this->mergeClasses($classesBefore, $newClasses);
         return $this->setAttrib('class', $classesAfter);
     }
 
@@ -275,11 +260,8 @@ class Element implements JsonSerializable, Serializable
      */
     public function removeClass($class)
     {
-        $removeClasses = $this->normalizeClass($class);
-        $classesBefore = \array_key_exists('class', $this->attribs)
-            ? $this->attribs['class']
-            : [];
-        $classesAfter = \array_diff($classesBefore, $removeClasses);
+        list($classesRemove, $classesBefore) = $this->normalizeClass($class, true);
+        $classesAfter = \array_diff($classesBefore, $classesRemove);
         return $this->setAttrib('class', $classesAfter);
     }
 
@@ -294,7 +276,7 @@ class Element implements JsonSerializable, Serializable
     public function setAttrib($name, $value)
     {
         if ($name === 'class') {
-            $value = $this->normalizeClass($value);
+            $value = $this->normalizeClass($value, true)[0];
         }
         $attribs = &$this->attribs;
         if ($this->buildingHtml) {
@@ -342,7 +324,7 @@ class Element implements JsonSerializable, Serializable
             }
             $child->setParent($this);
         }
-        $this->children = $children;
+        $this->children = \array_values($children);
         return $this;
     }
 
@@ -482,19 +464,76 @@ class Element implements JsonSerializable, Serializable
     }
 
     /**
-     * Normalize class value
+     * Add/remove class values
      *
-     * @param list<string>|array $class Class(es)
+     * @param array $existing start values
+     * @param array $new      new values
      *
      * @return list<string>
      */
-    private function normalizeClass($class)
+    private function mergeClasses(array $existing, array $new)
     {
-        if (\is_string($class)) {
-            $class = \explode(' ', $class);
+        $after = $existing;
+        foreach ($new as $key => $val) {
+            if (\is_int($key)) {
+                $after[] = $val;
+                continue;
+            }
+            // add/remove based on boolean value
+            if (\filter_var($val, FILTER_VALIDATE_BOOLEAN) === false) {
+                $after = \array_diff($after, [$key]);
+                continue;
+            }
+            $after[] = $key;
         }
-        $class = \array_unique(\array_filter($class));
-        \sort($class);
-        return $class;
+        $after = \array_values(\array_filter(\array_unique($after)));
+        \sort($after);
+        return $after;
+    }
+
+    /**
+     * Normalize class value
+     *
+     * @param string|array $class  Class(es)
+     * @param bool         $asList Whether to return current classes as list
+     *
+     * @return array
+     */
+    private function normalizeClass($class, $asList = false)
+    {
+        $classesCurrent = [];
+        if ($this->buildingHtml) {
+            $classesCurrent = isset($this->defaults['attribs']['class'])
+                ? $this->defaults['attribs']['class']
+                : [];
+        } elseif (isset($this->attribs['class'])) {
+            $classesCurrent = $this->attribs['class'];
+        }
+        $classesArray = \is_string($class)
+            ? \explode(' ', $class)
+            : $class;
+        return [
+            $asList
+                ? $this->mergeClasses([], $classesArray)
+                : $classesArray,
+            $classesCurrent,
+        ];
+    }
+
+    /**
+     * Set multiple properties via setter methods
+     *
+     * @param array<string,mixed> $props Properties
+     *
+     * @return void
+     */
+    protected function setProperties(array $props)
+    {
+        foreach ($props as $name => $val) {
+            $method = 'set' . \ucfirst($name);
+            if (\method_exists($this, $method)) {
+                $this->$method($val);
+            }
+        }
     }
 }

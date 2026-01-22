@@ -712,6 +712,12 @@ var phpDebugConsole = (function (exports, $) {
 
   function buildFileHref (file, line, docRoot) {
     // console.warn('buildfileHref', {file, line, docRoot})
+    if (typeof file === 'object') {
+      file = (file.docRoot ? 'DOCUMENT_ROOT' : '')
+        + (file.pathCommon ? file.pathCommon : '')
+        + (file.pathRel ? file.pathRel : '')
+        + (file.baseName ? file.baseName : '');
+    }
     var data = {
       file: docRoot
         ? file.replace(/^DOCUMENT_ROOT\b/, docRoot)

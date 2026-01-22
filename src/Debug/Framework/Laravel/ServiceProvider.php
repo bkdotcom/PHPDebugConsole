@@ -18,7 +18,6 @@ use bdk\Debug\Framework\Laravel\EventsSubscriber;
 use bdk\Debug\Framework\Laravel\Middleware;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Utility\ArrayUtil;
-use bdk\Debug\Utility\TableRow;
 use bdk\ErrorHandler\Error;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
@@ -107,16 +106,13 @@ class ServiceProvider extends BaseServiceProvider
         $tableInfoRows = array();
         $modelCounts = $this->buildModelCountTable($tableInfoRows);
         $debug->table('Model Usage', $modelCounts, $debug->meta(array(
-            'columnNames' => array(
-                TableRow::INDEX => 'model',
-                TableRow::SCALAR => 'count',
+            'columnLabels' => array(
+                \bdk\Table\Factory::KEY_INDEX => 'model',
+                \bdk\Table\Factory::KEY_SCALAR => 'count',
             ),
             'detectFiles' => true,
             'sortable' => true,
-            'tableInfo' => array(
-                'rows' => $tableInfoRows,
-            ),
-            'totalCols' => [TableRow::SCALAR],
+            'totalCols' => [\bdk\Table\Factory::KEY_SCALAR],
         )));
     }
 

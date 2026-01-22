@@ -32,7 +32,7 @@ class TextAnsi extends Text
             'excluded' => "\e[38;5;9m",     // red
             'false' => "\e[91m",            // red
             'keyword' => "\e[38;5;45m",     // blue
-            'maxlen' => "\e[30;48;5;41m",   // black foreground / light-green background
+            'maxLen' => "\e[30;48;5;41m",   // black foreground / light-green background
             'muted' => "\e[38;5;250m",      // dark grey
             'numeric' => "\e[96m",          // blue
             'operator' => "\e[38;5;224m",   // "misty rose"
@@ -99,13 +99,11 @@ class TextAnsi extends Text
      *
      * @return Value
      */
-    protected function getValDumper()
+    protected function initValDumper()
     {
-        if (!$this->valDumper) {
-            $this->valDumper = new Value($this);
-            $this->valDumper->setCfg($this->cfg);
-        }
-        return $this->valDumper;
+        $valDumper = new Value($this);
+        $valDumper->setCfg($this->cfg);
+        return $valDumper;
     }
 
     /**

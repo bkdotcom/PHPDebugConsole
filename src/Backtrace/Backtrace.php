@@ -112,7 +112,7 @@ class Backtrace
             we need to collect object... we'll remove object at end if undesired
         */
         $phpOptions = static::translateOptions($options | self::INCL_OBJECT);
-        $backtrace = \debug_backtrace($phpOptions, 33);
+        $backtrace = \debug_backtrace($phpOptions, 40);
         $backtrace = self::normalize($backtrace);
         $index = SkipInternal::getFirstIndex($backtrace, $offset);
         $index = \max($index, 1); // ensure we're >= 1

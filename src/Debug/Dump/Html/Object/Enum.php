@@ -66,10 +66,7 @@ class Enum
             $this->valDumper->optionGet('attribs'),
             $parsed['attribs']
         );
-        if ($this->valDumper->optionGet('tagName') !== 'td') {
-            $this->valDumper->optionSet('tagName', 'span');
-        }
-        $this->valDumper->optionSet('type', null); // exclude t_object classname
+        $this->valDumper->optionSet('dumpType', false); // exclude t_object classname
         $this->valDumper->optionSet('attribs', $attribs);
         return $parsed['innerhtml'];
     }

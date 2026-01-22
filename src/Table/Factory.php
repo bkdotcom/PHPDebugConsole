@@ -27,7 +27,15 @@ class Factory
             self::KEY_INDEX => '',
             self::KEY_SCALAR => 'value',
         ),
-        'columnMeta' => array(), // key => meta array
+        'columnMeta' => array(
+            self::KEY_INDEX => array(
+                'attribs' => array(
+                    'class' => ['t_key'],
+                    'scope' => 'row',
+                ),
+                'tagName' => 'th',
+            ),
+        ), // key => meta array
         'columns' => [], // list of keys
         'getValInfo' => null, // callable to get type info
         'totalCols' => [],
@@ -38,14 +46,13 @@ class Factory
         'class' => null,
         'columns' => array(
             // array(
+            //    'attribs' => array()
             //    'class' => null,
             //    'key' => int|string,
             //    'total' => null,
             // )
         ),
         'haveObjectRow' => false, // temporary (not store in table's meta)
-        // 'isIndexed' => true,
-        // 'rows' => array(), // key => array(class)
     );
 
     /** @var array<string, mixed> */
@@ -215,8 +222,6 @@ class Factory
                     // )
                 ),
                 'haveObjectRow' => false,
-                // 'isIndexed' => true,
-                // 'rows' => array(),
             );
         }
         foreach ($keys as $key) {
@@ -226,10 +231,13 @@ class Factory
             $columnMeta = \array_merge(array(
                 'class' => null, // if all values in column are objects of same class, store class name here
                 'key' => $key,
-                'total' => null,
+                'total' => null, // temporary total value for column
             ), $columnMeta);
             \ksort($columnMeta);
             $this->meta['columns'][] = $columnMeta;
+            if ($columnMeta['total'] !== null && !\in_array($key, $this->options['totalCols'], true)) {
+                $this->options['totalCols'][] = $key;
+            }
         }
     }
 
@@ -379,14 +387,8 @@ class Factory
         foreach ($this->data as $row) {
             $values = \array_replace($defaultValues, \array_intersect_key($row, $defaultValues));
             $this->updateRowMeta($values);
-            $row = new TableRow(ArrayUtil::mapWithKeys(static function ($val, $key) {
-                $cell = new TableCell($val);
-                if ($key === Factory::KEY_INDEX) {
-                    $cell->setTagName('th')
-                        ->addClass('t_key')
-                        ->setAttrib('scope', 'row');
-                }
-                return $cell;
+            $row = new TableRow(\array_map(static function ($val) {
+                return new TableCell($val);
             }, $values));
             $this->table->appendRow($row);
         }

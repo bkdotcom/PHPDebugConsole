@@ -78,26 +78,10 @@ class BasicTest extends DebugTestFramework
                 'entry' => static function (LogEntry $logEntry) {
                     // we're doing the custom stuff via Debug::EVENT_OUTPUT_LOG_ENTRY, so logEntry should still be trace
                     self::assertSame('trace', $logEntry['method']);
-                    self::assertIsArray($logEntry['args'][0]);
-                    $filepaths = \array_column($logEntry['args'][0], 0);
+                    self::assertInstanceOf('\bdk\Debug\Abstraction\Abstraction', $logEntry['args'][0]);
                     $metaExpect = array(
-                        'caption' => 'trace',
-                        'inclArgs' => false,
                         'inclInternal' => false,
                         'limit' => 0,
-                        'sortable' => false,
-                        'tableInfo' => array(
-                            'class' => null,
-                            'columns' => array(
-                                array('key' => 'file'),
-                                array('key' => 'line'),
-                                array('key' => 'function'),
-                            ),
-                            'haveObjRow' => false,
-                            'indexLabel' => null,
-                            'rows' => array(),
-                            'summary' => '',
-                        ),
                     );
                     // \bdk\Debug::varDump('expect', $metaExpect);
                     // \bdk\Debug::varDump('actual', $logEntry['meta']);
@@ -116,9 +100,7 @@ class BasicTest extends DebugTestFramework
                     'log',
                     array('something completely different'),
                     array(
-                        'inclArgs' => false,
                         'inclInternal' => false,
-                        'format' => 'raw',
                     ),
                 ),
             )

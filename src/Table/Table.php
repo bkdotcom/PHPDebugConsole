@@ -53,6 +53,9 @@ class Table extends Element
             'rows' => $this->getRows(),
         );
         \ksort($data);
+        foreach ($data['meta']['columns'] as &$column) {
+            \ksort($column);
+        }
         return \array_filter($data);
     }
 

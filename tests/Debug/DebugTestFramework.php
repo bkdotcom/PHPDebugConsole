@@ -114,21 +114,27 @@ class DebugTestFramework extends DOMTestCase
         }
         */
 
-        if (!isset($this->file)) {
-            /*
-            this dummy test won't do any assertions, but will set
-                $this->file
-                $this->line
-            */
-            $this->testMethod(
-                'getCfg',
-                ['collect'],
-                array(
-                    'custom' => function () {
-                    },
-                )
-            );
+        if ($this->doesNotPerformAssertions()) {
+            return;
         }
+
+        if (isset($this->file)) {
+            return;
+        }
+
+        /*
+        this dummy test won't do any assertions, but will set
+            $this->file
+            $this->line
+        */
+        $this->testMethod(
+            'getCfg',
+            ['collect'],
+            array(
+                'custom' => static function () {
+                },
+            )
+        );
     }
 
     /**
@@ -317,8 +323,31 @@ class DebugTestFramework extends DOMTestCase
             'return' => null,
             'output' => null,
         );
+        if (!$tests) {
+            $tests = array(
+                'notLogged' => true,
+            );
+        }
+        if (isset($tests['chromeLogger']) && isset($tests['serverLog']) === false) {
+            $tests['serverLog'] = $tests['chromeLogger'];
+        }
         ArrayUtil::sortWithOrder($tests, ['entry'], 'key');
-        // $tests = \array_diff_key($tests, \array_flip(array('streamAnsi')));
+        $tests = \array_intersect_key($tests, \array_flip([
+            'entry',
+            'chromeLogger',
+            'custom',
+            'firephp',
+            'html',
+            'notLogged',
+            'output',
+            'return',
+            'script',
+            'serverLog',
+            'streamAnsi',
+            'text',
+            'wamp',
+        ]));
+
         if (\is_array($method)) {
             if (isset($method['dataPath'])) {
                 $dataPath = $method['dataPath'];
@@ -338,11 +367,6 @@ class DebugTestFramework extends DOMTestCase
             \ksort($meta);
             $logEntry['meta'] = $meta;
         }
-        if (!$tests) {
-            $tests = array(
-                'notLogged' => true,
-            );
-        }
         /*
         $this->debug->varDump(array(
             'method' => $method,
@@ -352,9 +376,6 @@ class DebugTestFramework extends DOMTestCase
             'logEntry' => $logEntry,
         ));
         */
-        if (isset($tests['chromeLogger']) && isset($tests['serverLog']) === false) {
-            $tests['serverLog'] = $tests['chromeLogger'];
-        }
         foreach ($tests as $test => $expect) {
             $logEntryTemp = $logEntry
                 ? new LogEntry(
@@ -492,7 +513,7 @@ class DebugTestFramework extends DOMTestCase
                 'properties',
                 'scopeClass',
                 'stringified',
-                'traverseValues',
+                // 'traverseValues',
                 'viaDebugInfo',
             ];
             $keysMissing = \array_diff($keys, \array_keys($abs->getValues()));
@@ -655,21 +676,23 @@ class DebugTestFramework extends DOMTestCase
             case 'entry':
                 if (\is_callable($expect)) {
                     \call_user_func($expect, $logEntry);
-                } elseif (\is_string($expect)) {
+                    return false;
+                }
+                if (\is_string($expect)) {
                     $logEntryArray = $this->helper->logEntryToArray($logEntry);
                     self::assertStringMatchesFormat(
                         $expect,
                         \json_encode($logEntryArray),
                         'log entry does not match format'
                     );
-                } else {
-                    $logEntryArray = $this->helper->logEntryToArray($logEntry);
-                    if (isset($expect['meta']['file']) && $expect['meta']['file'] === '*') {
-                        unset($expect['meta']['file']);
-                        unset($logEntryArray['meta']['file']);
-                    }
-                    self::assertEquals($expect, $logEntryArray);
+                    return false;
                 }
+                $logEntryArray = $this->helper->logEntryToArray($logEntry);
+                if (isset($expect['meta']['file']) && $expect['meta']['file'] === '*') {
+                    unset($expect['meta']['file']);
+                    unset($logEntryArray['meta']['file']);
+                }
+                self::assertEquals($expect, $logEntryArray);
                 return false;
             case 'custom':
                 \call_user_func($expect, $logEntry);
@@ -920,7 +943,7 @@ class DebugTestFramework extends DOMTestCase
         \call_user_func_array(['PHPUnit\Framework\TestCase', 'assertStringMatchesFormat'], $args);
     }
 
-    private static function normalizeString($string, $keepCr = true)
+    protected static function normalizeString($string, $keepCr = true)
     {
         $string = \preg_replace('#^\s+#m', '', $string);
         // @see https://github.com/sebastianbergmann/phpunit/issues/3040

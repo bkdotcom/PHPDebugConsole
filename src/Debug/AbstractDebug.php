@@ -80,7 +80,7 @@ abstract class AbstractDebug
         $this->publishBubbleEvent(Debug::EVENT_CUSTOM_METHOD, $logEntry);
         if ($logEntry['handled'] !== true) {
             $logEntry->setMeta('isCustomMethod', true);
-            $this->rootInstance->getPlugin('methodBasic')->log($logEntry);
+            $this->rootInstance->log($logEntry);
         }
         return $logEntry['return'];
     }

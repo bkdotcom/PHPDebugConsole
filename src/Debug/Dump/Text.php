@@ -179,12 +179,9 @@ class Text extends Base
      *
      * @return Value
      */
-    protected function getValDumper()
+    protected function initValDumper()
     {
-        if (!$this->valDumper) {
-            $this->valDumper = new Value($this);
-        }
-        return $this->valDumper;
+        return new Value($this);
     }
 
     /**
@@ -304,12 +301,6 @@ class Text extends Base
      */
     protected function methodTabular(LogEntry $logEntry)
     {
-        $meta = $logEntry['meta'];
-        $logEntry->setMeta('forceArray', false);
-        parent::methodTabular($logEntry);
-        if (!empty($meta['caption'])) {
-            \array_unshift($logEntry['args'], $meta['caption']);
-        }
-        return $this->buildArgString($logEntry['args'], $meta);
+        return $this->methodDefault($logEntry);
     }
 }

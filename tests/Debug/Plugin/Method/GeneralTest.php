@@ -71,8 +71,8 @@ class GeneralTest extends DebugTestFramework
 
     public function testGetDump()
     {
-        self::assertTrue($this->debug->getDump('html', true));
-        self::assertFalse($this->debug->getDump('bogus', true));
+        self::assertTrue($this->debug->getDump('html', null, true));
+        self::assertFalse($this->debug->getDump('bogus', null, true));
 
         self::assertInstanceOf('bdk\\Debug\\Dump\\Text', (new Debug(array(
             'logResponse' => false,

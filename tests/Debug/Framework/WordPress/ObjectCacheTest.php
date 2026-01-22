@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Framework\WordPress;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
@@ -71,29 +72,53 @@ class ObjectCacheTest extends DebugTestFramework
                 'method' => 'table',
                 'args' => [
                     array(
-                        'baz' => ['10 B'],
-                        'foo' => ['10 B'],
+                        'debug' => Abstracter::ABSTRACTION,
+                        'footer' => [
+                            array(
+                                'html' => '',
+                                'value' => null,
+                            ),
+                            '20 B',
+                        ],
+                        'header' => [
+                            '',
+                            'size',
+                        ],
+                        'meta' => array(
+                            'class' => null,
+                            'columns' => [
+                                array(
+                                    'attribs' => array(
+                                        'class' => ['t_key'],
+                                        'scope' => 'row',
+                                    ),
+                                    'key' => \bdk\Table\Factory::KEY_INDEX,
+                                    'tagName' => 'th',
+                                ),
+                                array(
+                                    'attribs' => array('class' => ['no-quotes']),
+                                    'key' => 'size',
+                                ),
+                            ],
+                            'haveObjectRow' => false,
+                            'sortable' => true,
+                        ),
+                        'rows' => [
+                            [
+                                'baz',
+                                '10 B',
+                            ],
+                            [
+                                'foo',
+                                '10 B',
+                            ],
+                        ],
+                        'type' => 'table',
+                        'value' => null,
                     ),
                 ],
                 'meta' => array(
                     'channel' => 'cache',
-                    'sortable' => true,
-                    'tableInfo' => array(
-                        'class' => null,
-                        'columns' => [
-                            array(
-                                'attribs' => array(
-                                    'class' => ['no-quotes'],
-                                ),
-                                'key' => 'size',
-                                'total' => '20 B',
-                            ),
-                        ],
-                        'haveObjRow' => false,
-                        'indexLabel' => null,
-                        'rows' => array(),
-                        'summary' => '',
-                    ),
                 ),
             ),
         ], $this->helper->deObjectifyData($this->debug->data->get('log')));

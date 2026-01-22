@@ -17,6 +17,7 @@ use bdk\Debug\Dump\Text\Value as TextValue;
 use bdk\Debug\Dump\TextAnsi as Dumper;
 use bdk\Debug\Dump\TextAnsi\TextAnsiObject;
 use bdk\Debug\Utility\Utf8;
+use bdk\Table\Table as BdkTable;
 
 /**
  * Base output plugin
@@ -298,7 +299,7 @@ class Value extends TextValue
             $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
         }
         if ($strLenDiff) {
-            $val .= $this->cfg['escapeCodes']['maxlen']
+            $val .= $this->cfg['escapeCodes']['maxLen']
             . '[' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $strLenDiff)) . ']'
             . $this->escapeReset;
         }
@@ -327,6 +328,32 @@ class Value extends TextValue
                 ? $this->cfg['escapeCodes']['binary'] . $chunk[1] . $this->escapeReset
                 : $this->highlightChars($chunk[1]);
         }, $abs['chunks'] ?: array()));
+    }
+
+    /**
+     * Dump table
+     *
+     * @param Abstraction $abs Table abstraction
+     *
+     * @return string
+     */
+    protected function dumpTable(Abstraction $abs)
+    {
+        $data = $abs->getValues();
+        $table = new BdkTable($data);
+        $tableAsArray = \bdk\Table\Utility::asArray($table);
+        $caption = $table->getCaption();
+        if (!$caption) {
+            return $this->dumpArray($tableAsArray);
+        }
+        $caption = $this->dump($table->getCaption()->getHtml(), array(
+            'addQuotes' => false,
+        ));
+        return self::ANSI_BOLD
+            . $caption .  "\n"
+            . \str_repeat('-', \strlen($caption))
+            . $this->escapeReset . "\n"
+            . $this->dumpArray($tableAsArray);
     }
 
     /**

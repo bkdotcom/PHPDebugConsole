@@ -35,6 +35,7 @@ class Abstraction extends BaseAbstraction
         'isTraverseOnly',
         'propertyOverrideValues',
         'reflector',
+        'unstructuredValue',
     ];
 
     /** @var ValueStore */
@@ -197,7 +198,7 @@ class Abstraction extends BaseAbstraction
         foreach ($order as $what) {
             $multiSortArgs[] = $sortData[$what];
         }
-        // array_multisort reindexes nunmeric keys,
+        // array_multisort reindexes numeric keys,
         // so... we sort the keys -> array_fill -> array_replace
         $multiSortArgs[] = &$sortData['key'];
         \call_user_func_array('array_multisort', $multiSortArgs);

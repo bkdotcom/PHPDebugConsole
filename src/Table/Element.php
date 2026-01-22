@@ -78,7 +78,7 @@ class Element implements JsonSerializable, Serializable
                 return $data;
             }, $this->children),
             'html' => $this->html,
-            'meta' => $this->meta,
+            'meta' => $this->getMeta(),
             'tagName' => $this->tagName,
         );
         $data = \array_filter($data, static function ($val) {
@@ -180,6 +180,7 @@ class Element implements JsonSerializable, Serializable
     public function getMeta($key = null, $default = null)
     {
         if ($key === null) {
+            \ksort($this->meta);
             return $this->meta;
         }
         return \array_key_exists($key, $this->meta)

@@ -85,7 +85,7 @@ class ChromeLogger extends AbstractRoute
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        $this->dumper = $debug->getDump('base');
+        $this->dumper = $debug->getDump('base', 'chromeLogger');
     }
 
     /**

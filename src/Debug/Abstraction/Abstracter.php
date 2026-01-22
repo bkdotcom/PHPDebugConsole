@@ -17,6 +17,7 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\AbstractString;
 use bdk\Debug\Abstraction\Type;
+use SensitiveParameterValue;
 
 /**
  * Store array/object/resource info
@@ -228,7 +229,7 @@ class Abstracter extends AbstractComponent
             case Type::TYPE_FLOAT:
                 return $this->getAbstractionFloat($val, $typeMore);
             case Type::TYPE_OBJECT:
-                return $val instanceof \SensitiveParameterValue
+                return $val instanceof SensitiveParameterValue
                     ? $this->abstractString->getAbstraction(\call_user_func($this->debug->getPlugin('redaction')->getCfg('redactReplace'), 'redacted'))
                     : $this->abstractObject->getAbstraction($val, $method, $hist);
             case Type::TYPE_RESOURCE:
@@ -280,13 +281,10 @@ class Abstracter extends AbstractComponent
             return false;
         }
         list($type, $typeMore) = $this->type->getType($val);
-        if ($type === Type::TYPE_BOOL) {
+        if (\in_array($typeMore, [Type::TYPE_STRING_NUMERIC, 'false', 'true'], true)) {
             return false;
         }
-        if (\in_array($typeMore, [Type::TYPE_STRING_NUMERIC], true)) {
-            return false;
-        }
-        return $typeMore
+        return $type === Type::TYPE_OBJECT || $typeMore !== null
             ? [$type, $typeMore]
             : false;
     }

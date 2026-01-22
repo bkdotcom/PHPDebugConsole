@@ -13,6 +13,7 @@ namespace bdk\Debug\Route;
 use bdk\Debug;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
+use bdk\Table\Table as BdkTable;
 
 /**
  * Output log via FirePHP
@@ -61,7 +62,8 @@ class Firephp extends AbstractRoute
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        $this->dumper = $debug->getDump('base');
+        $this->dumper = $debug->getDump('base', 'firephp');
+        $this->dumper->setCfg('undefinedAs', null);
     }
 
     /**
@@ -215,32 +217,31 @@ class Firephp extends AbstractRoute
      */
     private function methodTabular(LogEntry $logEntry)
     {
-        $logEntry->setMeta('undefinedAs', 'null');
-        $this->dumper->processLogEntry($logEntry);
+        $data = $logEntry['args'][0]->getValues();
+        $table = new BdkTable($data);
         $logEntry['firephpMeta']['Type'] = $this->firephpMethods['table'];
-        $caption = $logEntry->getMeta('caption');
-        if ($caption) {
-            $logEntry['firephpMeta']['Label'] = $caption;
+        if ($table->getCaption()) {
+            $logEntry['firephpMeta']['Label'] = $table->getCaption()->getHtml();
         }
-        $args = $logEntry['args'];
-        $firephpTable = true;
-        if (!$firephpTable) {
-            return $this->dumper->valDumper->dump($args[0]);
+
+        $headerVals = \array_map(static function ($cell) {
+            return $cell->getValue();
+        }, $table->getHeader()->getChildren());
+        // initiate rows with header row
+        $rows = [
+            $headerVals,
+        ];
+        $tableAsArray = \bdk\Table\Utility::asArray($table, array(
+            'forceArray' => true,
+            'undefinedAs' => null,
+        ));
+        $tableAsArray = $this->dumper->valDumper->dump($tableAsArray);
+        foreach ($tableAsArray as $k => $row) {
+            $rows[] = \array_merge([$k], \array_values($row));
         }
-        $value = array();
-        $keys = \array_map(static function (array $colInfo) {
-            return $colInfo['key'];
-        }, $logEntry['meta']['tableInfo']['columns']);
-        if ($logEntry['meta']['tableInfo']['haveObjRow']) {
-            \array_unshift($keys, '___class_name');
-        }
-        \array_unshift($keys, ''); // key/index
-        $value[] = $keys;
-        foreach ($args[0] as $k => $row) {
-            $value[] = \array_merge([$k], \array_values($row));
-        }
-        return $this->dumper->valDumper->dump($value);
+        return $this->dumper->valDumper->dump($rows);
     }
+
 
     /**
      * {@inheritDoc}

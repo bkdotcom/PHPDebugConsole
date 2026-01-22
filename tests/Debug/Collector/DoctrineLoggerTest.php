@@ -95,10 +95,18 @@ WHERE
 <table class="sortable table-bordered">
 <caption>parameters</caption>
 <thead>
-<tr><th>&nbsp;</th><th scope="col">value</th><th scope="col">type</th></tr>
+<tr>
+<th class="t_string" scope="col"></th>
+<th class="t_string" scope="col">value</th>
+<th class="t_string" scope="col">type</th>
+</tr>
 </thead>
 <tbody>
-<tr><th class="t_key t_string" scope="row">:datetime</th><td class="t_string">{$datetime}</td><td class="t_identifier" data-type-more="const" title="value: 2"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_STR</span></td></tr>
+<tr>
+<th class="t_key t_string" scope="row">:datetime</th>
+<td class="t_string">{$datetime}</td>
+<td class="t_identifier" data-type-more="const" title="value: 2"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_STR</span></td>
+</tr>
 </tbody>
 </table>
 </li>
@@ -129,15 +137,27 @@ where
 <table class="sortable table-bordered">
 <caption>parameters</caption>
 <thead>
-<tr><th>&nbsp;</th><th scope="col">value</th><th scope="col">type</th></tr>
+<tr>
+<th class="t_string" scope="col"></th>
+<th class="t_string" scope="col">value</th>
+<th class="t_string" scope="col">type</th>
+</tr>
 </thead>
 <tbody>
-<tr><th class="t_int t_key" scope="row">0</th><td class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+<tr>
+<th class="t_int t_key" scope="row">0</th>
+<td class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
 <ul class="array-inner list-unstyled">
     <li><span class="t_int t_key">0</span><span class="t_operator">=&gt;</span><span class="t_string">foo</span></li>
     <li><span class="t_int t_key">1</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
-</ul><span class="t_punct">)</span></td><td class="t_identifier" data-type-more="const" title="value: 101"><span class="classname"><span class="namespace">Doctrine\DBAL\</span>Connection</span><span class="t_operator">::</span><span class="t_name">PARAM_INT_ARRAY</span></td></tr>
-<tr><th class="t_int t_key" scope="row">1</th><td class="t_string">declined</td><td class="t_identifier" data-type-more="const" title="value: 2"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_STR</span></td></tr>
+</ul><span class="t_punct">)</span></td>
+<td class="t_identifier" data-type-more="const" title="value: 101"><span class="classname"><span class="namespace">Doctrine\DBAL\</span>Connection</span><span class="t_operator">::</span><span class="t_name">PARAM_INT_ARRAY</span></td>
+</tr>
+<tr>
+<th class="t_int t_key" scope="row">1</th>
+<td class="t_string">declined</td>
+<td class="t_identifier" data-type-more="const" title="value: 2"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_STR</span></td>
+</tr>
 </tbody>
 </table>
 </li>

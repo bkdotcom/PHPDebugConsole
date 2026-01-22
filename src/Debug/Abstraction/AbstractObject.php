@@ -13,6 +13,7 @@ namespace bdk\Debug\Abstraction;
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Abstraction\Object\Constants;
 use bdk\Debug\Abstraction\Object\Definition;
@@ -21,6 +22,9 @@ use bdk\Debug\Abstraction\Object\Methods;
 use bdk\Debug\Abstraction\Object\Properties;
 use bdk\Debug\Abstraction\Object\PropertiesInstance;
 use bdk\Debug\Abstraction\Object\Subscriber;
+use bdk\Debug\Abstraction\Type;
+use bdk\Table\Element;
+use bdk\Table\Table;
 use ReflectionClass;
 use ReflectionEnumUnitCase;
 use RuntimeException;
@@ -185,7 +189,6 @@ class AbstractObject extends AbstractComponent
         'sectionOrder' => array(),  // cfg.objectSectionOrder
         'sort' => '',  // cfg.objectSort
         'stringified' => null,
-        'traverseValues' => array(),  // populated if method is table
         'viaDebugInfo' => false,
     );
 
@@ -221,7 +224,7 @@ class AbstractObject extends AbstractComponent
      * @param string        $method Method requesting abstraction
      * @param array         $hist   (@internal) array & object history
      *
-     * @return ObjectAbstraction
+     * @return ObjectAbstraction|mixed
      * @throws RuntimeException
      */
     public function getAbstraction($obj, $method = null, array $hist = array())
@@ -230,13 +233,25 @@ class AbstractObject extends AbstractComponent
         if ($reflector instanceof ReflectionEnumUnitCase) {
             $reflector = $reflector->getEnum();
         }
+        if ($obj instanceof Element) {
+            $hist[] = $obj;
+            $values = $obj->jsonSerialize();
+            $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_END, [$this, 'tableCellValueAbstracter']);
+            $values = $this->abstracter->crate($values, $method, $hist);
+            $this->debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_END, [$this, 'tableCellValueAbstracter']);
+            return $obj instanceof Table
+                ? new Abstraction(Type::TYPE_TABLE, $values)
+                : $values;
+        }
         $values = $this->getAbstractionValues($reflector, $obj, $method, $hist);
         $definitionValueStore = $this->definition->getAbstraction($obj, $values);
         $abs = new ObjectAbstraction($definitionValueStore, $values);
         $abs->setSubject($obj);
         $abs['hist'][] = $obj;
         $this->doAbstraction($abs);
-        return $abs->clean();
+        return $abs['unstructuredValue']
+            ? $abs['unstructuredValue']
+            : $abs->clean();
     }
 
     /**
@@ -258,21 +273,18 @@ class AbstractObject extends AbstractComponent
     }
 
     /**
-     * Populate rows or columns (traverseValues) if we're outputting as a table
+     * If cell value is an object, set unstructuredValue for abstraction
      *
-     * @param ObjectAbstraction $abs Abstraction instance
+     * @param ObjectAbstraction $abs Object Abstraction instance
      *
      * @return void
      */
-    private function addTraverseValues(ObjectAbstraction $abs)
+    public function tableCellValueAbstracter($abs)
     {
-        if ($abs['traverseValues']) {
-            return;
-        }
-        $obj = $abs->getSubject();
-        $abs['hist'][] = $obj;
-        foreach ($obj as $k => $v) {
-            $abs['traverseValues'][$k] = $this->abstracter->crate($v, $abs['debugMethod'], $abs['hist']);
+        if (isset($abs['stringified'])) {
+            $abs['unstructuredValue'] = $abs['stringified'];
+        } elseif (isset($abs['methods']['__toString']['returnValue'])) {
+            $abs['unstructuredValue'] = $abs['methods']['__toString']['returnValue'];
         }
     }
 
@@ -297,14 +309,10 @@ class AbstractObject extends AbstractComponent
             set cfgFlags (int / bitmask)
             set propertyOverrideValues
             set stringified
-            set traverseValues
         */
         $this->debug->publishBubbleEvent(Debug::EVENT_OBJ_ABSTRACT_START, $abs, $this->debug);
         if ($abs['isExcluded']) {
             return;
-        }
-        if ($abs['isTraverseOnly']) {
-            $this->addTraverseValues($abs);
         }
         $this->methods->addInstance($abs);  // method static variables
         $this->propertiesInstance->add($abs);
@@ -394,6 +402,9 @@ class AbstractObject extends AbstractComponent
     private function getScopeClass(array &$hist)
     {
         for ($i = \count($hist) - 1; $i >= 0; $i--) {
+            if ($hist[$i] instanceof \bdk\Table\Element) {
+                continue;
+            }
             if (\is_object($hist[$i])) {
                 return \get_class($hist[$i]);
             }

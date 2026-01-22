@@ -23,19 +23,7 @@ use ReflectionUnionType;
 use RuntimeException;
 
 /**
- * Container
- *
- * Forked from pimple/pimple
- *    adds:
- *       get()
- *       has()
- *       needsInvoked()
- *       setCfg()
- *          allowOverride & onInvoke callback
- *       setValues()
- *
- * @author Fabien Potencier
- * @author Brad Kent <bkfake-github@yahoo.com>
+ * Instantiate objects with dependencies resolved via the container
  */
 class ObjectBuilder
 {
@@ -84,31 +72,28 @@ class ObjectBuilder
      * If it is not found, we will try to instantiate it via reflection and obtaining dependencies via the container
      * We will save the instance in the container
      *
-     * @param string $classname      Fully qualified class name
-     * @param bool   $addToContainer (true) Add instantiated object to container?
+     * @param string $classname    Fully qualified class name
+     * @param bool   $useContainer (true) Pull obj from container if available / store obj in container after build
      *
      * @return object
      *
      * @throws RuntimeException
      */
-    public function build($classname, $addToContainer = true)
+    public function build($classname, $useContainer = true)
     {
         if ($this->container->has($classname)) {
             return $this->container->get($classname);
         }
         $refClass = new ReflectionClass($classname);
         $refConstructor = $refClass->getConstructor();
-        if ($refConstructor === null) {
-            $return = new $classname();
+        $paramValues = $refConstructor
+            ? $this->resolveConstructorArgs($refConstructor)
+            : [];
+        $return = $refClass->newInstanceArgs($paramValues);
+        if ($useContainer) {
             $this->container->offsetSet($classname, $return);
-            return $return;
         }
-        $paramValues = $this->resolveConstructorArgs($refConstructor);
-        $obj = $refClass->newInstanceArgs($paramValues);
-        if ($addToContainer) {
-            $this->container->offsetSet($classname, $obj);
-        }
-        return $obj;
+        return $return;
     }
 
     /**

@@ -30,6 +30,11 @@ abstract class AbstractValue extends AbstractComponent
     /** @var array<string,charInfo> */
     public $charData = array();
 
+    /** @var array<string,mixed> */
+    protected $cfg = array(
+        'undefinedAs' => 'unset',
+    );
+
     /** @var Dumper  */
     protected $dumper;
 
@@ -41,6 +46,9 @@ abstract class AbstractValue extends AbstractComponent
 
     /** @var array<string,mixed> Pointer to top of optionsStack */
     protected $optionsCurrent = array();
+
+    /** @var array<string,mixed> Options for previously dumped value */
+    protected $optionsPrevious = array();
 
     /** @var list<Type::TYPE_*> */
     protected $simpleTypes = [
@@ -138,6 +146,9 @@ abstract class AbstractValue extends AbstractComponent
      */
     public function optionGet($what = null)
     {
+        if ($what === 'previous') {
+            return $this->optionsPrevious;
+        }
         return $what === null
             ? $this->optionsCurrent
             : $this->debug->arrayUtil->pathGet($this->optionsCurrent, $what);
@@ -184,7 +195,7 @@ abstract class AbstractValue extends AbstractComponent
      */
     public function optionStackPop()
     {
-        \array_pop($this->optionStack);
+        $this->optionsPrevious = \array_pop($this->optionStack);
         $this->optionsCurrent = &$this->optionStack[\count($this->optionStack) - 1];
     }
 
@@ -302,6 +313,15 @@ abstract class AbstractValue extends AbstractComponent
     abstract protected function dumpFloat($val, $abs = null);
 
     /**
+     * Dump identifier
+     *
+     * @param Abstraction $abs constant abstraction
+     *
+     * @return string
+     */
+    abstract protected function dumpIdentifier(Abstraction $abs);
+
+    /**
      * Dump integer value
      *
      * @param int              $val integer value
@@ -336,6 +356,15 @@ abstract class AbstractValue extends AbstractComponent
      * @return string
      */
     abstract protected function dumpString($val, $abs = null);
+
+    /**
+     * Dump Table
+     *
+     * @param Abstraction $abs Table abstraction
+     *
+     * @return array|string
+     */
+    abstract protected function dumpTable(Abstraction $abs);
 
     /**
      * Escape hex and unicode escape sequences.

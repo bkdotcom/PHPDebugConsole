@@ -13,6 +13,8 @@ namespace bdk\Debug\Abstraction;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Utility\Php;
+use Closure;
+use UnitEnum;
 
 /**
  * Determine value type / extended type
@@ -49,6 +51,8 @@ class Type
     const TYPE_IDENTIFIER_CLASSNAME = 'className';
     const TYPE_IDENTIFIER_CONST = 'const';
     const TYPE_IDENTIFIER_METHOD = 'method';
+    const TYPE_OBJ_CLOSURE = 'closure';             // subtype of object
+    const TYPE_OBJ_ENUM = 'enum';                   // subtype of object
     const TYPE_STRING_BASE64 = 'base64';            // "encoded" / auto-detected
     const TYPE_STRING_BINARY = 'binary';            // string that contains non-utf8
     const TYPE_STRING_CLASSNAME = 'classname';      // deprecated (use TYPE_IDENTIFIER)
@@ -58,6 +62,7 @@ class Type
     const TYPE_STRING_LONG = 'maxLen';
     const TYPE_STRING_NUMERIC = 'numeric';
     const TYPE_STRING_SERIALIZED = 'serialized';    // encoded / auto-detected
+    const TYPE_TABLE = 'table';                     // Table structure
     const TYPE_TIMESTAMP = 'timestamp';
 
     protected $abstracter;
@@ -182,9 +187,16 @@ class Type
      */
     private function getTypeObject($object)
     {
-        return $object instanceof Abstraction
-            ? [$object['type'], $object['typeMore']]
-            : [self::TYPE_OBJECT, self::TYPE_RAW]; // raw indicates value needs abstracted
+        if ($object instanceof Abstraction) {
+            return [$object['type'], $object['typeMore']];
+        }
+        $typeMore = null;
+        if ($object instanceof Closure) {
+            $typeMore = self::TYPE_OBJ_CLOSURE;
+        } elseif ($object instanceof UnitEnum) {
+            $typeMore = self::TYPE_OBJ_ENUM;
+        }
+        return [self::TYPE_OBJECT, $typeMore];
     }
 
     /**

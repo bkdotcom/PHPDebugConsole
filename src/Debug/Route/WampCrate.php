@@ -204,6 +204,7 @@ class WampCrate
             $meta
         );
         $this->debug->rootInstance->getPlugin('methodTrace')->doTrace($logEntryTmp);
+        $logEntryTmp->crate();
         return \array_replace_recursive(
             $logEntryTmp['meta'],
             array(

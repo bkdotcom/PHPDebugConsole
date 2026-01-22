@@ -10,8 +10,16 @@
 
 namespace bdk\Debug\Dump\Html;
 
+use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html as Dumper;
+use bdk\Debug\Dump\Html\Helper;
+use bdk\Debug\Dump\Html\Value as ValDumper;
+use bdk\Table\Table as BdkTable;
+use bdk\Table\TableCell;
+use bdk\Table\TableRow;
 
 /**
  * build a table
@@ -24,306 +32,240 @@ class Table
     /** @var Dumper */
     protected $dumper;
 
-    /** @var array<string,mixed> */
-    protected $options;
+    /** @var Helper helper class */
+    protected $helper;
 
-    /** @var array<string,mixed> */
-    private $optionsDefault = array(
-        'attribs' => array(),
-        'caption' => '',
-        'tableInfo' => array(
-            'class' => null,  // class name of table object
-            'columns' => array(),
-            'commonRowInfo' => array(
-                'attribs' => array(),
-                'class' => null,
-                'key' => null,
-                'keyOutput' => true,
-                'summary' => '',
-            ),
-            'haveObjRow' => false,
-            'indexLabel' => null,
-            'rows' => array(),
-            'summary' => '', // title attr on class
-        ),
-    );
+    /** @var \bdk\Debug\Utility\Html */
+    protected $html;
+
+    /** @var ValDumper */
+    protected $valDumper;
+
+    /** @var int|null */
+    private $classColumnIndex;
+
+    /** @var BdkTable|null */
+    private $table;
 
     /**
      * Constructor
      *
-     * @param Dumper $dumper html dumper
+     * @param Dumper $dumper Html dumper
+     * @param Helper $helper Html dump helpers
      */
-    public function __construct(Dumper $dumper)
+    public function __construct(Dumper $dumper, Helper $helper)
     {
         $this->debug = $dumper->debug;
         $this->dumper = $dumper;
+        $this->helper = $helper;
+        $this->html = $this->debug->html;
+        $this->valDumper = $dumper->valDumper;
     }
 
     /**
-     * Formats an array as a table
+     * Dump table structure
      *
-     * @param mixed $rows    array of \Traversable or Abstraction
-     * @param array $options options
-     *                           'attribs' : key/val array (or string - interpreted as class value)
-     *                           'caption' : optional caption
-     *                           'tableInfo':
-     *                               'columns' : list of columns info
+     * @param Abstraction $abs Table abstraction
      *
      * @return string
      */
-    public function build($rows, $options = array())
+    public function dump(Abstraction $abs)
     {
-        $this->buildInitOptions($options);
+        $data = $abs->getValues();
+        $table = new BdkTable($data);
+        $classes = \array_keys(\array_filter(array(
+            'sortable' => $table->getMeta('sortable'),
+            'table-bordered' => true,
+            'trace-context' => $table->getMeta('inclContext'), // only applies for trace tables
+        )));
+        $table->addClass($classes);
+        $this->table = $table;
 
-        return $this->debug->html->buildTag(
-            'table',
-            $this->options['attribs'],
-            "\n"
-                . $this->buildCaption()
-                . $this->buildHeader()
-                . $this->buildBody($rows)
-                . $this->buildFooter()
-        );
+        $this->updateCaption();
+        $this->setClassColumnIndex();
+
+        if ($table->getMeta('inclContext')) {
+            $this->addContextRows($table);
+        }
+
+        TableCell::setValDumper(function (TableCell $tableCell) {
+            return $this->valDumper($tableCell);
+        });
+        return $table->getOuterHtml();
     }
 
     /**
-     * Initialize options
+     * Insert new table rows fot context
      *
-     * @param array $options table options and info
+     * @param BdkTable $table Table instance
      *
      * @return void
      */
-    private function buildInitOptions(array $options)
+    private function addContextRows(BdkTable $table)
     {
-        $this->options = \array_replace_recursive($this->optionsDefault, $options);
-
-        foreach ($this->options['tableInfo']['columns'] as $k => $colInfo) {
-            $this->options['tableInfo']['columns'][$k] = \array_merge(array(
-                'attribs' => array(),
-                'class' => null,
-                'falseAs' => null,
-                'key' => '',
-                'total' => null,
-                'trueAs' => null,
-            ), $colInfo);
-        }
-    }
-
-    /**
-     * Builds table's body
-     *
-     * @param array $rows array of arrays or Traversable
-     *
-     * @return string
-     */
-    protected function buildBody($rows)
-    {
-        $tBody = '';
-        foreach ($rows as $k => $row) {
-            $rowInfo = \array_merge(
-                $this->options['tableInfo']['commonRowInfo'],
-                isset($this->options['tableInfo']['rows'][$k])
-                    ? $this->options['tableInfo']['rows'][$k]
-                    : array()
-            );
-            $tBody .= $this->buildRow($row, $rowInfo, $k);
-        }
-        return '<tbody>' . "\n" . $tBody . '</tbody>' . "\n";
-    }
-
-    /**
-     * Build table caption
-     *
-     * @return string
-     */
-    private function buildCaption()
-    {
-        $caption = $this->dumper->valDumper->dump((string) $this->options['caption'], array(
-            'tagName' => null,
-            'type' => Type::TYPE_STRING, // pass so dumper doesn't need to infer
-        ));
-        if (!$this->options['tableInfo']['class']) {
-            return $caption
-                ? '<caption>' . $caption . '</caption>' . "\n"
-                : '';
-        }
-        $class = $this->dumper->valDumper->markupIdentifier(
-            $this->options['tableInfo']['class'],
-            Type::TYPE_IDENTIFIER_CLASSNAME,
-            'span',
-            array(
-                'title' => $this->options['tableInfo']['summary'],
-            )
-        );
-        $caption = $caption
-            ? $caption . ' (' . $class . ')'
-            : $class;
-        return '<caption>' . $caption . '</caption>' . "\n";
-    }
-
-    /**
-     * Builds table's tfoot
-     *
-     * @return string
-     */
-    protected function buildFooter()
-    {
-        $haveTotal = false;
-        $cells = \array_map(function ($colInfo) use (&$haveTotal) {
-            if (isset($colInfo['total']) === false) {
-                return '<td></td>';
+        $rows = $table->getRows();
+        $table->setRows([]);
+        foreach ($rows as $i => $row) {
+            $table->appendRow($row);
+            if ($row->getMeta('context') === null) {
+                continue;
             }
-            $haveTotal = true;
-            $totalVal = $colInfo['total'];
-            if (\is_float($totalVal)) {
-                $totalVal = \round($totalVal, 6);
-            }
-            return $this->dumper->valDumper->dump($totalVal, array(
-                'attribs' => $colInfo['attribs'],
-                'tagName' => 'td',
-            ));
-        }, $this->options['tableInfo']['columns']);
-        if (!$haveTotal) {
+            $contextRow = $this->buildContextRow($row, $i === 0);
+            $table->appendRow($contextRow);
+        }
+    }
+
+    /**
+     * Dump context arguments
+     *
+     * @param string|array $args Arguments from backtrace
+     *
+     * @return string
+     */
+    private function buildContextArguments($args)
+    {
+        if (\is_array($args) === false || \count($args) === 0) {
             return '';
         }
-        return '<tfoot>' . "\n"
-            . '<tr>'
-                . ($this->options['tableInfo']['commonRowInfo']['keyOutput'] ? '<td>&nbsp;</td>' : '')
-                . ($this->options['tableInfo']['haveObjRow'] ? '<td>&nbsp;</td>' : '')
-                . \implode('', $cells)
-            . '</tr>' . "\n"
-            . '</tfoot>' . "\n";
+        $crateRawWas = $this->dumper->crateRaw;
+        $this->dumper->crateRaw = true;
+        // set maxDepth for args
+        $maxDepthBak = $this->debug->getCfg('maxDepth');
+        if ($maxDepthBak > 0) {
+            $this->debug->setCfg('maxDepth', $maxDepthBak + 1, Debug::CONFIG_NO_PUBLISH);
+        }
+        $args = '<hr />Arguments = ' . $this->valDumper->dump($args);
+        $this->debug->setCfg('maxDepth', $maxDepthBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
+        $this->dumper->crateRaw = $crateRawWas;
+        return $args;
     }
 
     /**
-     * Returns table's thead
+     * Create new TableRow containing trace context
      *
-     * @return string
+     * @param TableRow $row      TableRow instance
+     * @param bool     $expanded Whether row should be initially expanded
+     *
+     * @return TableRow
      */
-    protected function buildHeader()
+    private function buildContextRow(TableRow $row, $expanded)
     {
-        $labels = \array_map([$this, 'buildHeaderLabel'], $this->options['tableInfo']['columns']);
-        $keyLabel = $this->options['tableInfo']['commonRowInfo']['keyOutput']
-            ? ($this->options['tableInfo']['indexLabel']
-                ? '<th>' . $this->options['tableInfo']['indexLabel'] . '</th>'
-                : '<th>&nbsp;</th>')
-            : '';
-        return '<thead>' . "\n"
-            . '<tr>'
-                . $keyLabel
-                . ($this->options['tableInfo']['haveObjRow']
-                    ? '<th>&nbsp;</th>'
-                    : '')
-                . \implode('', $labels)
-            . '</tr>' . "\n"
-            . '</thead>' . "\n";
+        if ($expanded) {
+            $row->addClass('expanded', $expanded);
+        }
+        $row->setAttrib('data-toggle', 'next');
+
+        $contextHtml = $this->helper->buildContext($row->getMeta('context'), $row->getCells()[2]->getValue())
+            . $this->buildContextArguments($row->getMeta('args'));
+        $contextHtml = $this->debug->abstracter->crateWithVals($contextHtml, array(
+            'dumpType' => false, // don't add t_string css class
+            'sanitize' => false,
+            'visualWhiteSpace' => false,
+        ));
+        $tableCell = new TableCell($contextHtml);
+        $tableCell->setAttrib('colspan', \count($row->getCells()));
+
+        $tableRow = new TableRow();
+        $tableRow->setAttribs(array(
+            'class' => ['context'],
+            'style' => $expanded ? 'display:table-row;' : null,
+        ));
+
+        $tableRow->appendCell($tableCell);
+        return $tableRow;
     }
 
     /**
-     * Build header label th tag
+     * Determine & set the column index of ___class_name column
      *
-     * @param array $colInfo Column information
+     * @return void
+     */
+    private function setClassColumnIndex()
+    {
+        $this->classColumnIndex = null;
+        foreach ($this->table->getMeta('columns', []) as $i => $colMeta) {
+            if ($colMeta['key'] === '___class_name') {
+                $this->classColumnIndex = $i;
+                break;
+            }
+        }
+    }
+
+    /**
+     * Dump a TableCell value
+     *
+     * @param TableCell $tableCell TableCell instance
      *
      * @return string
      */
-    protected function buildHeaderLabel($colInfo)
+    private function valDumper(TableCell $tableCell)
     {
-        $type = $this->debug->abstracter->type->getType($colInfo['key']);
-        $label = $this->dumper->valDumper->dump($colInfo['key'], array(
+        $index = $tableCell->getIndex();
+        $value = $tableCell->getValue();
+        $rowType = $tableCell->getParent()->getParent()->getTagName();
+
+        if ($index === $this->classColumnIndex && $rowType !== 'thead' && $value !== Abstracter::UNDEFINED) {
+            $dumped = $this->valDumper->markupIdentifier($value, Type::TYPE_IDENTIFIER_CLASSNAME);
+            $parsed = $this->html->parseTag($dumped);
+            $tableCell->setAttribs($parsed['attribs']);
+            return $parsed['innerhtml'];
+        }
+
+        $dumped = $this->valDumper->dump($value, array(
             'tagName' => null,
         ));
-        if (!empty($colInfo['class'])) {
-            $label .= ' ' . $this->dumper->valDumper->markupIdentifier($colInfo['class'], Type::TYPE_IDENTIFIER_CLASSNAME);
+        $optionsPrev = $this->valDumper->optionGet('previous');
+
+        $columnMeta = \array_merge(array(
+            'class' => null,
+            'falseAs' => null,
+            'trueAs' => null,
+        ), $this->table->getMeta('columns', [])[$index]);
+
+        if ($value === true && $columnMeta['trueAs'] !== null) {
+            $dumped = $columnMeta['trueAs'];
+        } elseif ($value === false && $columnMeta['falseAs'] !== null) {
+            $dumped = $columnMeta['falseAs'];
         }
-        return $this->debug->html->buildTag('th', array(
-            'class' => $type[0] !== 'string'
-                ? 't_' . $type[0]
-                : null,
-            'scope' => 'col',
-        ), $label);
+
+        $columnClass = $rowType === 'thead'
+            ? $columnMeta['class']
+            : null;
+        if ($columnClass) {
+            $dumped .= ' ' . $this->valDumper->markupIdentifier($columnClass, Type::TYPE_IDENTIFIER_CLASSNAME);
+        }
+
+        if ($optionsPrev['attribs']) {
+            $attribs = $this->debug->arrayUtil->mergeDeep($tableCell->getAttribs(), $optionsPrev['attribs']);
+            $tableCell->setAttribs($attribs);
+        }
+        return $dumped;
     }
 
     /**
-     * Returns table row
+     * Sanitize the caption and with classname (if applicable)
      *
-     * @param mixed      $row     should be array or object abstraction
-     * @param array      $rowInfo row info / meta
-     * @param string|int $rowKey  row key
-     *
-     * @return string
+     * @return void
      */
-    protected function buildRow($row, array $rowInfo, $rowKey)
+    private function updateCaption()
     {
-        $str = '';
-        $rowKey = $rowInfo['key'] ?: $rowKey;
-        $str .= '<tr' . $this->debug->html->buildAttribString($rowInfo['attribs']) . '>';
-        $str .= $rowInfo['keyOutput'] ? $this->buildRowKey($rowKey) : '';
-        /*
-            Output row's classname (if row is an object)
-        */
-        if ($this->options['tableInfo']['haveObjRow']) {
-            $str .= $rowInfo['class']
-                ? $this->dumper->valDumper->markupIdentifier($rowInfo['class'], Type::TYPE_IDENTIFIER_CLASSNAME, 'td', array(
-                    'title' => $rowInfo['summary'],
-                ))
-                : '<td class="t_undefined"></td>';
-        }
-        /*
-            Output values
-        */
-        $str .= $this->buildRowCells($row, $rowInfo);
-        $str .= '</tr>' . "\n";
-        return $str;
-    }
-
-    /**
-     * Build the row's value cells
-     *
-     * @param mixed $row     should be array or object abstraction
-     * @param array $rowInfo row info / meta
-     *
-     * @return string
-     */
-    private function buildRowCells($row, array $rowInfo)
-    {
-        $cells = \array_map(function ($val, $i) use ($rowInfo) {
-            $colInfo = \array_merge(
-                $this->options['tableInfo']['columns'][$i],
-                isset($rowInfo['columns'][$i])
-                    ? $rowInfo['columns'][$i]
-                    : array()
-            );
-            $td = $this->dumper->valDumper->dump($val, array(
-                'attribs' => $colInfo['attribs'],
-                'tagName' => 'td',
+        $caption = '';
+        $captionElement = $this->table->getCaption();
+        if ($captionElement) {
+            $caption = $captionElement->getHtml();
+            $caption = $this->valDumper->dump($caption, array(
+                'tagName' => null,
+                'type' => Type::TYPE_STRING, // pass so dumper doesn't need to infer
             ));
-            if ($val === true && $colInfo['trueAs'] !== null) {
-                $td = \str_replace('>true<', '>' . $colInfo['trueAs'] . '<', $td);
-            } elseif ($val === false && $colInfo['falseAs'] !== null) {
-                $td = \str_replace('>false<', '>' . $colInfo['falseAs'] . '<', $td);
-            }
-            return $td;
-        }, \array_values($row), \range(0, \count($row) - 1));
-        return \implode('', $cells);
-    }
-
-    /**
-     * Build row's key/index th tag
-     *
-     * @param string|int $rowKey Row's index
-     *
-     * @return string
-     */
-    private function buildRowKey($rowKey)
-    {
-        $rowKeyParsed = $this->debug->html->parseTag($this->dumper->valDumper->dump($rowKey));
-        return $this->debug->html->buildTag(
-            'th',
-            $this->debug->arrayUtil->mergeDeep($rowKeyParsed['attribs'], array(
-                'class' => ['t_key'],
-                'scope' => 'row',
-            )),
-            $rowKeyParsed['innerhtml']
-        );
+        }
+        $class = $this->table->getMeta('class');
+        if ($class) {
+            $caption = \trim(\sprintf(
+                '%s (%s)',
+                $caption,
+                $this->valDumper->markupIdentifier($class, Type::TYPE_IDENTIFIER_CLASSNAME)
+            ));
+        }
+        $this->table->setCaption($caption ?: null);
     }
 }

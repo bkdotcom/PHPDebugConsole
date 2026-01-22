@@ -75,31 +75,12 @@ class TableCell extends Element
      */
     public function getOuterHtml()
     {
-        // find the table this cell belongs to
-        // and access column meta data
-        // merge in any attribs
-        $table = null;
-        $parent = $this->getParent();
-        while ($parent !== null) {
-            if ($parent instanceof Table) {
-                $table = $parent;
-                break;
-            }
-            $parent = $parent->getParent();
-        }
         $innerHtml = $this->getHtml();
         $attribs = $this->getAttribs();
-        if ($table !== null) {
-            $index = $this->getIndex();
-            $columnsMeta = \array_replace(array(
-                $index => array(),
-            ), $table->getMeta('columns', array()));
-            $columnMeta = \array_merge(array(
-                'attribs' => array(),
-            ), $columnsMeta[$index]);
-            $attribs = ArrayUtil::mergeDeep($columnMeta['attribs'], $attribs);
-        }
-        return Html::buildTag($this->getTagName(), $attribs, $innerHtml);
+        $columnMeta = $this->getColumnMeta();
+        $tagName = $columnMeta['tagName'] ?? $this->getTagName();
+        $attribs = ArrayUtil::mergeDeep($columnMeta['attribs'], $attribs);
+        return Html::buildTag($tagName, $attribs, $innerHtml);
     }
 
     /**
@@ -167,6 +148,40 @@ class TableCell extends Element
         $tableCell->addClass($class);
 
         return \htmlspecialchars($value);
+    }
+
+    /**
+     * Get the column meta values for this cell's column
+     *   * Only applies to tbody cells without colspan/rowspan
+     *
+     * @return array<string,mixed>
+     */
+    protected function getColumnMeta()
+    {
+        $columnMetaDefault = array(
+            'attribs' => array(),
+            'tagName' => null,
+        );
+        // find the table this cell belongs to
+        $table = null;
+        $parent = $this->getParent();
+        $rowType = $this->getParent()->getParent()->getTagName();
+        while ($parent !== null) {
+            if ($parent instanceof Table) {
+                $table = $parent;
+                break;
+            }
+            $parent = $parent->getParent();
+        }
+        $attribs = $this->getAttribs();
+        if ($table === null || $rowType !== 'tbody' || \array_intersect_key($attribs, \array_flip(['colspan', 'rowspan']))) {
+            return $columnMetaDefault;
+        }
+        $index = $this->getIndex();
+        $columnsMeta = \array_replace(array(
+            $index => array(),
+        ), $table->getMeta('columns', array()));
+        return \array_merge($columnMetaDefault, $columnsMeta[$index]);
     }
 
     /**

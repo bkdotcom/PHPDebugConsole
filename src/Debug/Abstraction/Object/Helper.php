@@ -167,7 +167,7 @@ class Helper
     }
 
     /**
-     * Test if only need to populate traverseValues
+     * Test if "traverseOnly" mode
      *
      * @param ObjectAbstraction $abs Abstraction instance
      *
@@ -175,7 +175,7 @@ class Helper
      */
     public function isTraverseOnly(ObjectAbstraction $abs)
     {
-        if ($abs['debugMethod'] === 'table' && \count($abs['hist']) < 4) {
+        if ($abs['debugMethod'] === 'table' && \count($abs['hist']) < 7) {
             $abs['cfgFlags'] &= ~AbstractObject::CONST_COLLECT;  // set collect constants to "false"
             $abs['cfgFlags'] &= ~AbstractObject::METHOD_COLLECT;  // set collect methods to "false"
             return true;

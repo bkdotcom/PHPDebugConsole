@@ -58,10 +58,13 @@ class LogResponseTest extends DebugTestFramework
         self::assertSame('request-response', $logEntries[0]['meta']['channel']);
 
         self::assertSame('table', $logEntries[1]['method']);
-        self::assertSame(array(
-            'Content-Type' => [ContentType::JSON],
-        ), $logEntries[1]['args'][0]);
-        self::assertSame('response headers', $logEntries[1]['meta']['caption']);
+        self::assertSame([
+            [
+                'Content-Type',
+                ContentType::JSON,
+            ],
+        ], $logEntries[1]['args'][0]['rows']);
+        self::assertSame('response headers', $logEntries[1]['args'][0]['caption']);
 
         self::assertSame('{' . "\n"
             . '    "foo": "bar"' . "\n"
@@ -125,11 +128,13 @@ class LogResponseTest extends DebugTestFramework
         self::assertSame('request-response', $logEntries[0]['meta']['channel']);
 
         self::assertSame('table', $logEntries[1]['method']);
-        self::assertSame('response headers', $logEntries[1]['meta']['caption']);
-        self::assertSame(array(
-            'Content-Type' => [ContentType::JSON],
-        ), $logEntries[1]['args'][0]);
-
+        self::assertSame('response headers', $logEntries[1]['args'][0]['caption']);
+        self::assertSame([
+            [
+                'Content-Type',
+                ContentType::JSON,
+            ],
+        ], $logEntries[1]['args'][0]['rows']);
         self::assertSame('response too large (13 B) to output', $logEntries[2]['args'][0]);
     }
 

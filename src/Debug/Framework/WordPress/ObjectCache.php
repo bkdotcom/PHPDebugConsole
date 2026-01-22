@@ -57,12 +57,10 @@ class ObjectCache extends AbstractComponent implements SubscriberInterface
         $this->debug->log(\_x('Cache Misses', 'cache.misses', 'debug-console-php'), $GLOBALS['wp_object_cache']->cache_misses);
 
         $cacheInfo = $this->getCacheInfo();
-        $this->debug->table($cacheInfo, $this->debug->meta('tableInfo', array(
-            'columns' => array(
-                'size' => array(
-                    'attribs' => array('class' => ['no-quotes']),
-                    'total' => $this->debug->utility->getBytes($this->totalCacheSize),
-                ),
+        $this->debug->table($cacheInfo, $this->debug->meta('columnMeta', array(
+            'size' => array(
+                'attribs' => array('class' => ['no-quotes']),
+                'total' => $this->debug->utility->getBytes($this->totalCacheSize),
             ),
         )));
     }

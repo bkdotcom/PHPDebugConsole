@@ -11,6 +11,7 @@
 namespace bdk\Debug\Dump\Html;
 
 use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Base\Value as BaseValue;
@@ -18,11 +19,13 @@ use bdk\Debug\Dump\Html as Dumper;
 use bdk\Debug\Dump\Html\HtmlArray;
 use bdk\Debug\Dump\Html\HtmlObject;
 use bdk\Debug\Dump\Html\HtmlString;
+use bdk\Debug\Dump\Html\Table;
 
 /**
  * Dump val as HTML
  *
  * @property HtmlObject $object lazy-loaded HtmlObject... only loaded if dumping an object
+ * @property HtmlTable  $table  lazy-loaded HtmlTable... only loaded if outputting a table
  */
 class Value extends BaseValue
 {
@@ -37,6 +40,9 @@ class Value extends BaseValue
 
     /** @var HtmlObject */
     protected $lazyObject;
+
+    /** @var Table */
+    protected $lazyTable;
 
     /**
      * Constructor
@@ -78,14 +84,15 @@ class Value extends BaseValue
                     'class' => ['timestamp', 'value-container'],
                     'title' => $date,
                 );
-                if ($opts['tagName'] === 'td') {
-                    return $this->html->buildTag(
-                        'td',
-                        $attribsContainer,
-                        $this->html->buildTag('span', $opts['attribs'], $val)
-                    );
+                if ($opts['tagName'] !== 'span') {
+                    // if tagName is not 'span' or even if null, go ahead and wrap/rebuild in <span class="t_int" data-type-more="timestamp">
+                    $dumped = $this->html->buildTag('span', $opts['attribs'], $val);
                 }
-                return $this->html->buildTag('span', $attribsContainer, $dumped);
+                $this->optionSet('attribs', $attribsContainer); // replace attribs with new outer container attribs
+                // dumped is now : <span class="t_int" data-type-more="timestamp">1767751464</span>
+                return $opts['tagName'] !== null
+                    ? $this->html->buildTag($opts['tagName'], $attribsContainer, $dumped)
+                    : $dumped;
             });
         }
         return $date;
@@ -104,7 +111,7 @@ class Value extends BaseValue
     {
         $opts = $this->getPerValueOptions($val, $opts);
         $this->optionStackPush($opts); // sets optionsCurrent
-        $val = $this->doDump($val);
+        $dumped = $this->doDump($val);
         if ($this->optionsCurrent['type'] && $this->optionsCurrent['dumpType']) {
             $this->optionsCurrent['attribs']['class'][] = 't_' . $this->optionsCurrent['type'];
         }
@@ -113,13 +120,13 @@ class Value extends BaseValue
         }
         $tagName = $this->optionsCurrent['tagName'];
         if ($tagName) {
-            $val = $this->html->buildTag($tagName, $this->optionsCurrent['attribs'], $val);
+            $dumped = $this->html->buildTag($tagName, $this->optionsCurrent['attribs'], $dumped);
         }
         if ($this->optionsCurrent['postDump']) {
-            $val = \call_user_func($this->optionsCurrent['postDump'], $val, $this->optionsCurrent);
+            $dumped = \call_user_func($this->optionsCurrent['postDump'], $dumped, $this->optionsCurrent);
         }
         $this->optionStackPop();
-        return $val;
+        return $dumped;
     }
 
     /**
@@ -131,12 +138,12 @@ class Value extends BaseValue
      * @param string       $what    (Type::TYPE_IDENTIFIER_CLASSNAME), Type::TYPE_IDENTIFIER_CONST, or Type::TYPE_IDENTIFIER_METHOD
      *                                specify what we're marking if ambiguous
      * @param string       $tagName ("span") html tag to use
-     * @param array        $attribs (optional) additional html attributes for classname span (such as title)
+     * @param array|null   $attribs (optional) additional html attributes for classname span (such as title)
      * @param bool         $wbr     (false) whether to add a <wbr /> after the classname
      *
      * @return string html snippet
      */
-    public function markupIdentifier($val, $what = Type::TYPE_IDENTIFIER_CLASSNAME, $tagName = 'span', array $attribs = array(), $wbr = false)
+    public function markupIdentifier($val, $what = Type::TYPE_IDENTIFIER_CLASSNAME, $tagName = 'span', $attribs = array(), $wbr = false)
     {
         $parts = \array_map([$this->string, 'dump'], $this->parseIdentifier($val, $what));
         $class = 'classname';
@@ -302,6 +309,19 @@ class Value extends BaseValue
     }
 
     /**
+     * Dump Table
+     *
+     * @param Abstraction $abs Table abstraction
+     *
+     * @return string
+     */
+    protected function dumpTable(Abstraction $abs)
+    {
+        $this->optionSet('tagName', null);
+        return $this->getTable()->dump($abs);
+    }
+
+    /**
      * Dump undefined
      *
      * @return string
@@ -337,6 +357,19 @@ class Value extends BaseValue
     }
 
     /**
+     * Getter for this->table
+     *
+     * @return HtmlTable
+     */
+    protected function getTable()
+    {
+        if (!$this->lazyTable) {
+            $this->lazyTable = new Table($this->dumper, $this->dumper->helper);
+        }
+        return $this->lazyTable;
+    }
+
+    /**
      * Get dump options
      *
      * @param mixed $val  value being dumped
@@ -348,6 +381,7 @@ class Value extends BaseValue
     protected function getPerValueOptions($val, $opts)
     {
         $parentOptions = parent::getPerValueOptions($val, $opts);
+        $isAbstraction = $val instanceof Abstraction;
         return $this->debug->arrayUtil->mergeDeep(
             array(
                 'attribs' => array(
@@ -355,13 +389,13 @@ class Value extends BaseValue
                 ),
                 'dumpType' => true,
                 'postDump' => null,
-                'tagName' => $parentOptions['type'] === Type::TYPE_OBJECT
+                'tagName' => $parentOptions['type'] === Type::TYPE_OBJECT && (!$isAbstraction || !($val['cfgFlags'] & AbstractObject::BRIEF))
                     ? 'div'
                     : 'span',
             ),
             $parentOptions,
             array(
-                'attribs' => $val instanceof Abstraction && \is_array($val['attribs'])
+                'attribs' => $isAbstraction && \is_array($val['attribs'])
                     ? $val['attribs']
                     : [],
             )

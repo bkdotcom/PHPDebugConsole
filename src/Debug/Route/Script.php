@@ -56,7 +56,8 @@ class Script extends AbstractRoute
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        $this->dumper = $debug->getDump('base');
+        $this->dumper = $debug->getDump('base', 'script');
+        $this->dumper->setCfg('undefinedAs', Abstracter::UNDEFINED);
     }
 
     /**
@@ -90,32 +91,14 @@ class Script extends AbstractRoute
      */
     public function processLogEntry(LogEntry $logEntry)
     {
-        $method = $logEntry['method'];
-        if (\in_array($method, ['table', 'trace'], true)) {
-            $logEntry->setMeta(array(
-                'forceArray' => false,
-                'undefinedAs' => Abstracter::UNDEFINED,
-            ));
-        }
         $this->dumper->processLogEntry($logEntry);
         $str = $this->buildConsoleCall($logEntry);
-        $str = \str_replace(
-            [
-                // ensure that </script> doesn't appear inside our <script>
-                '</script>',
-                \json_encode(Type::TYPE_FLOAT_INF),
-                \json_encode(Type::TYPE_FLOAT_NAN),
-                \json_encode(Abstracter::UNDEFINED),
-            ],
-            [
-                '<\\/script>',
-                'Infinity',
-                'NaN',
-                'undefined',
-            ],
-            $str
-        );
-        return $str;
+        return \strtr($str, array(
+            '</script>' => '<\\/script>',
+            \json_encode(Type::TYPE_FLOAT_INF) => 'Infinity',
+            \json_encode(Type::TYPE_FLOAT_NAN) => 'NaN',
+            \json_encode(Abstracter::UNDEFINED) => 'undefined',
+        ));
     }
 
     /**

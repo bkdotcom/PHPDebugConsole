@@ -112,7 +112,7 @@ abstract class AbstractClient
      *
      * @return PromiseInterface
      */
-    public function get($uri, array $headers = array())
+    public function get($uri, $headers = array())
     {
         return $this->request('GET', $uri, array(
             'headers' => $headers,

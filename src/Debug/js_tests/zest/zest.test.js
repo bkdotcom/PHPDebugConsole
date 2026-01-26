@@ -265,6 +265,47 @@ describe('helper.extend function', () => {
 
     expect(target).toEqual({ a: { b: 2 } });
   });
+
+  test('merges arrays with unique values only', () => {
+    const target = { arr: [1, 2, 3] };
+    const source = { arr: [3, 4, 5] };
+
+    zest.extend(true, target, source);
+
+    expect(target.arr).toEqual([1, 2, 3, 4, 5]);
+    expect(target.arr.length).toBe(5);
+    // Verify no duplicates
+    const uniqueValues = [...new Set(target.arr)];
+    expect(target.arr.length).toBe(uniqueValues.length);
+  });
+
+  test('merges multiple arrays keeping only unique values', () => {
+    const target = { arr: ['a', 'b', 'c'] };
+    const source1 = { arr: ['b', 'c', 'd'] };
+    const source2 = { arr: ['c', 'd', 'e'] };
+
+    zest.extend(true, target, source1, source2);
+
+    expect(target.arr).toEqual(['a', 'b', 'c', 'd', 'e']);
+    expect(target.arr.length).toBe(5);
+    // Verify no duplicates
+    const uniqueValues = [...new Set(target.arr)];
+    expect(target.arr.length).toBe(uniqueValues.length);
+  });
+
+  test('top-level array merge with duplicates removed', () => {
+    const target = [1, 2, 3];
+    const source = [3, 4, 5];
+
+    const result = zest.extend(target, source);
+
+    expect(result).toBe(target);
+    expect(target).toEqual([1, 2, 3, 4, 5]);
+    expect(target.length).toBe(5);
+    // Verify no duplicates
+    const uniqueValues = [...new Set(target)];
+    expect(target.length).toBe(uniqueValues.length);
+  });
 });
 
 describe('helper.isNumeric function', () => {

@@ -127,15 +127,19 @@ export const extend = function ( ...args ) {
     var curSourceIsObject = false
     if (source === undefined || source === null) {
       // silently skip over undefined/null sources
-      return
+      return // continue
     }
     if (typeof source !== 'object') {
       throw new Error('extend: object or array expected, ' + type(source) + ' given')
     }
     if (Array.isArray(target) && Array.isArray(source)) {
-      // append arrays
+      // append source array values to target array
       Array.prototype.push.apply(target, source)
-      return [...new Set(target)] // unique values
+      // Now replace target contents with unique values only
+      const uniqueValues = [...new Set(target)]
+      target.length = 0
+      Array.prototype.push.apply(target, uniqueValues)
+      return // continue
     }
     for (const [key, value] of Object.entries(source)) {
       curSourceIsObject = typeof value === 'object' && value !== null
@@ -164,6 +168,20 @@ export const findDeepest = function (el) {
     ? deepestEl[0]
     : deepestEl
 }
+
+/*
+export const intersectObjects = function ( ...objects ) {
+  var target = objects.shift()
+  objects.forEach((obj) => {
+    const intersectingKeys = Object.keys(target).filter(key => Object.keys(obj).includes(key))
+    target = intersectingKeys.reduce((result, key) => {
+      result[key] = target[key]
+      return result
+    }, {})
+  })
+  return target
+}
+*/
 
 /*
 function hash (str) {

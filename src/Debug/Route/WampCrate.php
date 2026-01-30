@@ -105,6 +105,9 @@ class WampCrate
                     $clone['valueDecoded'] = $this->crate($clone['valueDecoded']);
                 }
                 return $clone;
+            case Type::TYPE_TABLE:
+                $clone['rows'] = $this->crateArray($clone['rows']);
+                return $clone;
         }
         return $clone;
     }

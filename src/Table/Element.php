@@ -19,6 +19,11 @@ class Element implements JsonSerializable, Serializable
     /** @var bool */
     protected $buildingHtml = false;
 
+    /** @var array>string,mixed> */
+    protected $cfg = array(
+        'indent '=> false,
+    );
+
     /** @var list<Element> */
     protected $children = array();
 
@@ -136,8 +141,11 @@ class Element implements JsonSerializable, Serializable
             $innerHtml = "\n" . \implode('', \array_map(static function (self $child) {
                 return $child->getOuterHtml() . "\n";
             }, $children));
-            $innerHtml = \str_replace("\n", "\n  ", $innerHtml);
-            return \substr($innerHtml, 0, -2);
+            if ($this->cfg['indent ']) {
+                $innerHtml = \str_replace("\n", "\n  ", $innerHtml);
+                return \substr($innerHtml, 0, -2);
+            }
+            return $innerHtml;
         }
         return $this->html;
     }

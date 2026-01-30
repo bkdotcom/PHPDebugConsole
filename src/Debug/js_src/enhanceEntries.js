@@ -109,7 +109,7 @@ function addIconsMisc ($node) {
         return
       }
       $this.prepend($icon)
-    });
+    })
   }
 }
 

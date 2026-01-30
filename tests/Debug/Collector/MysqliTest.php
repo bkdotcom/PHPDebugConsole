@@ -501,8 +501,13 @@ EOD;
         self::assertTrue($result2);
         self::assertTrue($result3);
 
-        $result4 = self::$client->release_savepoint('Sally');
-        $line = __LINE__ - 1;
+        $result4 = null;
+        try {
+            $result4 = self::$client->release_savepoint('Sally');
+            $line = __LINE__ - 1;
+        } catch (\mysqli_sql_exception $e) {
+            $line = $e->getLine();
+        }
         /*
         if (PHP_VERSION_ID < 70000 || \mysqli_get_client_version() <= 50082) {
             \bdk\Debug::varDump('client version', \mysqli_get_client_version());

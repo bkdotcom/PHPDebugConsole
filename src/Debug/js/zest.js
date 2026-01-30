@@ -233,7 +233,7 @@ var zest = (function () {
         elements.push(arg);
       } else if (arg instanceof NodeList) {
         elements.push(...arg);
-      } else if (typeof arg === 'object' && typeof arg[Symbol.iterator] === 'function') {
+      } else if (typeof arg === 'object' && arg !== null && typeof arg[Symbol.iterator] === 'function') {
         args.unshift(...arg);
       } else if (typeof arg === 'function') {
         args.unshift(arg.call(el, el, index));

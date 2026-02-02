@@ -8,6 +8,8 @@ use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
+use bdk\Table\TableCell;
+use bdk\Table\TableRow;
 
 /**
  * WordPress "shortcode" info
@@ -91,38 +93,50 @@ class Shortcodes extends AbstractComponent implements SubscriberInterface
     protected function modifyShortcodeTable(LogEntry $logEntry)
     {
         $table = $logEntry['args'][0];
-        $rows = $table->getRows();
         $rowsNew = [];
-        \array_walk($rows, function ($row) use (&$rowsNew) {
+        foreach ($table->getRows() as $row) {
             $rowsNew[] = $row;
             $cells = $row->getCells();
             $shortcode = $cells[0]->getValue();
-            $method = $cells[1]->getValue();
             $links = $cells[2]->getValue();
-            $phpDoc = $this->debug->phpDoc->getParsed($method . '()');
             $cells[2]->setValue(
                 $links . ' <a href="#" data-toggle="#shortcode_' . $shortcode . '_doc" title="handler phpDoc"><i class="fa fa-code"></i></a>'
             );
-            $infoCell = new \bdk\Table\TableCell($this->debug->abstracter->crateWithVals(
-                $this->buildPhpDoc($shortcode, $phpDoc),
-                array(
-                    'addQuotes' => false,
-                    'sanitize' => false,
-                    'visualWhiteSpace' => false,
-                )
-            ));
-            $infoCell->setAttribs(array(
-                'colspan' => 3,
-            ));
-            $infoRow = (new \bdk\Table\TableRow())
-                ->setAttribs(array(
-                    'id' => 'shortcode_' . $shortcode . '_doc',
-                    'style' => 'display: none;',
-                ))
-                ->appendCell($infoCell);
-            $rowsNew[] = $infoRow;
-        });
+            $rowsNew[] = $this->buildInfoRow($row);
+        }
         $table->setRows($rowsNew);
+    }
+
+    /**
+     * Build the phpDoc info row for the shortcode
+     *
+     * @param TableRow $row TableRow instance
+     *
+     * @return TableRow
+     */
+    private function buildInfoRow(TableRow $row)
+    {
+        $cells = $row->getCells();
+        $shortcode = $cells[0]->getValue();
+        $method = $cells[1]->getValue();
+        $phpDoc = $this->debug->phpDoc->getParsed($method . '()');
+        $infoCell = new TableCell($this->debug->abstracter->crateWithVals(
+            $this->buildPhpDoc($shortcode, $phpDoc),
+            array(
+                'addQuotes' => false,
+                'sanitize' => false,
+                'visualWhiteSpace' => false,
+            )
+        ));
+        $infoCell->setAttribs(array(
+            'colspan' => 3,
+        ));
+        return (new TableRow())
+            ->setAttribs(array(
+                'id' => 'shortcode_' . $shortcode . '_doc',
+                'style' => 'display: none;',
+            ))
+            ->appendCell($infoCell);
     }
 
     /**

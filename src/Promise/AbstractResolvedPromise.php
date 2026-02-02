@@ -14,7 +14,8 @@ abstract class AbstractResolvedPromise extends Promise
     /**
      * Constructor
      *
-     * @param mixed $value Resolved value
+     * @param string $state  Resolved state
+     * @param mixed  $result Resolved value
      *
      * @throws InvalidArgumentException
      */

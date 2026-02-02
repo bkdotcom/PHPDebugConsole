@@ -91,7 +91,7 @@ class Hooks extends AbstractComponent implements SubscriberInterface
         return array(
             'columnLabels' => array(
                 'count' => \_x('count', 'hooks.count.label', 'debug-console-php'),
-                'isFilter' => \_x('isFilter', 'hooks.isFilter.label', 'debug-console-php')
+                'isFilter' => \_x('isFilter', 'hooks.isFilter.label', 'debug-console-php'),
             ),
             'columnMeta' => array(
                 'isFilter' => array(

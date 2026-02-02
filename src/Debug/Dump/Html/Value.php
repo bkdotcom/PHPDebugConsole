@@ -205,6 +205,13 @@ class Value extends BaseValue
      */
     protected function dumpBool($val)
     {
+        $options = $this->optionGet();
+        if ($val === true && isset($options['trueAs'])) {
+            return $options['trueAs'];
+        }
+        if ($val === false && isset($options['falseAs'])) {
+            return $options['falseAs'];
+        }
         return $val ? 'true' : 'false';
     }
 

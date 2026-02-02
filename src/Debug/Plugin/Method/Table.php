@@ -223,7 +223,7 @@ class Table implements SubscriberInterface
         foreach (\array_keys($this->tableMeta) as $key) {
             $logEntry->setMeta($key, null);
         }
-         $logEntry['meta'] = \array_filter($logEntry['meta'], static function ($val) {
+        $logEntry['meta'] = \array_filter($logEntry['meta'], static function ($val) {
             return $val !== null;
         });
     }

@@ -82,7 +82,6 @@ class Value extends TextValue
     public function markupIdentifier($val, $what = Type::TYPE_IDENTIFIER_CLASSNAME)
     {
         $parts = $this->parseIdentifier($val, $what);
-        $escapeReset = $this->escapeReset;
         $operator = $this->cfg['escapeCodes']['operator'] . $parts['operator'] . $this->escapeReset;
         $identifier = '';
         $classnameOut = $parts['classname']
@@ -92,9 +91,7 @@ class Value extends TextValue
             ? $this->markupIdentifierNamespace($parts['namespace'])
             : '';
         if ($parts['name']) {
-            $this->escapeReset = "\e[0;1m";
-            $identifier = self::ANSI_BOLD . $this->highlightChars($parts['name']) . self::ANSI_BOLD_DIM_RESET;
-            $this->escapeReset = $escapeReset;
+            $identifier = self::ANSI_BOLD . $this->highlightChars($parts['name'], "\e[0;1m") . self::ANSI_BOLD_DIM_RESET;
         }
         $parts = \array_filter([$namespaceOut, $classnameOut, $identifier], 'strlen');
         return \implode($operator, $parts);
@@ -126,8 +123,8 @@ class Value extends TextValue
         $isNested = $this->valDepth > 0;
         $escapeCodes = $this->cfg['escapeCodes'];
         if ($this->optionGet('isMaxDepth')) {
-            return $this->cfg['escapeCodes']['keyword'] . 'array '
-                . $this->cfg['escapeCodes']['recursion'] . '*' . $this->debug->i18n->trans('abs.max-depth') . '*'
+            return $escapeCodes['keyword'] . 'array '
+                . $escapeCodes['recursion'] . '*' . $this->debug->i18n->trans('abs.max-depth') . '*'
                 . $this->escapeReset;
         }
         $absKeys = isset($abs['keys'])
@@ -184,9 +181,8 @@ class Value extends TextValue
      */
     protected function dumpBool($val)
     {
-        return $val
-            ? $this->cfg['escapeCodes']['true'] . 'true' . $this->escapeReset
-            : $this->cfg['escapeCodes']['false'] . 'false' . $this->escapeReset;
+        $key = $val ? 'true' : 'false';
+        return $this->cfg['escapeCodes'][$key] . $key . $this->escapeReset;
     }
 
     /**
@@ -208,9 +204,7 @@ class Value extends TextValue
         }
         $date = $this->checkTimestamp($val, $abs);
         $val = $this->cfg['escapeCodes']['numeric'] . $val . $this->escapeReset;
-        return $date
-            ? '📅 ' . $val . ' ' . $this->cfg['escapeCodes']['muted'] . '(' . $date . ')' . $this->escapeReset
-            : $val;
+        return $this->formatWithDate($val, $date);
     }
 
     /**
@@ -272,7 +266,9 @@ class Value extends TextValue
         \bdk\Debug\Utility\PhpType::assertType($abs, self::TYPE_ABSTRACTION, 'abs');
 
         if (\is_numeric($val)) {
-            return $this->dumpStringNumeric($val, $abs);
+            $date = $this->checkTimestamp($val, $abs);
+            $val = $this->cfg['escapeCodes']['numeric'] . $val . $this->escapeReset;
+            return $this->formatWithDate($this->addQuotes($val), $date);
         }
         if ($abs) {
             return $this->dumpStringAbs($abs);
@@ -339,8 +335,7 @@ class Value extends TextValue
      */
     protected function dumpTable(Abstraction $abs)
     {
-        $data = $abs->getValues();
-        $table = new BdkTable($data);
+        $table = new BdkTable($abs->getValues());
         $tableAsArray = \bdk\Table\Utility::asArray($table);
         $caption = $table->getCaption();
         if (!$caption) {
@@ -354,27 +349,6 @@ class Value extends TextValue
             . \str_repeat('-', \strlen($caption))
             . $this->escapeReset . "\n"
             . $this->dumpArray($tableAsArray);
-    }
-
-    /**
-     * Dump numeric string
-     *
-     * @param string           $val numeric string value
-     * @param Abstraction|null $abs (optional) full abstraction
-     *
-     * @return string
-     */
-    private function dumpStringNumeric($val, $abs = null)
-    {
-        \bdk\Debug\Utility\PhpType::assertType($abs, self::TYPE_ABSTRACTION, 'abs');
-
-        $escapeCodes = $this->cfg['escapeCodes'];
-        $date = $this->checkTimestamp($val, $abs);
-        $val = $escapeCodes['numeric'] . $val . $this->escapeReset;
-        $val = $this->addQuotes($val);
-        return $date
-            ? '📅 ' . $val . ' ' . $escapeCodes['muted'] . '(' . $date . ')' . $this->escapeReset
-            : $val;
     }
 
     /**
@@ -403,21 +377,37 @@ class Value extends TextValue
     /**
      * Highlight confusable and other characters
      *
-     * @param string $str HTML String to update
+     * @param string      $str   HTML String to update
+     * @param string|null $reset (optional) specify reset sequence
      *
      * @return string
      */
-    protected function highlightChars($str)
+    protected function highlightChars($str, $reset = null)
     {
         $chars = $this->findChars($str);
         $charReplace = $this->optionGet('charReplace');
         foreach ($chars as $char) {
             $replacement = $this->cfg['escapeCodes']['char']
                 . $this->charReplacement($char, $charReplace)
-                . $this->escapeReset;
+                . ($reset ?: $this->escapeReset);
             $str = \str_replace($char, $replacement, $str);
         }
         return $str;
+    }
+
+    /**
+     * Format value with optional date annotation
+     *
+     * @param string      $val  formatted value
+     * @param string|null $date date string or null
+     *
+     * @return string
+     */
+    private function formatWithDate($val, $date)
+    {
+        return $date
+            ? '📅 ' . $val . ' ' . $this->cfg['escapeCodes']['muted'] . '(' . $date . ')' . $this->escapeReset
+            : $val;
     }
 
     /**
@@ -436,11 +426,7 @@ class Value extends TextValue
             $classname = \substr($classname, $idx + 1);
             $classnameOut = $this->markupIdentifierNamespace($namespace);
         }
-        $escapeReset = $this->escapeReset;
-        $this->escapeReset = "\e[0;1m";
-        $classnameOut .= self::ANSI_BOLD . $this->highlightChars($classname) . self::ANSI_BOLD_DIM_RESET;
-        $this->escapeReset = $escapeReset;
-        return $classnameOut;
+        return $classnameOut . self::ANSI_BOLD . $this->highlightChars($classname, "\e[0;1m") . self::ANSI_BOLD_DIM_RESET;
     }
 
     /**
@@ -452,10 +438,6 @@ class Value extends TextValue
      */
     private function markupIdentifierNamespace($namespace)
     {
-        $escapeReset = $this->escapeReset;
-        $this->escapeReset = $this->cfg['escapeCodes']['muted'];
-        $namespace = $this->cfg['escapeCodes']['muted'] . $this->highlightChars($namespace) . $escapeReset;
-        $this->escapeReset = $escapeReset;
-        return $namespace;
+        return $this->cfg['escapeCodes']['muted'] . $this->highlightChars($namespace, $this->cfg['escapeCodes']['muted']) . $this->escapeReset;
     }
 }

@@ -242,7 +242,6 @@ class Firephp extends AbstractRoute
         return $this->dumper->valDumper->dump($rows);
     }
 
-
     /**
      * {@inheritDoc}
      */

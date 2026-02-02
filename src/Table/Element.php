@@ -21,7 +21,7 @@ class Element implements JsonSerializable, Serializable
 
     /** @var array>string,mixed> */
     protected $cfg = array(
-        'indent '=> false,
+        'indent' => false,
     );
 
     /** @var list<Element> */
@@ -141,7 +141,7 @@ class Element implements JsonSerializable, Serializable
             $innerHtml = "\n" . \implode('', \array_map(static function (self $child) {
                 return $child->getOuterHtml() . "\n";
             }, $children));
-            if ($this->cfg['indent ']) {
+            if ($this->cfg['indent']) {
                 $innerHtml = \str_replace("\n", "\n  ", $innerHtml);
                 return \substr($innerHtml, 0, -2);
             }
@@ -327,13 +327,10 @@ class Element implements JsonSerializable, Serializable
      */
     public function setChildren(array $children)
     {
+        $this->children = [];
         foreach ($children as $child) {
-            if (($child instanceof self) === false) {
-                throw new InvalidArgumentException('Children must be instances of ' . __CLASS__);
-            }
-            $child->setParent($this);
+            $this->appendChild($child);
         }
-        $this->children = \array_values($children);
         return $this;
     }
 

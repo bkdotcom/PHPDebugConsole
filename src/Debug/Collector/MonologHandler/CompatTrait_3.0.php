@@ -19,6 +19,8 @@ use Monolog\LogRecord;
 if (\trait_exists(__NAMESPACE__ . '\\CompatTrait', false) === false) {
     /**
      * Provide handle method (with return type-hint)
+     *
+     * @phpcs:disable Generic.Classes.DuplicateClassName.Found
      */
     trait CompatTrait // @phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter Generic.CodeAnalysis.UnusedFunctionParameter
     {

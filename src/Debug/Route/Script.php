@@ -95,9 +95,9 @@ class Script extends AbstractRoute
         $str = $this->buildConsoleCall($logEntry);
         return \strtr($str, array(
             '</script>' => '<\\/script>',
+            \json_encode(Abstracter::UNDEFINED) => 'undefined',
             \json_encode(Type::TYPE_FLOAT_INF) => 'Infinity',
             \json_encode(Type::TYPE_FLOAT_NAN) => 'NaN',
-            \json_encode(Abstracter::UNDEFINED) => 'undefined',
         ));
     }
 

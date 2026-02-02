@@ -2,7 +2,6 @@
 
 namespace bdk\Table;
 
-use bdk\Debug\Utility\ArrayUtil;
 use bdk\Debug\Utility\Php;
 use bdk\Debug\Utility\PhpType;
 use bdk\Table\TableRow;
@@ -182,11 +181,11 @@ class Factory
      */
     private function columnKeys()
     {
-        $indexAndClassKeys = \array_filter([
-            self::KEY_INDEX,
-            $this->meta['haveObjectRow'] ? self::KEY_CLASS_NAME : null,
-        ]);
         if ($this->options['columns']) {
+            $indexAndClassKeys = \array_filter([
+                self::KEY_INDEX,
+                $this->meta['haveObjectRow'] ? self::KEY_CLASS_NAME : null,
+            ]);
             return \array_merge(
                 $indexAndClassKeys,
                 $this->options['columns']
@@ -198,6 +197,9 @@ class Factory
             if ($curRowKeys !== $colKeys) {
                 $colKeys = self::colKeysMerge($curRowKeys, $colKeys);
             }
+        }
+        if (!$this->meta['haveObjectRow']) {
+            $colKeys = \array_diff($colKeys, [self::KEY_CLASS_NAME]);
         }
         return $colKeys;
     }
@@ -267,18 +269,13 @@ class Factory
                 self::KEY_CLASS_NAME => $valInfo['className'],
             ), $values);
         }
-        if ($valInfo['type'] === 'object') {
-            // treat object as a single value
-            // Closure, DateTime, UnitEnum
-            // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
-            return array(
-                self::KEY_INDEX => $key,
-                self::KEY_CLASS_NAME => $valInfo['className'],
-                self::KEY_SCALAR => $row,
-            );
-        }
+
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
         return array(
             self::KEY_INDEX => $key,
+            self::KEY_CLASS_NAME => $valInfo['type'] === 'object'
+                ? $valInfo['className']
+                : self::VAL_UNDEFINED,
             self::KEY_SCALAR => $row,
         );
     }
@@ -363,13 +360,12 @@ class Factory
             $this->data = $this->getObjectValues($this->data);
         }
         if (\is_array($this->data) === false) {
-            // @todo store error?
             $this->data = [];
         }
         // $data is now array of unknowns (objects, arrays, or scalars)
         foreach ($this->data as $key => $row) {
             $values = $this->getRowValues($row, $key);
-            $this->meta['haveObjectRow'] = $this->meta['haveObjectRow'] || isset($values[self::KEY_CLASS_NAME]);
+            $this->meta['haveObjectRow'] = $this->meta['haveObjectRow'] || (isset($values[self::KEY_CLASS_NAME]) && $values[self::KEY_CLASS_NAME] !== self::VAL_UNDEFINED);
             $this->data[$key] = $values;
         }
     }

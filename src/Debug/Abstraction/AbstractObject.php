@@ -235,8 +235,8 @@ class AbstractObject extends AbstractComponent
         }
         if ($obj instanceof Element) {
             $hist[] = $obj;
-            $values = $obj->jsonSerialize();
             $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_END, [$this, 'tableCellValueAbstracter']);
+            $values = $obj->jsonSerialize();
             $values = $this->abstracter->crate($values, $method, $hist);
             $this->debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_END, [$this, 'tableCellValueAbstracter']);
             return $obj instanceof Table
@@ -402,7 +402,7 @@ class AbstractObject extends AbstractComponent
     private function getScopeClass(array &$hist)
     {
         for ($i = \count($hist) - 1; $i >= 0; $i--) {
-            if ($hist[$i] instanceof \bdk\Table\Element) {
+            if ($hist[$i] instanceof Element) {
                 continue;
             }
             if (\is_object($hist[$i])) {

@@ -204,42 +204,49 @@ class Table
         $value = $tableCell->getValue();
         $rowType = $tableCell->getParent()->getParent()->getTagName();
 
-        if ($index === $this->classColumnIndex && $rowType !== 'thead' && $value !== Abstracter::UNDEFINED) {
-            $dumped = $this->valDumper->markupIdentifier($value, Type::TYPE_IDENTIFIER_CLASSNAME);
-            $parsed = $this->html->parseTag($dumped);
-            $tableCell->setAttribs($parsed['attribs']);
-            return $parsed['innerhtml'];
+        if ($rowType === 'tbody' && $index === $this->classColumnIndex && \in_array($value, [null, Abstracter::UNDEFINED], true) === false) {
+            return $this->valDumperClassName($tableCell);
         }
-
-        $dumped = $this->valDumper->dump($value, array(
-            'tagName' => null,
-        ));
-        $optionsPrev = $this->valDumper->optionGet('previous');
 
         $columnMeta = \array_merge(array(
             'class' => null,
             'falseAs' => null,
             'trueAs' => null,
         ), $this->table->getMeta('columns', [])[$index]);
+        $dumpOpts = \array_merge($columnMeta, array(
+            'attribs' => array(), // don't use columnMeta attribs
+            'tagName' => null,
+        ));
 
-        if ($value === true && $columnMeta['trueAs'] !== null) {
-            $dumped = $columnMeta['trueAs'];
-        } elseif ($value === false && $columnMeta['falseAs'] !== null) {
-            $dumped = $columnMeta['falseAs'];
-        }
-
-        $columnClass = $rowType === 'thead'
-            ? $columnMeta['class']
-            : null;
-        if ($columnClass) {
-            $dumped .= ' ' . $this->valDumper->markupIdentifier($columnClass, Type::TYPE_IDENTIFIER_CLASSNAME);
-        }
-
+        $dumped = $this->valDumper->dump($value, $dumpOpts);
+        $optionsPrev = $this->valDumper->optionGet('previous');
         if ($optionsPrev['attribs']) {
+            // update tableCell attribs
             $attribs = $this->debug->arrayUtil->mergeDeep($tableCell->getAttribs(), $optionsPrev['attribs']);
             $tableCell->setAttribs($attribs);
         }
+
+        if ($rowType === 'thead' && $columnMeta['class']) {
+            $dumped .= ' ' . $this->valDumper->markupIdentifier($columnMeta['class'], Type::TYPE_IDENTIFIER_CLASSNAME);
+        }
+
         return $dumped;
+    }
+
+    /**
+     * Dump the className column value
+     *
+     * @param TableCell $tableCell TableCell instance
+     *
+     * @return string
+     */
+    private function valDumperClassName(TableCell $tableCell)
+    {
+        $value = $tableCell->getValue();
+        $dumped = $this->valDumper->markupIdentifier($value, Type::TYPE_IDENTIFIER_CLASSNAME);
+        $parsed = $this->html->parseTag($dumped);
+        $tableCell->setAttribs($parsed['attribs']);
+        return $parsed['innerhtml'];
     }
 
     /**

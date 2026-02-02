@@ -5,42 +5,16 @@ namespace bdk\Table;
 use bdk\Table\Factory;
 use bdk\Table\Table;
 use bdk\Table\TableCell;
+use bdk\Table\TableRow;
 
 /**
  * Output table data as html
  */
 class Utility
 {
-    /** @var callable|null */
-    protected $valDumper;
+    private static $options = array();
 
-    /**
-     * Set value / content dumper
-     *
-     * @param callable $valDumper Callable that returns the cell content
-     *                             Signature: function (TableCell $cell, array &$attribs) : string
-     *
-     * @return void
-     */
-    public function setValDumper(callable $valDumper)
-    {
-        $this->valDumper = $valDumper;
-    }
-
-    /**
-     * Output Table as HTML
-     *
-     * @param Table $table Table instance
-     *
-     * @return string html fragment
-     */
-    public function output(Table $table)
-    {
-        if ($this->valDumper) {
-            TableCell::setValDumper($this->valDumper);
-        }
-        return $table->getOuterHtml();
-    }
+    private static $tempData = array();
 
     /**
      * Export table as array
@@ -49,56 +23,93 @@ class Utility
      * @param array $options (optional) options
      *
      * @return array
-     *
-     * @todo header vs meta.column.i.key
-     * @todo skip colspan cols?
      */
     public static function asArray(Table $table, array $options = array())
     {
-        $options = \array_merge(array(
+        self::$options = \array_merge(array(
             'forceArray' => false,
             'undefinedAs' => 'unset', // 'unset', Factory::VAL_UNDEFINED, null
         ), $options);
 
-        $columnMeta = $table->getMeta('columns');
-        $headerVals = \array_map(static function ($cell) {
-            return $cell->getValue();
-        }, $table->getHeader()->getChildren());
+        self::$tempData = array(
+            'columnsMeta' => $table->getMeta('columns'),
+            'headerVals' => \array_map(static function ($cell) {
+                return $cell->getValue();
+            }, $table->getHeader()->getChildren()),
+            'rowKey' => 0,
+        );
+
         $rows = array();
-        $colCount = \count($columnMeta);
         foreach ($table->getRows() as $iRow => $tableRow) {
-            $row = array();
-            $cells = $tableRow->getCells();
-            $rowKey = $iRow;
-            $iCell = 0;
-            if ($columnMeta[0]['key'] === Factory::KEY_INDEX) {
-                $iCell = 1;
-                $rowKey = (string) $cells[0]->getValue();
-            }
-            $cellCountOut = 0;
-            for (; $iCell < $colCount; $iCell++) {
-                $tableCell = $cells[$iCell];
-                $key = $columnMeta[$iCell]['key'];
-                $value = $tableCell->getValue();
-                $isScalar = $key === Factory::KEY_SCALAR;
-                if ($value === Factory::VAL_UNDEFINED) {
-                    $value = $options['undefinedAs'];
-                    if ($value === 'unset') {
-                        continue;
-                    }
-                }
-                $cellCountOut++;
-                if ($isScalar) {
-                    $key = $headerVals[$iCell];
-                }
-                $row[$key] = $value;
-                if ($isScalar && $cellCountOut === 1 && $options['forceArray'] === false) {
-                    // this scalar column is the only column other than the index
-                    $row = $row[$key];
-                }
-            }
-            $rows[$rowKey] = $row;
+            $rowAsArray = self::rowAsArray($tableRow, $iRow);
+            $rows[self::$tempData['rowKey']] = $rowAsArray;
         }
         return $rows;
+    }
+
+    /**
+     * Convert TableRow to array
+     *
+     * @param TableRow $tableRow TableRow instance
+     * @param int      $iRow     Row index
+     *
+     * @return array
+     */
+    private static function rowAsArray(TableRow $tableRow, $iRow)
+    {
+        $row = array();
+        self::$tempData['rowKey'] = $iRow;
+        foreach ($tableRow->getCells() as $iCell => $tableCell) {
+            $cellInfo = self::getCellKeyValue($tableCell, $iCell);
+            $key = $cellInfo['key'];
+            $value = $cellInfo['value'];
+            /*
+            if ($key === Factory::KEY_INDEX) {
+                $this->tempData['rowKey'] = $value;
+                continue;
+            }
+            */
+            if ($key === null) {
+                continue;
+            }
+            $row[$key] = $value;
+        }
+        if (\count($row) === 1 && $cellInfo['isScalar'] && self::$options['forceArray'] === false) {
+            // this scalar column is the only column other than the index
+            $row = $row[$key];
+        }
+        return $row;
+    }
+
+    /**
+     * Get cell key and value
+     *
+     * @param TableCell $tableCell TableCell instance
+     * @param int       $iCell     Cell index
+     *
+     * @return array
+     */
+    private static function getCellKeyValue(TableCell $tableCell, $iCell)
+    {
+        $key = self::$tempData['columnsMeta'][$iCell]['key'];
+        $value = $tableCell->getValue();
+        $isScalar = $key === Factory::KEY_SCALAR;
+        if ($key === Factory::KEY_INDEX) {
+            self::$tempData['rowKey'] = (string) $value; // value may be string Abstraction
+            $key = null;
+        }
+        if ($value === Factory::VAL_UNDEFINED) {
+            $value = self::$options['undefinedAs'];
+            if ($value === 'unset') {
+                $key = null;
+            }
+        }
+        return array(
+            'isScalar' => $isScalar,
+            'key' => $isScalar
+                ? self::$tempData['headerVals'][$iCell]
+                : $key,
+            'value' => $value,
+        );
     }
 }

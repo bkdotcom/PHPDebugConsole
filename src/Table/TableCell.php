@@ -165,8 +165,12 @@ class TableCell extends Element
         // find the table this cell belongs to
         $table = null;
         $parent = $this->getParent();
-        $rowType = $this->getParent()->getParent()->getTagName();
+        $rowType = 'tbody';
         while ($parent !== null) {
+            $tagName = $parent->getTagName();
+            if (\in_array($tagName, ['thead', 'tbody', 'tfoot'], true)) {
+                $rowType = $tagName;
+            }
             if ($parent instanceof Table) {
                 $table = $parent;
                 break;

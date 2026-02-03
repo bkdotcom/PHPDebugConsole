@@ -381,15 +381,18 @@ class FactoryTest extends TestCase
 
         $table = $factory->create($data);
 
+        $meta = $table->getMeta();
         $rows = $table->getRows();
         $firstRow = $rows[0];
         $cells = $firstRow->getCells();
         $firstCell = $cells[0];
 
         // First cell should be the index column
-        self::assertSame('th', $firstCell->getTagName());
-        self::assertContains('t_key', $firstCell->getAttribs()['class']);
-        self::assertSame('row', $firstCell->getAttribs()['scope']);
+        self::assertSame('td', $firstCell->getTagName());
+        self::assertSame('th', $meta['columns'][0]['tagName']);
+        self::assertContains('t_key', $meta['columns'][0]['attribs']['class']);
+        self::assertSame('row', $meta['columns'][0]['attribs']['scope']);
+        self::assertSame('<th class="t_int t_key" scope="row">0</th>', $firstCell->getOuterHtml());
     }
 
     /**

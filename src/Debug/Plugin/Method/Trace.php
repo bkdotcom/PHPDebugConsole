@@ -171,8 +171,7 @@ class Trace implements SubscriberInterface
             ? $this->debug->i18n->trans('method.trace')
                 . ' (' . $this->debug->i18n->trans('method.trace.limited', array('limit' => $argsTyped['limit'])) . ')'
             : $this->debug->i18n->trans('method.trace');
-        $args = \array_merge($argsDefault, $argsTyped);
-        return \array_values($args);
+        return \array_values(\array_merge($argsDefault, $argsTyped));
     }
 
     /**
@@ -184,7 +183,12 @@ class Trace implements SubscriberInterface
      */
     private function getTraceFinish(array $trace)
     {
-        $trace = $this->mapFilepaths($trace);
+        $trace = \array_map(function ($frame) {
+            if (isset($frame['file'])) {
+                $frame['file'] = $this->debug->filepathMap($frame['file']);
+            }
+            return $frame;
+        }, $trace);
         $this->setCommonFilePrefix($trace);
         return \array_map(function ($frame) {
             if ($frame['file'] === null) {
@@ -198,23 +202,6 @@ class Trace implements SubscriberInterface
                     'value' => $frame['function'],
                 ))
                 : Abstracter::UNDEFINED; // either not set or null
-            return $frame;
-        }, $trace);
-    }
-
-    /**
-     * Update filepaths in trace according to filepathMap config
-     *
-     * @param array $trace Backtrace frames
-     *
-     * @return array
-     */
-    private function mapFilepaths(array $trace)
-    {
-        return \array_map(function ($frame) {
-            if (isset($frame['file'])) {
-                $frame['file'] = $this->debug->filepathMap($frame['file']);
-            }
             return $frame;
         }, $trace);
     }
@@ -266,13 +253,9 @@ class Trace implements SubscriberInterface
     private function removeMinInternal(array $trace)
     {
         $count = \count($trace);
-        $internalClasses = [
-            __CLASS__,
-            'bdk\PubSub\Manager',
-        ];
+        $internalClasses = [__CLASS__, 'bdk\PubSub\Manager'];
         for ($i = 3; $i < $count; $i++) {
-            $frame = $trace[$i];
-            \preg_match('/^(?P<classname>.+)->(?P<function>.+)$/', $frame['function'], $matches);
+            \preg_match('/^(?P<classname>.+)->(?P<function>.+)$/', $trace[$i]['function'], $matches);
             $isInternal = \in_array($matches['classname'], $internalClasses, true) || $matches['function'] === 'publishBubbleEvent';
             if ($isInternal === false) {
                 break;
@@ -294,10 +277,9 @@ class Trace implements SubscriberInterface
         if (\count($trace) < 2) {
             return;
         }
-        $trace = \array_filter($trace, static function ($frame) {
+        $files = \array_column(\array_filter($trace, static function ($frame) {
             return isset($frame['file']) && empty($frame['evalLine']);
-        });
-        $files = \array_column($trace, 'file');
+        }), 'file');
         $commonPrefix = $this->debug->stringUtil->commonPrefix($files);
         // don't treat "/" as common prefix
         $this->commonFilePrefix = \strlen($commonPrefix) > 1
@@ -343,12 +325,12 @@ class Trace implements SubscriberInterface
      */
     private function slice(array $trace, array $meta)
     {
-        if ($meta['inclInternal']) {
-            $trace = $this->removeMinInternal($trace);
-        }
-        if ($meta['limit'] > 0) {
-            $trace = \array_slice($trace, 0, $meta['limit']);
-        }
+        $trace = $meta['inclInternal']
+            ? $this->removeMinInternal($trace)
+            : $trace;
+        $trace = $meta['limit'] > 0
+            ? \array_slice($trace, 0, $meta['limit'])
+            : $trace;
         return $trace;
     }
 
@@ -364,12 +346,9 @@ class Trace implements SubscriberInterface
         $table = $logEntry['args'][0];
         $meta = $logEntry['meta'];
         unset($meta['trace']);
-        $keys = [
-            'inclArgs' => $meta['inclArgs'],
-            'inclContext' => $meta['inclContext'],
-        ];
-        foreach ($keys as $key => $value) {
-            $table->setMeta($key, $value);
+        $keys = ['inclArgs', 'inclContext'];
+        foreach ($keys as $key) {
+            $table->setMeta($key, $meta[$key]);
             unset($meta[$key]);
         }
         $logEntry['meta'] = $meta;

@@ -57,31 +57,7 @@ class Table implements SubscriberInterface
     public function __construct()
     {
         $this->tableFactory = new TableFactory(array(
-            'getValInfo' => function ($value, $isRow = false) {
-                $type = $this->debug->abstracter->type->getType($value)[0];
-                $nonIterable = [
-                    'UnitEnum',
-                    'Closure',
-                    'DateTime',
-                    'DateTimeImmutable',
-                ];
-                $isIterable = true;
-                foreach ($nonIterable as $nonIterableType) {
-                    if ($value instanceof $nonIterableType) {
-                        $isIterable = false;
-                        break;
-                    }
-                }
-                return array(
-                    'className' => $type === Type::TYPE_OBJECT
-                        ? ($value instanceof Abstraction
-                            ? $value['className']
-                            : \get_class($value))
-                        : null,
-                    'iterable' => $isIterable,
-                    'type' => $type,
-                );
-            },
+            'getValInfo' => [$this, 'getValInfo'],
         ));
     }
 
@@ -149,6 +125,41 @@ class Table implements SubscriberInterface
         if ($cfgRestore) {
             $this->debug->setCfg($cfgRestore, Debug::CONFIG_NO_RETURN);
         }
+    }
+
+    /**
+     * "getValInfo" callback used by TableFactory
+     *
+     * @param mixed $value Value to get type of
+     * @param bool  $isRow Does value represent a row
+     *
+     * @return array<string,mixed>
+     */
+    public function getValInfo($value, $isRow = false)
+    {
+        $type = $this->debug->abstracter->type->getType($value)[0];
+        $nonIterable = [
+            'UnitEnum',
+            'Closure',
+            'DateTime',
+            'DateTimeImmutable',
+        ];
+        $isIterable = true;
+        foreach ($nonIterable as $nonIterableType) {
+            if ($value instanceof $nonIterableType) {
+                $isIterable = false;
+                break;
+            }
+        }
+        return array(
+            'className' => $type === Type::TYPE_OBJECT
+                ? ($value instanceof Abstraction
+                    ? $value['className']
+                    : \get_class($value))
+                : null,
+            'iterable' => $isIterable,
+            'type' => $type,
+        );
     }
 
     /**

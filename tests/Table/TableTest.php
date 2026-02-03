@@ -6,7 +6,6 @@ use bdk\Table\Element;
 use bdk\Table\Table;
 use bdk\Table\TableCell;
 use bdk\Table\TableRow;
-// use bdk\Test\Debug\DebugTestFramework;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -19,6 +18,11 @@ class TableTest extends TestCase
 {
     const CLASS_TABLE_ROW = 'bdk\\Table\\TableRow';
     const CLASS_ELEMENT = 'bdk\\Table\\Element';
+
+    public static function setUpBeforeClass(): void
+    {
+        TableCell::setValDumper(['bdk\Table\TableCell', 'valDumper']);
+    }
 
     /**
      * Test basic constructor

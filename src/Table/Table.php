@@ -53,8 +53,10 @@ class Table extends Element
             'rows' => $this->getRows(),
         );
         \ksort($data);
-        foreach ($data['meta']['columns'] as &$column) {
-            \ksort($column);
+        if (isset($data['meta']['columns'])) {
+            foreach ($data['meta']['columns'] as &$column) {
+                \ksort($column);
+            }
         }
         return \array_filter($data);
     }

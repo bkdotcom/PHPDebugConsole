@@ -5,7 +5,6 @@ namespace bdk\Test\Table;
 use bdk\Table\Element;
 use bdk\Table\Factory;
 use bdk\Table\TableCell;
-// use bdk\Test\Debug\DebugTestFramework;
 use DateTime;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
@@ -30,6 +29,7 @@ class TableCellTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();
+        TableCell::setValDumper(['bdk\Table\TableCell', 'valDumper']);
         // Store original dumper
         $reflection = new \ReflectionClass(self::CLASS_TABLE_CELL);
         $property = $reflection->getProperty('valDumper');

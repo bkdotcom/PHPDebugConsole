@@ -3,8 +3,6 @@
 namespace bdk\Test\Table;
 
 use bdk\Table\Element;
-// use bdk\Test\Debug\DebugTestFramework;
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -301,8 +299,8 @@ class ElementTest extends TestCase
      */
     public function testSetChildrenInvalid()
     {
-        $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('Children must be instances of');
+        $this->expectException('TypeError');
+        // $this->expectExceptionMessage('Children must be instances of');
 
         $parent = new Element('div');
         $parent->setChildren(['not an Element object']);

@@ -176,6 +176,26 @@ class Table
     }
 
     /**
+     * Determine TableCell's row "type" (thead, tbody, or tfoot)
+     *
+     * @param TableCell $tableCell TableCell instance
+     *
+     * @return string
+     */
+    private function getRowType(TableCell $tableCell)
+    {
+        $parent = $tableCell->getParent();
+        while ($parent !== null) {
+            $tagName = $parent->getTagName();
+            if (\in_array($tagName, ['thead', 'tbody', 'tfoot'], true)) {
+                return $tagName;
+            }
+            $parent = $parent->getParent();
+        }
+        return 'tbody';
+    }
+
+    /**
      * Determine & set the column index of ___class_name column
      *
      * @return void
@@ -202,7 +222,7 @@ class Table
     {
         $index = $tableCell->getIndex();
         $value = $tableCell->getValue();
-        $rowType = $tableCell->getParent()->getParent()->getTagName();
+        $rowType = $this->getRowType($tableCell);
 
         if ($rowType === 'tbody' && $index === $this->classColumnIndex && \in_array($value, [null, Abstracter::UNDEFINED], true) === false) {
             return $this->valDumperClassName($tableCell);

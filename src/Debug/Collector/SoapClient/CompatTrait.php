@@ -16,21 +16,8 @@ namespace bdk\Debug\Collector\SoapClient;
 
 $traitExists = \trait_exists(__NAMESPACE__ . '\\CompatTrait', false);
 
-if (PHP_VERSION_ID >= 80400 && !$traitExists) {
-    /**
-     * @phpcs:disable Generic.Classes.DuplicateClassName.Found
-     */
-    trait CompatTrait
-    {
-        /**
-         * {@inheritDoc}
-         */
-        #[\ReturnTypeWillChange]
-        public function __doRequest($request, $location, $action, $version, $oneWay = 0, $uriParserClass = null)
-        {
-            return $this->doDoRequest($request, $location, $action, $version, $oneWay, $uriParserClass);
-        }
-    }
+if (PHP_VERSION_ID >= 80500 && !$traitExists) {
+    require __DIR__ . '/CompatTrait_8.5.php';
 } elseif (!$traitExists) {
     /**
      * @phpcs:disable Generic.Classes.DuplicateClassName.Found

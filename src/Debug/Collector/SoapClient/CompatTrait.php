@@ -14,11 +14,9 @@
 
 namespace bdk\Debug\Collector\SoapClient;
 
-$traitExists = \trait_exists(__NAMESPACE__ . '\\CompatTrait', false);
-
-if (PHP_VERSION_ID >= 80500 && !$traitExists) {
+if (PHP_VERSION_ID >= 80500) {
     require __DIR__ . '/CompatTrait_8.5.php';
-} elseif (!$traitExists) {
+} elseif (\trait_exists(__NAMESPACE__ . '\\CompatTrait', false) === false) {
     /**
      * @phpcs:disable Generic.Classes.DuplicateClassName.Found
      */

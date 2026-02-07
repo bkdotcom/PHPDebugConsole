@@ -12,11 +12,11 @@ namespace bdk\Debug\Abstraction\Object;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
-use bdk\Debug\Abstraction\Object\Definition as AbstractObjectDefinition;
+use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Abstraction\Object\PropertiesDom;
-use bdk\Debug\Data;
-use bdk\Debug\Utility\PhpDoc;
+use bdk\Debug\Abstraction\Type;
 use bdk\PubSub\SubscriberInterface;
 use Exception;
 use mysqli;
@@ -33,6 +33,8 @@ class Subscriber implements SubscriberInterface
 
     /** @var PropertiesDom */
     private $dom;
+
+    private $isAbstractingTable = false;
 
     /**
      * Constructor
@@ -59,48 +61,41 @@ class Subscriber implements SubscriberInterface
     /**
      * Debug::EVENT_OBJ_ABSTRACT_START event subscriber
      *
-     * @param Abstraction $abs Abstraction instance
+     * @param ObjectAbstraction $abs Abstraction instance
      *
      * @return void
      */
-    public function onStart(Abstraction $abs)
+    public function onStart(ObjectAbstraction $abs)
     {
         $obj = $abs->getSubject();
-        switch (true) {
-            case $obj instanceof \DateTime || $obj instanceof \DateTimeImmutable:
-                // check for both DateTime and DateTimeImmutable
-                //   DateTimeInterface (and DateTimeImmutable) not available until Php 5.5
-                $abs['stringified'] = $obj->format(\DateTime::RFC3339);
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
+        $handlers = array(
+            'bdk\Table\Table' => [$this, 'onStartTable'],
+            'bdk\Table\Element' => [$this, 'onStartElement'],
+            'Closure' => [$this, 'onStartClosure'],
+            'DateTime' => [$this, 'onStartDateTime'],
+            'DateTimeImmutable' => [$this, 'onStartDateTime'],
+            'mysqli' => [$this, 'onStartMysqli'],
+            'bdk\Debug\Abstraction\Object\Definition' => [$this, 'onStartAbstractObjectDefinition'],
+            'bdk\Debug\Data' => [$this, 'onStartData'],
+            'bdk\Debug\Utility\PhpDoc' => [$this, 'onStartPhpDoc'],
+        );
+        foreach ($handlers as $class => $handler) {
+            if (\is_a($obj, $class)) {
+                \call_user_func($handler, $abs);
                 break;
-            case $obj instanceof mysqli:
-                $this->onStartMysqli($abs);
-                break;
-            case $obj instanceof Data:
-                $abs['propertyOverrideValues']['data'] = Abstracter::NOT_INSPECTED;
-                break;
-            case $obj instanceof PhpDoc:
-                $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
-                break;
-            case $obj instanceof UnitEnum:
-                $abs['isTraverseOnly'] = false;
-                break;
-            case $obj instanceof AbstractObjectDefinition:
-                $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
-                break;
-            case $abs['className'] === 'Closure':
-                $this->onStartClosure($abs);
-                break;
+            }
         }
     }
 
     /**
      * Debug::EVENT_OBJ_ABSTRACT_END event subscriber
      *
-     * @param Abstraction $abs Abstraction instance
+     * @param ObjectAbstraction $abs Object abstraction instance
      *
      * @return void
      */
-    public function onEnd(Abstraction $abs)
+    public function onEnd(ObjectAbstraction $abs)
     {
         $obj = $abs->getSubject();
         if ($obj instanceof Exception && isset($abs['properties']['xdebug_message'])) {
@@ -118,13 +113,29 @@ class Subscriber implements SubscriberInterface
     }
 
     /**
-     * Add enum case's @var desc (if exists) to phpDoc
+     * If cell value is an object, set unstructuredValue for abstraction
      *
-     * @param Abstraction $abs Abstraction instance
+     * @param ObjectAbstraction $abs Object abstraction instance
      *
      * @return void
      */
-    private function onEndEnum(Abstraction $abs)
+    public function tableCellValueAbstracter(ObjectAbstraction $abs)
+    {
+        if (isset($abs['stringified'])) {
+            $abs['unstructuredValue'] = $abs['stringified'];
+        } elseif (isset($abs['methods']['__toString']['returnValue'])) {
+            $abs['unstructuredValue'] = $abs['methods']['__toString']['returnValue'];
+        }
+    }
+
+    /**
+     * Add enum case's @var desc (if exists) to phpDoc
+     *
+     * @param ObjectAbstraction $abs Object abstraction instance
+     *
+     * @return void
+     */
+    private function onEndEnum(ObjectAbstraction $abs)
     {
         if ($abs['debugMethod'] === 'table') {
             $abs['cfgFlags'] |= AbstractObject::BRIEF;
@@ -150,11 +161,11 @@ class Subscriber implements SubscriberInterface
     /**
      * Add mysqli property values
      *
-     * @param Abstraction $abs Abstraction instance
+     * @param ObjectAbstraction $abs Object abstraction instance
      *
      * @return void
      */
-    private function onEndMysqli(Abstraction $abs)
+    private function onEndMysqli(ObjectAbstraction $abs)
     {
         $obj = $abs->getSubject();
         $propsAlwaysAvail = [
@@ -175,13 +186,25 @@ class Subscriber implements SubscriberInterface
     }
 
     /**
-     * Set Closure definition and debug properties
+     * Don't inspect Definition cache
      *
-     * @param Abstraction $abs Abstraction instance
+     * @param ObjectAbstraction $abs Object abstraction instance
      *
      * @return void
      */
-    private function onStartClosure(Abstraction $abs)
+    private function onStartAbstractObjectDefinition(ObjectAbstraction $abs)
+    {
+        $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
+    }
+
+    /**
+     * Set Closure definition and debug properties
+     *
+     * @param ObjectAbstraction $abs Object abstraction instance
+     *
+     * @return void
+     */
+    private function onStartClosure(ObjectAbstraction $abs)
     {
         // get the per-instance __invoke signature
         $this->abstractObject->methods->add($abs);
@@ -195,13 +218,53 @@ class Subscriber implements SubscriberInterface
     }
 
     /**
-     * Test if we can collect mysqli property values
+     * Data - don't inspect data prop
      *
-     * @param Abstraction $abs Abstraction instance
+     * @param ObjectAbstraction $abs Object abstraction instance
      *
      * @return void
      */
-    private function onStartMysqli(Abstraction $abs)
+    private function onStartData(ObjectAbstraction $abs)
+    {
+        $abs['propertyOverrideValues']['data'] = Abstracter::NOT_INSPECTED;
+    }
+
+    /**
+     * DateTime - store stringified value
+     *
+     * @param ObjectAbstraction $abs Object abstraction instance
+     *
+     * @return void
+     */
+    private function onStartDateTime(ObjectAbstraction $abs)
+    {
+        $obj = $abs->getSubject();
+        $abs['stringified'] = $obj->format(\DateTime::RFC3339);
+    }
+
+    /**
+     * Handle element abstraction
+     *
+     * @param ObjectAbstraction $abs Object abstraction instance
+     *
+     * @return void
+     */
+    private function onStartElement(ObjectAbstraction $abs)
+    {
+        $obj = $abs->getSubject();
+        $values = $obj->jsonSerialize();
+        $abs['unstructuredValue'] = $this->abstractObject->abstracter->crate($values, $abs['debugMethod'], $abs['hist']);
+        $abs['isExcluded'] = true;
+    }
+
+    /**
+     * Test if we can collect mysqli property values
+     *
+     * @param ObjectAbstraction $abs Object abstraction instance
+     *
+     * @return void
+     */
+    private function onStartMysqli(ObjectAbstraction $abs)
     {
         /*
             stat() may throw an error (ie "mysqli object is not fully initialized")
@@ -217,13 +280,47 @@ class Subscriber implements SubscriberInterface
     }
 
     /**
-     * Reuse the phpDoc description from promoted __construct params
+     * PhpDoc - don't inspect cache
      *
-     * @param Abstraction $abs Abstraction instance
+     * @param ObjectAbstraction $abs Object abstraction instance
      *
      * @return void
      */
-    private function promoteParamDescs(Abstraction $abs)
+    private function onStartPhpDoc(ObjectAbstraction $abs)
+    {
+        $abs['propertyOverrideValues']['cache'] = Abstracter::NOT_INSPECTED;
+    }
+
+    /**
+     * Handle table abstraction
+     *
+     * @param ObjectAbstraction $abs Object abstraction instance
+     *
+     * @return void
+     */
+    private function onStartTable(ObjectAbstraction $abs)
+    {
+        $obj = $abs->getSubject();
+        $debug = $this->abstractObject->debug;
+        $this->isAbstractingTable = true;
+        $debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_END, [$this, 'tableCellValueAbstracter']);
+        $values = $obj->jsonSerialize();
+        $values = $debug->abstracter->crate($values, $abs['debugMethod'], $abs['hist']);
+        $values['type'] = Type::TYPE_TABLE;
+        $debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_END, [$this, 'tableCellValueAbstracter']);
+        $this->isAbstractingTable = false;
+        $abs['unstructuredValue'] = new Abstraction(Type::TYPE_TABLE, $values);
+        $abs['isExcluded'] = true;
+    }
+
+    /**
+     * Reuse the phpDoc description from promoted __construct params
+     *
+     * @param ObjectAbstraction $abs Object abstraction instance
+     *
+     * @return void
+     */
+    private function promoteParamDescs(ObjectAbstraction $abs)
     {
         if (isset($abs['methods']['__construct']) === false) {
             return;

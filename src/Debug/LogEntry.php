@@ -230,7 +230,7 @@ class LogEntry extends Event implements JsonSerializable
         }
         $detectFiles = $this->getMeta('detectFiles', false);
         $detectFilesWas = $detectFiles !== null
-            ? $this->subject->abstracter->abstractString->setCfg('detectFiles', true)
+            ? $this->subject->abstracter->abstractString->setCfg('detectFiles', $detectFiles)
             : $detectFiles;
         if ($detectFilesWas !== $detectFiles) {
             $cfgRestore['detectFiles'] = $detectFilesWas;

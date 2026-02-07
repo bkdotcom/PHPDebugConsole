@@ -32,7 +32,6 @@ class Abstraction extends BaseAbstraction
         'collectPropertyValues',
         'fullyQualifyPhpDocType',
         'hist',
-        'isTraverseOnly',
         'propertyOverrideValues',
         'reflector',
         'unstructuredValue',

@@ -210,7 +210,21 @@ class TraceTest extends DebugTestFramework
                     // \bdk\Debug::varDump('output', $output);
                     self::assertSame($expect, \trim($output));
                 },
-                // 'wamp' => @todo
+                'wamp' => static function (array $messages, LogEntry $logEntry) use ($values) {
+                    $trace = $messages[0]['args'][1][0];
+                    self::assertSame(array(
+                        'attribs' => array(
+                            'data-file' => __FILE__,
+                            'data-line' => $values['line0'],
+                        ),
+                        'children' => [
+                            0,
+                            'eval()\'d code',
+                            1,
+                            Abstracter::UNDEFINED,
+                        ],
+                    ), $trace['rows'][0]);
+                },
             )
         );
     }

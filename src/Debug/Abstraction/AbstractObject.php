@@ -13,7 +13,6 @@ namespace bdk\Debug\Abstraction;
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Abstraction\Object\Constants;
 use bdk\Debug\Abstraction\Object\Definition;
@@ -22,9 +21,7 @@ use bdk\Debug\Abstraction\Object\Methods;
 use bdk\Debug\Abstraction\Object\Properties;
 use bdk\Debug\Abstraction\Object\PropertiesInstance;
 use bdk\Debug\Abstraction\Object\Subscriber;
-use bdk\Debug\Abstraction\Type;
 use bdk\Table\Element;
-use bdk\Table\Table;
 use ReflectionClass;
 use ReflectionEnumUnitCase;
 use RuntimeException;
@@ -208,10 +205,11 @@ class AbstractObject extends AbstractComponent
         $this->propertiesInstance = new PropertiesInstance($this);
         $this->definition = new Definition($this);
 
-        if ($abstracter->debug->parentInstance === null) {
-            // we only need to subscribe to these events from root channel
-            $abstracter->debug->eventManager->addSubscriberInterface(new Subscriber($this));
-        }
+        // if we are the root instance, subscribe to events
+        //  otherwise ensure root instance is instantiated
+        $abstracter->debug->parentInstance === null
+            ? $abstracter->debug->eventManager->addSubscriberInterface(new Subscriber($this))
+            : $abstracter->debug->rootInstance->abstracter;
 
         self::$values['sectionOrder'] = $abstracter->getCfg('objectSectionOrder');
         self::$values['sort'] = $abstracter->getCfg('objectSort');
@@ -232,16 +230,6 @@ class AbstractObject extends AbstractComponent
         $reflector = $this->debug->reflection->getReflector($obj);
         if ($reflector instanceof ReflectionEnumUnitCase) {
             $reflector = $reflector->getEnum();
-        }
-        if ($obj instanceof Element) {
-            $hist[] = $obj;
-            $this->debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_END, [$this, 'tableCellValueAbstracter']);
-            $values = $obj->jsonSerialize();
-            $values = $this->abstracter->crate($values, $method, $hist);
-            $this->debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_END, [$this, 'tableCellValueAbstracter']);
-            return $obj instanceof Table
-                ? new Abstraction(Type::TYPE_TABLE, $values)
-                : $values;
         }
         $values = $this->getAbstractionValues($reflector, $obj, $method, $hist);
         $definitionValueStore = $this->definition->getAbstraction($obj, $values);
@@ -273,22 +261,6 @@ class AbstractObject extends AbstractComponent
     }
 
     /**
-     * If cell value is an object, set unstructuredValue for abstraction
-     *
-     * @param ObjectAbstraction $abs Object Abstraction instance
-     *
-     * @return void
-     */
-    public function tableCellValueAbstracter($abs)
-    {
-        if (isset($abs['stringified'])) {
-            $abs['unstructuredValue'] = $abs['stringified'];
-        } elseif (isset($abs['methods']['__toString']['returnValue'])) {
-            $abs['unstructuredValue'] = $abs['methods']['__toString']['returnValue'];
-        }
-    }
-
-    /**
      * Collect instance info
      * Property values & static method variables
      *
@@ -301,7 +273,6 @@ class AbstractObject extends AbstractComponent
         if ($abs['isMaxDepth'] || $abs['isRecursion']) {
             return;
         }
-        $abs['isTraverseOnly'] = $this->helper->isTraverseOnly($abs);
         /*
             Debug::EVENT_OBJ_ABSTRACT_START subscriber may
             set isExcluded
@@ -355,7 +326,6 @@ class AbstractObject extends AbstractComponent
                 'collectPropertyValues' => true,
                 'fullyQualifyPhpDocType' => $this->cfg['fullyQualifyPhpDocType'],
                 'hist' => $hist,
-                'isTraverseOnly' => false,
                 'propertyOverrideValues' => array(),
                 'reflector' => $reflector,
             )

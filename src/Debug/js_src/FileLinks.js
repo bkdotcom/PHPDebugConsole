@@ -51,13 +51,7 @@ export function create ($entry, $filepaths, remove) {
 }
 
 function buildFileHref (file, line, docRoot) {
-  // console.warn('buildfileHref', {file, line, docRoot})
-  if (typeof file === 'object') {
-    file = (file.docRoot ? 'DOCUMENT_ROOT' : '')
-      + (file.pathCommon ? file.pathCommon : '')
-      + (file.pathRel ? file.pathRel : '')
-      + (file.baseName ? file.baseName : '')
-  }
+  // console.warn('buildFileHref', {file, line, docRoot})
   var data = {
     file: docRoot
       ? file.replace(/^DOCUMENT_ROOT\b/, docRoot)
@@ -126,8 +120,15 @@ function createFileLinksTrace ($entry, remove) {
     $entry.find('table tr:not(.context) > *:last-child').remove()
     return
   }
-  $entry.find('table tbody tr').each(function () {
+  $entry.find('table tbody tr:not(.context)').each(function () {
     createFileLinksTraceProcessTr($(this), isUpdate)
+  })
+  if (isUpdate) {
+    return;
+  }
+  $entry.find('table tbody tr.context').each(function () {
+    var $td0 = $(this).find('> td').eq(0)
+    $td0.attr('colspan', parseInt($td0.attr('colspan'), 10) + 1)
   })
 }
 
@@ -147,11 +148,7 @@ function createFileLinksTraceProcessTr($tr, isUpdate) {
   })
   if (isUpdate) {
     $tr.find('.file-link').replaceWith($a)
-    return // continue
-  }
-  if ($tr.hasClass('context')) {
-    $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1)
-    return // continue
+    return
   }
   $tds.last().after($('<td/>', {
     class: 'text-center',

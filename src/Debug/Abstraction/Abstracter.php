@@ -64,6 +64,7 @@ class Abstracter extends AbstractComponent
         'brief' => false, // collect & output less details
                           //    see also AbstractObject::$cfgFlags where each key
                           //    can be set to true/false as a cfg value here
+        'detectFiles' => false,
         'fullyQualifyPhpDocType' => false,
         'interfacesCollapse' => [
             'ArrayAccess',

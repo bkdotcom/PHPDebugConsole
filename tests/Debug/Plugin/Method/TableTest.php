@@ -758,11 +758,20 @@ EOD;
                                 <dl class="object-inner">
                                     <dt class="modifiers">modifiers</dt>
                                     <dd class="t_modifier_final">final</dd>
-                                    <dt class="constants">constants <i>not collected</i></dt>
                                     <dt class="properties">properties</dt>
                                     <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">file</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="filepath"><span class="file-path-rel">' . \dirname(__FILE__) . '/</span><span class="file-basename">' . \basename(__FILE__) . '</span></span></dd>
                                     <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string">line</span> <span class="t_operator">=</span> <span class="t_int">%i</span></dd>
-                                    <dt class="methods">methods <i>not collected</i></dt>
+                                    <dt class="methods">methods</dt>
+                                    <dd class="method private"><span class="t_modifier_private">private</span> <span class="t_identifier">__construct</span><span class="t_punct">(</span><span class="t_punct">)</span></dd>
+                                    <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">__invoke</span><span class="t_punct">(</span><span class="parameter"><span class="t_parameter-name">$foo</span></span><span class="t_punct">)</span></dd>
+                                    <dd class="isStatic method public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">bind</span><span class="t_punct">(</span><span class="parameter"><span class="t_type"><span class="classname">Closure</span></span> <span class="t_parameter-name">$closure</span></span><span class="t_punct">,</span>
+                                    <span class="parameter"><span class="t_type">object</span> <span class="t_parameter-name">$newThis</span></span><span class="t_punct">,</span>
+                                    <span class="parameter"><span class="t_type">object</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">|</span><span class="t_type">null</span> <span class="t_parameter-name">$newScope</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">static</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type"><span class="classname">Closure</span></span></dd>
+                                    <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">bindTo</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">object</span> <span class="t_parameter-name">$newThis</span></span><span class="t_punct">,</span>
+                                    <span class="parameter"><span class="t_type">object</span><span class="t_punct">|</span><span class="t_type">string</span><span class="t_punct">|</span><span class="t_type">null</span> <span class="t_parameter-name">$newScope</span> <span class="t_operator">=</span> <span class="t_parameter-default t_string">static</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type"><span class="classname">Closure</span></span></dd>
+                                    <dd class="method public"><span class="t_modifier_public">public</span> <span class="t_identifier">call</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">object</span> <span class="t_parameter-name">$newThis</span></span><span class="t_punct">,</span>
+                                    <span class="parameter"><span class="t_type">mixed</span> <span class="t_parameter-name">...$args</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type">mixed</span></dd>
+                                    <dd class="isStatic method public"><span class="t_modifier_public">public</span> <span class="t_modifier_static">static</span> <span class="t_identifier">fromCallable</span><span class="t_punct">(</span><span class="parameter"><span class="t_type">callable</span> <span class="t_parameter-name">$callback</span></span><span class="t_punct">)</span><span class="t_punct t_colon">:</span> <span class="t_type"><span class="classname">Closure</span></span></dd>
                                 </dl>
                             </td>
                         </tr>
@@ -785,6 +794,9 @@ EOD;
                                     properties:
                                         (debug) file = "' . __FILE__ . '"
                                         (debug) line = %i
+                                    methods:
+                                        public: 5
+                                        private: 1
                             )
                         )',
                     'script' => 'console.log("%%cflat", "' . self::$captionStyle . '")' . "\n"

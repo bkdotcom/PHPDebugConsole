@@ -420,6 +420,7 @@ class LogRequestTest extends DebugTestFramework
                 )],
                 'meta' => array(
                     'channel' => 'request-response',
+                    'detectFiles' => true,
                 ),
             ),
         );

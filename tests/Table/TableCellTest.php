@@ -33,7 +33,9 @@ class TableCellTest extends TestCase
         // Store original dumper
         $reflection = new \ReflectionClass(self::CLASS_TABLE_CELL);
         $property = $reflection->getProperty('valDumper');
-        $property->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $property->setAccessible(true);
+        }
         self::$originalValDumper = $property->getValue();
     }
 

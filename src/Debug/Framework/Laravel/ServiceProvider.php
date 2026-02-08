@@ -32,6 +32,7 @@ class ServiceProvider extends BaseServiceProvider
     protected $modelCounts = array();
     private $isLumen = false;
     private $logViews;
+    private $logDb;
 
     /**
      * Register services.

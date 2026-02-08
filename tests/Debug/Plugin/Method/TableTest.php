@@ -802,7 +802,7 @@ EOD;
                     'script' => 'console.log("%%cflat", "' . self::$captionStyle . '")' . "\n"
                         . 'console.table(['
                             . '{"___class_name":undefined,"value":"a"},'
-                            . '{"___class_name":"DateTime","value":"2233-03-22T00:00:00-05:00"},'
+                            . '{"___class_name":"DateTime","value":"' . $vals['datetime']['crated']['stringified'] . '"},'
                             . '{"___class_name":undefined,"value":"Resource id #%d: stream"},'
                             . '{"___class_name":undefined,"value":' . \json_encode('callable: ' . __CLASS__ . '::providerTestMethod') . '},'
                             . '{"___class_name":"Closure","value":{"___class_name":"Closure","(debug) file":"' . __FILE__ . '","(debug) line":%i}}'

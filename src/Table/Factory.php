@@ -37,6 +37,7 @@ class Factory
         ), // key => meta array
         'columns' => [], // list of keys
         'getValInfo' => null, // callable to get type info
+        'inclIndex' => true,
         'totalCols' => [],
     );
 
@@ -181,15 +182,12 @@ class Factory
      */
     private function columnKeys()
     {
+        $colsIncl = \array_filter([
+            $this->options['inclIndex'] ? self::KEY_INDEX : null,
+            $this->meta['haveObjectRow'] ? self::KEY_CLASS_NAME : null,
+        ]);
         if ($this->options['columns']) {
-            $indexAndClassKeys = \array_filter([
-                self::KEY_INDEX,
-                $this->meta['haveObjectRow'] ? self::KEY_CLASS_NAME : null,
-            ]);
-            return \array_merge(
-                $indexAndClassKeys,
-                $this->options['columns']
-            );
+            return \array_merge($colsIncl, $this->options['columns']);
         }
         $colKeys = array();
         foreach ($this->data as $row) {
@@ -198,10 +196,11 @@ class Factory
                 $colKeys = self::colKeysMerge($curRowKeys, $colKeys);
             }
         }
-        if (!$this->meta['haveObjectRow']) {
-            $colKeys = \array_diff($colKeys, [self::KEY_CLASS_NAME]);
-        }
-        return $colKeys;
+        $colsRemove = \array_diff([
+            self::KEY_INDEX,
+            self::KEY_CLASS_NAME,
+        ], $colsIncl);
+        return \array_diff($colKeys, $colsRemove);
     }
 
     /**

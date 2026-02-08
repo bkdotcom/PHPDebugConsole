@@ -36,6 +36,7 @@ class Table implements SubscriberInterface
         'columnLabels' => 'option', // key => label
         'columnMeta' => 'option', // key => meta array
         'columns' => 'option', // list of keys
+        'inclIndex' => 'option',
         'sortable' => 'meta',
         'totalCols' => 'option',
     ];

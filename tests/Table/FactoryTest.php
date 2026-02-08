@@ -750,4 +750,44 @@ class FactoryTest extends TestCase
             self::assertCount($cellCount, $row->getCells());
         }
     }
+
+    /**
+     * Test inclIndex = false option excludes index column
+     */
+    public function testInclIndexFalse()
+    {
+        $factory = new Factory();
+        $data = [
+            ['name' => 'John', 'age' => 30],
+            ['name' => 'Jane', 'age' => 25],
+        ];
+
+        $table = $factory->create($data, ['inclIndex' => false]);
+
+        self::assertInstanceOf(self::CLASS_TABLE, $table);
+
+        // Check header cells - should not include index column
+        $header = $table->getHeader();
+        $headerCells = $header->getCells();
+        self::assertCount(2, $headerCells); // Only 'name' and 'age'
+
+        // Check that first cell is not an index column
+        $firstCell = $headerCells[0];
+        self::assertNotEquals('', $firstCell->getValue()); // Index column label is empty string by default
+
+        // Check row cells - should also not include index column
+        $rows = $table->getRows();
+        self::assertCount(2, $rows);
+
+        foreach ($rows as $row) {
+            $cells = $row->getCells();
+            self::assertCount(2, $cells); // Only 'name' and 'age' columns
+        }
+
+        // Verify meta columns don't include KEY_INDEX
+        $meta = $table->getMeta();
+        $columnKeys = \array_column($meta['columns'], 'key');
+        self::assertNotContains(Factory::KEY_INDEX, $columnKeys);
+    }
 }
+

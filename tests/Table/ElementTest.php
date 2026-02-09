@@ -3,6 +3,7 @@
 namespace bdk\Test\Table;
 
 use bdk\Table\Element;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -12,6 +13,8 @@ use PHPUnit\Framework\TestCase;
  */
 class ElementTest extends TestCase
 {
+    use AssertionTrait;
+
     /**
      * Test basic constructor with tag name
      */

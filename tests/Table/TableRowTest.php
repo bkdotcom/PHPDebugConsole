@@ -2,6 +2,7 @@
 
 namespace bdk\Test\Table;
 
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\Table\Element;
 use bdk\Table\TableCell;
 use bdk\Table\TableRow;
@@ -15,6 +16,8 @@ use PHPUnit\Framework\TestCase;
  */
 class TableRowTest extends TestCase
 {
+    use AssertionTrait;
+
     const CLASS_ELEMENT = 'bdk\\Table\\Element';
     const CLASS_TABLE_CELL = 'bdk\\Table\\TableCell';
 

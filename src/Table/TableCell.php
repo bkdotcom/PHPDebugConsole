@@ -195,7 +195,7 @@ class TableCell extends Element
      *
      * @return string
      */
-    private static function objectToString(object $obj)
+    private static function objectToString($obj)
     {
         if (\method_exists($obj, '__toString')) {
             return (string) $obj;

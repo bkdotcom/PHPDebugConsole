@@ -152,20 +152,6 @@ class Table implements SubscriberInterface
                 break;
             }
         }
-        /*
-        $className = null;
-        if ($type === Type::TYPE_OBJECT) {
-            $className = $value instanceof Abstraction
-                ? $value['className']
-                : \get_class($value);
-        } elseif ($type === Type::TYPE_IDENTIFIER && $value instanceof Abstraction) {
-            // Extract class name from identifier value (e.g., "PDO::PARAM_STR" -> "PDO")
-            $identifierValue = $value['value'];
-            if (\is_string($identifierValue) && \strpos($identifierValue, '::') !== false) {
-                $className = \explode('::', $identifierValue)[0];
-            }
-        }
-        */
         return array(
             'className' => $type === Type::TYPE_OBJECT
                 ? ($value instanceof Abstraction

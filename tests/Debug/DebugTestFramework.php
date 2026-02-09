@@ -332,6 +332,7 @@ class DebugTestFramework extends DOMTestCase
             $tests['serverLog'] = $tests['chromeLogger'];
         }
         ArrayUtil::sortWithOrder($tests, ['entry'], 'key');
+        /*
         $tests = \array_intersect_key($tests, \array_flip([
             'entry',
             'chromeLogger',
@@ -347,6 +348,7 @@ class DebugTestFramework extends DOMTestCase
             'text',
             'wamp',
         ]));
+        */
 
         if (\is_array($method)) {
             if (isset($method['dataPath'])) {

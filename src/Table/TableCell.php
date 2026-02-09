@@ -78,7 +78,9 @@ class TableCell extends Element
         $innerHtml = $this->getHtml();
         $attribs = $this->getAttribs();
         $columnMeta = $this->getColumnMeta();
-        $tagName = $columnMeta['tagName'] ?? $this->getTagName();
+        $tagName = isset($columnMeta['tagName'])
+            ? $columnMeta['tagName']
+            : $this->getTagName();
         $attribs = ArrayUtil::mergeDeep($columnMeta['attribs'], $attribs);
         return Html::buildTag($tagName, $attribs, $innerHtml);
     }

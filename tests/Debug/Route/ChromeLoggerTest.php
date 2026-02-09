@@ -32,7 +32,7 @@ class ChromeLoggerTest extends DebugTestFramework
             'headerMaxPer' => null,
             'route' => 'html',
         ));
-        $this->debug->routeChromeLogger->setCfg('group', false);
+        $this->debug->getRoute('chromeLogger')->setCfg('group', false);
     }
 
     public function testUnableToFitToMax()

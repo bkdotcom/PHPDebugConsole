@@ -798,7 +798,7 @@ EOD;
                                         (debug) file = "' . __FILE__ . '"
                                         (debug) line = %i
                                     methods:
-                                        public: 5
+                                        public: ' . (PHP_VERSION_ID >= 80500 ? '6' : '5') . '
                                         private: 1
                             )
                         )',

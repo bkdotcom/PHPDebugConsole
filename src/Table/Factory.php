@@ -5,6 +5,8 @@ namespace bdk\Table;
 use bdk\Debug\Utility\Php;
 use bdk\Debug\Utility\PhpType;
 use bdk\Table\TableRow;
+use Exception;
+use Throwable;
 
 /**
  * Create Table structure via iterable (array or object)
@@ -307,7 +309,7 @@ class Factory
     {
         $valsAll = $this->getObjectValues($obj);
         \set_error_handler(static function ($type, $message) {
-            throw new \Exception($message);
+            throw new Exception($message);
         });
         $vals = array();
         foreach ($keys as $key) {
@@ -315,7 +317,9 @@ class Factory
                 $vals[$key] = \array_key_exists($key, $valsAll)
                     ? $valsAll[$key]
                     : $obj->{$key};
-            } catch (\Throwable $e) {
+            } catch (Exception $e) {
+                $vals[$key] = self::VAL_UNDEFINED;
+            } catch (Throwable $e) {
                 $vals[$key] = self::VAL_UNDEFINED;
             }
         }

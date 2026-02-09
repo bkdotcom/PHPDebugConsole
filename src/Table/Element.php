@@ -75,7 +75,7 @@ class Element implements JsonSerializable, Serializable
     {
         $data = array(
             'attribs' => $this->attribs,
-            'children' => \array_map(static function (self $child) {
+            'children' => \array_map(static function ($child) {
                 $data = $child->__serialize();
                 if (\count($data) === 1) {
                     return \reset($data);
@@ -138,7 +138,7 @@ class Element implements JsonSerializable, Serializable
     {
         $children = $this->getChildren();
         if ($children) {
-            $innerHtml = "\n" . \implode('', \array_map(static function (self $child) {
+            $innerHtml = "\n" . \implode('', \array_map(static function ($child) {
                 return $child->getOuterHtml() . "\n";
             }, $children));
             if ($this->cfg['indent']) {
@@ -255,6 +255,9 @@ class Element implements JsonSerializable, Serializable
      */
     public function appendChild(self $child)
     {
+        if (!($child instanceof self)) {
+            throw new InvalidArgumentException('Child must be an instance of ' . __CLASS__);
+        }
         $child->setParent($this);
         $this->children[] = $child;
         return $this;

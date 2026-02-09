@@ -57,9 +57,6 @@ class Table implements SubscriberInterface
      */
     public function __construct()
     {
-        $this->tableFactory = new TableFactory(array(
-            'getValInfo' => [$this, 'getValInfo'],
-        ));
     }
 
     /**
@@ -174,7 +171,7 @@ class Table implements SubscriberInterface
     {
         $this->initLogEntry($logEntry);
 
-        $table = $this->tableFactory->create(
+        $table = $this->getTableFactory()->create(
             isset($logEntry['args'][0])
                 ? $logEntry['args'][0]
                 : null,
@@ -196,6 +193,21 @@ class Table implements SubscriberInterface
             $logEntry['args'] = [$this->debug->i18n->trans('method.table.no-args')];
         }
         $this->removeTableMetaFromLogEntry($logEntry);
+    }
+
+    /**
+     * Get or create TableFactory instance
+     *
+     * @return TableFactory
+     */
+    private function getTableFactory()
+    {
+        if ($this->tableFactory === null) {
+            $this->tableFactory = new TableFactory(array(
+                'getValInfo' => [$this, 'getValInfo'],
+            ));
+        }
+        return $this->tableFactory;
     }
 
     /**

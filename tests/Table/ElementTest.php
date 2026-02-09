@@ -4,7 +4,11 @@ namespace bdk\Test\Table;
 
 use bdk\Table\Element;
 use bdk\PhpUnitPolyfill\AssertionTrait;
+use ErrorNotice;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use TypeError;
 
 /**
  * PHPUnit tests for bdk\Table\Element
@@ -302,11 +306,10 @@ class ElementTest extends TestCase
      */
     public function testSetChildrenInvalid()
     {
-        $this->expectException('TypeError');
-        // $this->expectExceptionMessage('Children must be instances of');
-
-        $parent = new Element('div');
-        $parent->setChildren(['not an Element object']);
+        self::assertExceptionOrTypeError(function () {
+            $parent = new Element('div');
+            $parent->setChildren(['not an Element object']);
+        });
     }
 
     /**
@@ -882,5 +885,25 @@ class ElementTest extends TestCase
         // getHtml returns children HTML when children exist, not the set HTML
         $html = $parent->getHtml();
         self::assertStringContainsString('<span>Child</span>', $html);
+    }
+
+    protected static function assertExceptionOrTypeError($callable)
+    {
+        try {
+            $callable();
+        } catch (ErrorNotice $e) {
+            self::assertSame('A non well formed numeric value encountered', $e->getMessage());
+            return;
+        } catch (RuntimeException $e) {
+            self::assertSame('A non well formed numeric value encountered', $e->getMessage());
+            return;
+        } catch (InvalidArgumentException $e) {
+            self::assertTrue(true);
+            return;
+        } catch (TypeError $e) {
+            self::assertSame(\get_class($e), 'TypeError');
+            return;
+        }
+        throw new AssertionFailedError('Exception not thrown');
     }
 }

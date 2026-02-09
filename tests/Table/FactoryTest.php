@@ -2,10 +2,8 @@
 
 namespace bdk\Test\Table;
 
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\Table\Factory;
-use bdk\Table\Table;
-use bdk\Table\TableRow;
-use bdk\Test\Debug\DebugTestFramework;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -16,6 +14,8 @@ use stdClass;
  */
 class FactoryTest extends TestCase
 {
+    use AssertionTrait;
+
     const CLASS_TABLE_ROW = 'bdk\Table\TableRow';
     const CLASS_TABLE = 'bdk\Table\Table';
 

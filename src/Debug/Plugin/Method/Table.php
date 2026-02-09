@@ -152,6 +152,7 @@ class Table implements SubscriberInterface
                 break;
             }
         }
+        /*
         $className = null;
         if ($type === Type::TYPE_OBJECT) {
             $className = $value instanceof Abstraction
@@ -164,8 +165,13 @@ class Table implements SubscriberInterface
                 $className = \explode('::', $identifierValue)[0];
             }
         }
+        */
         return array(
-            'className' => $className,
+            'className' => $type === Type::TYPE_OBJECT
+                ? ($value instanceof Abstraction
+                    ? $value['className']
+                    : \get_class($value))
+                : null,
             'iterable' => $isIterable,
             'type' => $type,
         );

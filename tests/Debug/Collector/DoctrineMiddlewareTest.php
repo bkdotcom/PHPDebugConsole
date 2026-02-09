@@ -85,10 +85,14 @@ EOD;
 
         // Doctrine 4.x Doctrine\DBAL\ParameterType is an enum
         // pre Doctrine 4.x Doctrine\DBAL\ParameterType::STRING maps to PDO::PARAM_STR value
-        $parameterTypeTd = \function_exists('enum_exists') && \enum_exists('Doctrine\DBAL\ParameterType')
+        $haveParamType = \function_exists('enum_exists') && \enum_exists('Doctrine\DBAL\ParameterType');
+        $parameterTypeTd = $haveParamType
             ? '<td class="t_identifier" data-type-more="const" title="Represents the SQL CHAR, VARCHAR, or other string data type.
 Statement parameter type."><span class="classname"><span class="namespace">Doctrine\DBAL\</span>ParameterType</span><span class="t_operator">::</span><span class="t_name">STRING</span></td>'
             : '<td class="t_identifier" data-type-more="const" title="value: 2"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_STR</span></td>';
+        $colClass = $haveParamType
+            ? ' <span class="classname"><span class="namespace">Doctrine\DBAL\</span>ParameterType</span>'
+            : '';
 
         $select1expect = <<<EOD
 %A
@@ -108,7 +112,7 @@ WHERE
 <tr>
 <th class="t_string" scope="col"></th>
 <th class="t_string" scope="col">value</th>
-<th class="t_string" scope="col">type <span class="classname"><span class="namespace">Doctrine\DBAL\</span>ParameterType</span></th>
+<th class="t_string" scope="col">type{$colClass}</th>
 </tr>
 </thead>
 <tbody>
@@ -166,6 +170,9 @@ EOD;
                     <td class="t_string">declined</td>
                     <td class="t_identifier" data-type-more="const" title="value: 2"><span class="classname">PDO</span><span class="t_operator">::</span><span class="t_name">PARAM_STR</span></td>
                 </tr>';
+        $colClass = $haveParamType
+            ? ' <span class="classname"><span class="namespace">Doctrine\DBAL\</span>ParameterType</span>'
+            : '';
         $select2expect = <<<EOD
 %A
 <li class="m_group" data-channel="general.Doctrine" data-icon="fa fa-database" id="statementInfo3">
@@ -185,7 +192,7 @@ where
 <tr>
 <th class="t_string" scope="col"></th>
 <th class="t_string" scope="col">value</th>
-<th class="t_string" scope="col">type <span class="classname"><span class="namespace">Doctrine\DBAL\</span>ParameterType</span></th>
+<th class="t_string" scope="col">type{$colClass}</th>
 </tr>
 </thead>
 <tbody>

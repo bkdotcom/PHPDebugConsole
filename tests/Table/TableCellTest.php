@@ -300,12 +300,7 @@ class TableCellTest extends TestCase
      */
     public function testGetHtmlObjectWithToString()
     {
-        $obj = new class {
-            public function __toString()
-            {
-                return 'String Representation';
-            }
-        };
+        $obj = new \bdk\Test\Table\Fixture\Stringable('String Representation');
 
         $cell = new TableCell($obj);
         $html = $cell->getHtml();

@@ -630,11 +630,9 @@ class FactoryTest extends TestCase
     {
         $factory = new Factory();
 
-        $obj = new class {
-            public $publicProp = 'public';
-            protected $protectedProp = 'protected';
-            private $privateProp = 'private';
-        };
+        $obj = (object) array(
+            'foo' => 'bar',
+        );
 
         $data = [$obj];
 

@@ -114,7 +114,7 @@ class DebugTestFramework extends DOMTestCase
         }
         */
 
-        if ($this->doesNotPerformAssertions()) {
+        if (method_exists($this, 'doesNotPerformAssertions') && $this->doesNotPerformAssertions()) {
             return;
         }
 

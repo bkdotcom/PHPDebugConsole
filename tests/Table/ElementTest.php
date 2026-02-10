@@ -4,6 +4,7 @@ namespace bdk\Test\Table;
 
 use bdk\Table\Element;
 use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use ErrorException;
 use InvalidArgumentException;
 use PHPUnit\Framework\AssertionFailedError;
@@ -19,6 +20,7 @@ use TypeError;
 class ElementTest extends TestCase
 {
     use AssertionTrait;
+    use ExpectExceptionTrait;
 
     /**
      * Test basic constructor with tag name

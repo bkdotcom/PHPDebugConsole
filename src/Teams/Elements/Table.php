@@ -26,7 +26,7 @@ class Table extends AbstractElement
      *
      * @param iterable|TableRow[] $rows Table rows
      */
-    public function __construct(array $rows = array())
+    public function __construct($rows = array())
     {
         parent::__construct(array(
             'columns' => array(),

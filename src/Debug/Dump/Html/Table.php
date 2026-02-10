@@ -151,7 +151,7 @@ class Table
     private function buildContextRow(TableRow $row, $expanded)
     {
         if ($expanded) {
-            $row->addClass('expanded', $expanded);
+            $row->addClass('expanded');
         }
         $row->setAttrib('data-toggle', 'next');
 

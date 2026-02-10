@@ -79,7 +79,7 @@
       "bdk\\Debug\\Dev\\ComposerScripts::postUpdate"
     ],
     "test" : [
-      "vendor/bin/phpunit -v --testdox --testdox-summary"
+      "vendor/bin/phpunit -v"
     ],
     "update-char-data": [
       "bdk\\Debug\\Dev\\UpdateCharData::update"

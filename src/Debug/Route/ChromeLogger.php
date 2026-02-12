@@ -85,7 +85,7 @@ class ChromeLogger extends AbstractRoute
     public function __construct(Debug $debug)
     {
         parent::__construct($debug);
-        $this->dumper = $debug->getDump('base');
+        $this->dumper = $debug->getDump('base', 'chromeLogger');
     }
 
     /**
@@ -297,7 +297,7 @@ class ChromeLogger extends AbstractRoute
      *
      * @return void
      */
-    protected function reduceDataFill($logBack = array())
+    protected function reduceDataFill(array $logBack = array())
     {
         $indexes = \array_reverse(\array_keys($logBack));
         $this->depth = 0;

@@ -58,7 +58,7 @@ class Config
             $keys = \array_unique(\array_merge($this->normalizer->serviceKeys(), \array_keys($this->valuesPending)));
             $values = array();
             foreach ($keys as $debugProp) {
-                $values[$debugProp] = $this->getPropCfg($debugProp, array(), $forInit, false);
+                $values[$debugProp] = $this->getPropCfg($debugProp, [], $forInit, false);
             }
             \ksort($values);
             return $values;
@@ -165,13 +165,13 @@ class Config
         foreach ($configs as $debugProp => $cfg) {
             $cfgWas = $debugProp === 'debug'
                 ? $this->debug->getCfg(null, Debug::CONFIG_DEBUG)
-                : $this->getPropCfg($debugProp, array(), true, false);
+                : $this->getPropCfg($debugProp, [], true, false);
             $cfgWas = \array_intersect_key($cfgWas, $cfg);
             $keys = \array_keys($cfg);
             $keysWas = \array_keys($cfgWas);
             if ($debugProp !== 'debug' && \array_intersect($keys, $keysWas) !== $keys) {
                 // we didn't get all the expected previous values...
-                $cfgWas = $this->getPropCfg($debugProp, array(), true, false);
+                $cfgWas = $this->getPropCfg($debugProp, [], true, false);
                 $cfgWas = \array_intersect_key($cfgWas, $cfg);
             }
             $return[$debugProp] = $cfgWas;
@@ -189,7 +189,7 @@ class Config
      *
      * @return mixed
      */
-    private function getPropCfg($debugProp, $path = array(), $forInit = false, $delPending = true)
+    private function getPropCfg($debugProp, array $path = [], $forInit = false, $delPending = true)
     {
         $val = null;
         if (isset($this->valuesPending[$debugProp])) {
@@ -215,7 +215,7 @@ class Config
      *
      * @return mixed
      */
-    private function getPropCfgFromChildObj($debugProp, $path = array(), $forInit = false)
+    private function getPropCfgFromChildObj($debugProp, array $path = [], $forInit = false)
     {
         $obj = null;
         $matches = array();

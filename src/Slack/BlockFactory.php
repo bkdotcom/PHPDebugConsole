@@ -120,7 +120,7 @@ class BlockFactory extends BlockElementsFactory
      *
      * @return array<string,mixed>
      */
-    public static function actions(array $elements, $values = array())
+    public static function actions(array $elements, array $values = array())
     {
         $default = \array_merge(self::$defaults['actions'], array(
             'elements' => $elements,  // max: 25
@@ -139,7 +139,7 @@ class BlockFactory extends BlockElementsFactory
      *
      * @return array<string,mixed>
      */
-    public static function context(array $elements, $values = array())
+    public static function context(array $elements, array $values = array())
     {
         $default = \array_merge(self::$defaults['context'], array(
             'elements' => $elements,  // max: 10
@@ -182,7 +182,7 @@ class BlockFactory extends BlockElementsFactory
      *
      * @return array<string,mixed>
      */
-    public static function header($text, $values = array())
+    public static function header($text, array $values = array())
     {
         $default = \array_merge(self::$defaults['header'], array(
             'text' => array(
@@ -206,7 +206,7 @@ class BlockFactory extends BlockElementsFactory
      *
      * @return array<string,mixed>
      */
-    public static function image($url, $altText, $title = null, $values = array())
+    public static function image($url, $altText, $title = null, array $values = array())
     {
         $default = \array_merge(self::$defaults['image'], array(
             'alt_text' => $altText, // max: 2000 chars
@@ -230,7 +230,7 @@ class BlockFactory extends BlockElementsFactory
      *
      * @throws InvalidArgumentException
      */
-    public static function input($label, $element, $values = array())
+    public static function input($label, $element, array $values = array())
     {
         $default = \array_merge(self::$defaults['input'], array(
             'element' => $element,
@@ -261,7 +261,7 @@ class BlockFactory extends BlockElementsFactory
      * @throws OverflowException
      * @throws UnexpectedValueException
      */
-    public static function section($text, $fields = array(), $accessory = null, $values = array())
+    public static function section($text, $fields = array(), $accessory = null, array $values = array())
     {
         $default = \array_merge(self::$defaults['section'], array(
             'accessory' => $accessory,
@@ -301,7 +301,7 @@ class BlockFactory extends BlockElementsFactory
      *
      * @return array<string,mixed>
      */
-    public static function video($url, $altText, $title, $values = array())
+    public static function video($url, $altText, $title, array $values = array())
     {
         $default = \array_merge(self::$defaults['video'], array(
             'alt_text' => $altText,
@@ -327,7 +327,7 @@ class BlockFactory extends BlockElementsFactory
      *
      * @throws UnexpectedValueException
      */
-    public static function attachment($text, $blocks = array(), $values = array())
+    public static function attachment($text, array $blocks = array(), array $values = array())
     {
         /*
             everything other than blocks and color are "legacy"

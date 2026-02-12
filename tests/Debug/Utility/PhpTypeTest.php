@@ -138,8 +138,8 @@ class PhpTypeTest extends DebugTestFramework
         }
         if (PHP_VERSION_ID >= 80100) {
             $tests = \array_merge($tests, array(
-                'enum' => array(\bdk\Test\Debug\Fixture\Enum\Meals::BREAKFAST, 'bdk\Test\Debug\Fixture\Enum\Meals::BREAKFAST'),
                 'enum.backed' => array(\bdk\Test\Debug\Fixture\Enum\MealsBacked::BREAKFAST, 'bdk\Test\Debug\Fixture\Enum\MealsBacked::BREAKFAST'),
+                'enum.pure' => array(\bdk\Test\Debug\Fixture\Enum\Meals::BREAKFAST, 'bdk\Test\Debug\Fixture\Enum\Meals::BREAKFAST'),
             ));
         }
         return $tests;

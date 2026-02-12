@@ -179,12 +179,9 @@ class Text extends Base
      *
      * @return Value
      */
-    protected function getValDumper()
+    protected function initValDumper()
     {
-        if (!$this->valDumper) {
-            $this->valDumper = new Value($this);
-        }
-        return $this->valDumper;
+        return new Value($this);
     }
 
     /**
@@ -280,7 +277,7 @@ class Text extends Base
         ), $logEntry['meta']);
         $label = \array_shift($args);
         $label = $meta['isFuncName']
-            ? $this->valDumper->markupIdentifier($label, 'method')
+            ? $this->valDumper->markupIdentifier($label, Type::TYPE_IDENTIFIER_METHOD)
             : $this->valDumper->dump($label, array('addQuotes' => false));
         foreach ($args as $k => $v) {
             $args[$k] = $this->valDumper->dump($v);
@@ -304,12 +301,6 @@ class Text extends Base
      */
     protected function methodTabular(LogEntry $logEntry)
     {
-        $meta = $logEntry['meta'];
-        $logEntry->setMeta('forceArray', false);
-        parent::methodTabular($logEntry);
-        if (!empty($meta['caption'])) {
-            \array_unshift($logEntry['args'], $meta['caption']);
-        }
-        return $this->buildArgString($logEntry['args'], $meta);
+        return $this->methodDefault($logEntry);
     }
 }

@@ -164,7 +164,7 @@ class LogFilesTest extends DebugTestFramework
                 ),
                 'meta' => array(
                     'channel' => 'files',
-                    'detectFiles' => true,
+                    // 'detectFiles' => true,
                 ),
             ),
         ), $logEntries);

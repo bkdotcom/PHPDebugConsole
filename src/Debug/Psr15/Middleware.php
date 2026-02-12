@@ -36,7 +36,7 @@ class Middleware extends AbstractComponent implements MiddlewareInterface
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct($debug = null, $cfg = array())
+    public function __construct($debug = null, array $cfg = array())
     {
         \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
 

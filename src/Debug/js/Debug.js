@@ -711,7 +711,7 @@ var phpDebugConsole = (function (exports, $) {
   }
 
   function buildFileHref (file, line, docRoot) {
-    // console.warn('buildfileHref', {file, line, docRoot})
+    // console.warn('buildFileHref', {file, line, docRoot})
     var data = {
       file: docRoot
         ? file.replace(/^DOCUMENT_ROOT\b/, docRoot)
@@ -780,8 +780,15 @@ var phpDebugConsole = (function (exports, $) {
       $entry.find('table tr:not(.context) > *:last-child').remove();
       return
     }
-    $entry.find('table tbody tr').each(function () {
+    $entry.find('table tbody tr:not(.context)').each(function () {
       createFileLinksTraceProcessTr($(this), isUpdate);
+    });
+    if (isUpdate) {
+      return;
+    }
+    $entry.find('table tbody tr.context').each(function () {
+      var $td0 = $(this).find('> td').eq(0);
+      $td0.attr('colspan', parseInt($td0.attr('colspan'), 10) + 1);
     });
   }
 
@@ -801,11 +808,7 @@ var phpDebugConsole = (function (exports, $) {
     });
     if (isUpdate) {
       $tr.find('.file-link').replaceWith($a);
-      return // continue
-    }
-    if ($tr.hasClass('context')) {
-      $tds.eq(0).attr('colspan', parseInt($tds.eq(0).attr('colspan'), 10) + 1);
-      return // continue
+      return
     }
     $tds.last().after($('<td/>', {
       class: 'text-center',
@@ -6316,9 +6319,9 @@ var phpDebugConsole = (function (exports, $) {
     var $dl = $('<dl class="dl-horizontal"></dl>');
     for (i = 0, count = throws.length; i < count; i++) {
       info = throws[i];
-      $dl.append($('<dt></dt>').html(markupClassname(info.type)));
+      $dl.append($('<dt>').html(markupClassname(info.type)));
       if (info.desc) {
-        $dl.append($('<dd></dd>').html(info.desc));
+        $dl.append($('<dd>').html(info.desc));
       }
     }
     return title + $dl[0].outerHTML

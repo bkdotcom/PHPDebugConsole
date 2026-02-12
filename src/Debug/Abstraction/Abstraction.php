@@ -32,7 +32,7 @@ class Abstraction extends Event
      * @param string $type   value type (one of the Abstracter TYPE_XXX constants)
      * @param array  $values Abstraction values
      */
-    public function __construct($type, $values = array())
+    public function __construct($type, array $values = array())
     {
         $values['type'] = $type;
         if ($type !== Type::TYPE_OBJECT && \array_key_exists('value', $values) === false) {
@@ -97,7 +97,7 @@ class Abstraction extends Event
      *
      * @return void
      */
-    protected function onSet($values = array())
+    protected function onSet(array $values = array())
     {
         if ($this->values['type'] === Type::TYPE_CONST && $this->getValue('name') !== null) {
             \trigger_error('Deprecated: TYPE_CONST - use TYPE_IDENTIFIER instead', \E_USER_DEPRECATED);

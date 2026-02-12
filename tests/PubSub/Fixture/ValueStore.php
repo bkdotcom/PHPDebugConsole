@@ -18,7 +18,7 @@ class ValueStore extends ValueStoreBase
         return true;
     }
 
-    protected function onSet($values = array())
+    protected function onSet(array $values = array())
     {
         $this->onSetArgs[] = $values;
     }

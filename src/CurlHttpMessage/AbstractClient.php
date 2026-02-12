@@ -53,7 +53,7 @@ abstract class AbstractClient
      *
      * @throws InvalidArgumentException
      */
-    public function __construct($options = array())
+    public function __construct(array $options = array())
     {
         $cookieJarDefault = \tempnam(\sys_get_temp_dir(), 'curlHttpMessageCookies_') . '.txt';
         $this->isTempCookieJar = isset($options['curl'][CURLOPT_COOKIEJAR]) === false;

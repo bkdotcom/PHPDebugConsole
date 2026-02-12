@@ -25,6 +25,7 @@ use SplObjectStorage;
  * Forked from pimple/pimple
  *    adds:
  *       get()
+ *       getObject()
  *       has()
  *       needsInvoked()
  *       setCfg()
@@ -97,7 +98,7 @@ class Container implements ArrayAccess
      * @param array $values The parameters or objects
      * @param array $cfg    Config options
      */
-    public function __construct($values = array(), $cfg = array())
+    public function __construct(array $values = array(), array $cfg = array())
     {
         $this->factories = new SplObjectStorage();
         $this->protected = new SplObjectStorage();
@@ -213,16 +214,17 @@ class Container implements ArrayAccess
      *
      * Attempt to resolve any constructor arguments from the container.
      *
-     * @param string $classname Classname of the object to instantiate
+     * @param string $classname    Classname of the object to instantiate
+     * @param bool   $useContainer (true) Pull from container if available / store obj in container after build.  False is similar to factory behavior.
      *
      * @return object
      */
-    public function getObject($classname)
+    public function getObject($classname, $useContainer = true)
     {
         if ($this->objectBuilder === null) {
             $this->objectBuilder = new ObjectBuilder($this);
         }
-        return $this->objectBuilder->build($classname);
+        return $this->objectBuilder->build($classname, $useContainer);
     }
 
     /**
@@ -457,7 +459,7 @@ class Container implements ArrayAccess
      *
      * @return $this
      */
-    public function setValues($values)
+    public function setValues(array $values)
     {
         foreach ($values as $key => $value) {
             $this->offsetSet($key, $value);

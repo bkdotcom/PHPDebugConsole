@@ -370,8 +370,8 @@ class AbstractString extends AbstractComponent
             return Type::TYPE_STRING_FILEPATH;
         }
         $strLen = \strlen($val);
-        $maxlen = $this->getMaxLen('other', $strLen);
-        return $maxlen > -1 && $strLen > $maxlen
+        $maxLen = $this->getMaxLen('other', $strLen);
+        return $maxLen > -1 && $strLen > $maxLen
             ? Type::TYPE_STRING_LONG
             : null;
     }

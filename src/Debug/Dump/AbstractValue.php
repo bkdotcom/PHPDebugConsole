@@ -30,6 +30,11 @@ abstract class AbstractValue extends AbstractComponent
     /** @var array<string,charInfo> */
     public $charData = array();
 
+    /** @var array<string,mixed> */
+    protected $cfg = array(
+        'undefinedAs' => 'unset',
+    );
+
     /** @var Dumper  */
     protected $dumper;
 
@@ -41,6 +46,9 @@ abstract class AbstractValue extends AbstractComponent
 
     /** @var array<string,mixed> Pointer to top of optionsStack */
     protected $optionsCurrent = array();
+
+    /** @var array<string,mixed> Options for previously dumped value */
+    protected $optionsPrevious = array();
 
     /** @var list<Type::TYPE_*> */
     protected $simpleTypes = [
@@ -100,7 +108,7 @@ abstract class AbstractValue extends AbstractComponent
      *
      * @return mixed
      */
-    public function dump($val, $opts = array())
+    public function dump($val, array $opts = array())
     {
         $opts = $this->getPerValueOptions($val, $opts);
         if ($opts['typeMore'] === Type::TYPE_RAW) {
@@ -138,6 +146,9 @@ abstract class AbstractValue extends AbstractComponent
      */
     public function optionGet($what = null)
     {
+        if ($what === 'previous') {
+            return $this->optionsPrevious;
+        }
         return $what === null
             ? $this->optionsCurrent
             : $this->debug->arrayUtil->pathGet($this->optionsCurrent, $what);
@@ -184,7 +195,7 @@ abstract class AbstractValue extends AbstractComponent
      */
     public function optionStackPop()
     {
-        \array_pop($this->optionStack);
+        $this->optionsPrevious = \array_pop($this->optionStack);
         $this->optionsCurrent = &$this->optionStack[\count($this->optionStack) - 1];
     }
 
@@ -302,6 +313,15 @@ abstract class AbstractValue extends AbstractComponent
     abstract protected function dumpFloat($val, $abs = null);
 
     /**
+     * Dump identifier
+     *
+     * @param Abstraction $abs constant abstraction
+     *
+     * @return string
+     */
+    abstract protected function dumpIdentifier(Abstraction $abs);
+
+    /**
      * Dump integer value
      *
      * @param int              $val integer value
@@ -336,6 +356,15 @@ abstract class AbstractValue extends AbstractComponent
      * @return string
      */
     abstract protected function dumpString($val, $abs = null);
+
+    /**
+     * Dump Table
+     *
+     * @param Abstraction $abs Table abstraction
+     *
+     * @return array|string
+     */
+    abstract protected function dumpTable(Abstraction $abs);
 
     /**
      * Escape hex and unicode escape sequences.
@@ -374,14 +403,14 @@ abstract class AbstractValue extends AbstractComponent
      * Split identifier into classname, operator, & name.
      *
      * classname may be namespace\classname
-     * identifier = classname, constant function, or property
+     * identifier = className, const, method, or property
      *
      * @param string|array $val  classname or classname(::|->)name (method/property/const)
-     * @param string       $what ("classname"), "const", or "method"
+     * @param string       $what (Type::TYPE_IDENTIFIER_CLASSNAME), Type::TYPE_IDENTIFIER_CONST, or Type::TYPE_IDENTIFIER_METHOD
      *
      * @return array
      */
-    protected function parseIdentifier($val, $what = 'className')
+    protected function parseIdentifier($val, $what = Type::TYPE_IDENTIFIER_CLASSNAME)
     {
         $parts = \array_fill_keys(['classname', 'name', 'namespace', 'operator'], '');
         $parts['classname'] = $val;
@@ -394,7 +423,7 @@ abstract class AbstractValue extends AbstractComponent
             $parts['classname'] = $matches[1];
             $parts['operator'] = $matches[2];
             $parts['name'] = $matches[3];
-        } elseif (\in_array($what, ['const', 'method', 'function'], true)) {
+        } elseif (\in_array($what, [Type::TYPE_IDENTIFIER_CONST, Type::TYPE_IDENTIFIER_METHOD, 'function'], true)) {
             \preg_match('/^(.+\\\\)?(.+)$/', $val, $matches);
             $parts['classname'] = '';
             $parts['namespace'] = $matches[1];

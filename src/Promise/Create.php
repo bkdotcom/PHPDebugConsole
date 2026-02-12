@@ -11,8 +11,8 @@ namespace bdk\Promise;
 
 use ArrayIterator;
 use bdk\Promise;
-use bdk\Promise\Is;
 use bdk\Promise\Exception\RejectionException;
+use bdk\Promise\Is;
 use bdk\Promise\PromiseInterface;
 use Exception;
 use Iterator;

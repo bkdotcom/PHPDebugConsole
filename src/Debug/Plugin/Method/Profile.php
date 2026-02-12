@@ -19,6 +19,7 @@ use bdk\Debug\Utility\FileStreamWrapper;
 use bdk\Debug\Utility\Profile as ProfileInstance;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
+use bdk\Table\Table as BdkTable;
 
 /**
  * Handle Debug's profile methods
@@ -161,7 +162,9 @@ class Profile implements SubscriberInterface
             $this->debug,
             __FUNCTION__,
             \func_get_args(),
-            array(),
+            array(
+                'sortable' => true,
+            ),
             $this->debug->rootInstance->reflection->getMethodDefaultArgs(__METHOD__),
             ['name']
         );
@@ -224,6 +227,7 @@ class Profile implements SubscriberInterface
                 : 'profileEnd: ' . $this->debug->i18n->trans('method.profile.not-active')
             );
         $debug->rootInstance->getPlugin('methodTable')->doTable($logEntry);
+        $this->updateTableKeyColumn($logEntry);
         $debug->log($logEntry);
         unset($this->instances[$name]);
     }
@@ -244,18 +248,8 @@ class Profile implements SubscriberInterface
         if (!$data) {
             return [$caption, $this->debug->i18n->trans('method.profile.no-data')];
         }
-        $tableInfo = \array_replace_recursive(array(
-            'rows' => \array_fill_keys(\array_keys($data), array()),
-        ), $logEntry->getMeta('tableInfo', array()));
-        foreach (\array_keys($data) as $k) {
-            $tableInfo['rows'][$k]['key'] = new Abstraction(Type::TYPE_IDENTIFIER, array(
-                'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
-                'value' => $k,
-            ));
-        }
         $logEntry->setMeta(array(
             'caption' => $caption,
-            'tableInfo' => $tableInfo,
             'totalCols' => ['ownTime'],
         ));
         return [$data];
@@ -295,5 +289,29 @@ class Profile implements SubscriberInterface
             FileStreamWrapper::register();
         }
         return $val;
+    }
+
+    /**
+     * Update table key column (method name) to use method abstraction
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return void
+     */
+    private function updateTableKeyColumn(LogEntry $logEntry)
+    {
+        $table = $logEntry['args'][0];
+        if (($table instanceof BdkTable) === false) {
+            return;
+        }
+        foreach ($table->getRows() as $row) {
+            $cells = $row->getCells();
+            $method = $cells[0]->getValue();
+            $methodAbs = new Abstraction(Type::TYPE_IDENTIFIER, array(
+                'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
+                'value' => $method,
+            ));
+            $cells[0]->setValue($methodAbs);
+        }
     }
 }

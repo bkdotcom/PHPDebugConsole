@@ -153,6 +153,7 @@ EOD;
 
         $binary = \base64_decode('j/v9wNrF5i1abMXFW/4vVw==', true);
 
+        // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
         $tests = array(
             'basic' => array(
                 'log',
@@ -405,10 +406,10 @@ EOD;
                         self::assertSame(Type::TYPE_STRING, $abs['type']);
                         self::assertSame(Type::TYPE_STRING_BINARY, $abs['typeMore']);
                         self::assertSame([
-                            ["utf8", "<b>Brad</b>:\nw𝔞s "],
-                            ["other", "80" ],
-                            ["utf8Control", "\x00"],
-                            ["utf8", "hеre" ],
+                            ['utf8', "<b>Brad</b>:\nw𝔞s "],
+                            ['other', '80' ],
+                            ['utf8Control', "\x00"],
+                            ['utf8', 'hеre' ],
                         ], $abs['chunks']);
                     },
                     'html' => '<li class="m_log"><span class="no-quotes t_string" data-type-more="binary">&lt;b&gt;Brad&lt;/b&gt;:
@@ -430,7 +431,8 @@ EOD;
                 ],
                 array(
                     'entry' => static function (LogEntry $logEntry) {
-                        $abs = $logEntry['args'][0]['binary'][0];
+                        $tableAbs = $logEntry['args'][0];
+                        $abs = $tableAbs['rows'][0][1];
                         $expect = array(
                             'brief' => false,
                             'percentBinary' => (float) 96,
@@ -445,14 +447,20 @@ EOD;
                     'html' => '<li class="m_table">
                         <table class="sortable table-bordered">
                         <thead>
-                            <tr><th>&nbsp;</th><th scope="col">value</th></tr>
+                            <tr>
+                                <th class="t_string" scope="col"></th>
+                                <th class="t_string" scope="col">value</th>
+                            </tr>
                         </thead>
                         <tbody>
-                            <tr><th class="t_key t_string" scope="row">binary</th><td><span class="t_keyword">string</span><span class="text-muted">(binary)</span>
-                            <ul class="list-unstyled value-container" data-type="string" data-type-more="binary">
-                            <li>size = <span class="t_int">25</span></li>
-                            <li class="t_string"><span class="binary">00 00 00 00 01 01 00 00 00 00 00 00 00 00 00 f0 3f 00 00 00 00 00 00 00 40</span></li>
-                            </ul></td></tr>
+                            <tr>
+                                <th class="t_key t_string" scope="row">binary</th>
+                                <td><span class="t_keyword">string</span><span class="text-muted">(binary)</span>
+                                    <ul class="list-unstyled value-container" data-type="string" data-type-more="binary">
+                                    <li>size = <span class="t_int">25</span></li>
+                                    <li class="t_string"><span class="binary">00 00 00 00 01 01 00 00 00 00 00 00 00 00 00 f0 3f 00 00 00 00 00 00 00 40</span></li>
+                                    </ul></td>
+                            </tr>
                         </tbody>
                         </table>
                         </li>',
@@ -465,7 +473,12 @@ EOD;
                     '\u0000 / foo \\ bar',  // both are single backslash
                 ],
                 array(
-                    'script' => 'console.log(' . \json_encode('\u0000 / foo \ bar', JSON_UNESCAPED_SLASHES). ');',
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => [ '\u0000 / foo \\ bar' ],
+                        'meta' => array(),
+                    ),
+                    'script' => 'console.log(' . \json_encode('\u0000 / foo \ bar', JSON_UNESCAPED_SLASHES) . ');',
                     'text' => '\u0000 / foo \ bar',
                 ),
             ),

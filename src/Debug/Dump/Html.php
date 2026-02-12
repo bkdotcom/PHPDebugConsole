@@ -14,19 +14,17 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html\Group;
 use bdk\Debug\Dump\Html\Helper;
-use bdk\Debug\Dump\Html\Table;
 use bdk\Debug\Dump\Html\Value;
 use bdk\Debug\LogEntry;
 
 /**
  * Dump val as HTML
  *
- * @property HtmlTable $table     lazy-loaded HtmlTable... only loaded if outputting a table
- * @property Value     $valDumper HTML value dumper
+ * @property Value $valDumper HTML value dumper
  */
 class Html extends Base
 {
-    /** @var HtmlHelper helper class */
+    /** @var Helper helper class */
     public $helper;
 
     /** @var Debug[] Logged channels (channelName => Debug) */
@@ -37,9 +35,6 @@ class Html extends Base
 
     /** @var \bdk\Debug\Utility\Html */
     protected $html;
-
-    /** @var HtmlTable */
-    protected $lazyTable;
 
     /** @var array LogEntry meta attribs */
     protected $logEntryAttribs = array();
@@ -108,7 +103,7 @@ class Html extends Base
             $opts['tagName'] = null;
             $toStr = (string) $val; // objects __toString or its classname
             return $toStr === $val['className']
-                ? $this->valDumper->markupIdentifier($toStr, 'className')
+                ? $this->valDumper->markupIdentifier($toStr, Type::TYPE_IDENTIFIER_CLASSNAME)
                 : $this->valDumper->dump($toStr, $opts);
         }
         return $this->valDumper->dump($val);
@@ -129,29 +124,13 @@ class Html extends Base
     }
 
     /**
-     * Getter for this->table
-     *
-     * @return HtmlTable
-     */
-    protected function getTable()
-    {
-        if (!$this->lazyTable) {
-            $this->lazyTable = new Table($this);
-        }
-        return $this->lazyTable;
-    }
-
-    /**
      * Get value dumper
      *
      * @return Value
      */
-    protected function getValDumper()
+    protected function initValDumper()
     {
-        if (!$this->valDumper) {
-            $this->valDumper = new Value($this);
-        }
-        return $this->valDumper;
+        return new Value($this);
     }
 
     /**
@@ -227,10 +206,14 @@ class Html extends Base
         $append = !empty($meta['context'])
             ? $this->helper->buildContext($meta['context'], $meta['line'])
             : '';
+        $argString = $this->helper->buildArgString($args, $meta);
+        if (\in_array($logEntry['method'], ['profileEnd', 'table', 'trace'], true)) {
+            $argString = "\n" . $argString . "\n";
+        }
         return $this->html->buildTag(
             'li',
             $this->methodDefaultAttribs($logEntry),
-            $this->helper->buildArgString($args, $meta) . $append
+            $argString . $append
         );
     }
 
@@ -290,42 +273,7 @@ class Html extends Base
     #[\Override]
     protected function methodTabular(LogEntry $logEntry)
     {
-        $tableOptions = $this->debug->arrayUtil->mergeDeep(array(
-            'attribs' => array(
-                'class' => \array_keys(\array_filter(array(
-                    'sortable' => $logEntry->getMeta('sortable'),
-                    'table-bordered' => true,
-                    'trace-context' => $logEntry->getMeta('inclContext'),
-                ))),
-            ),
-        ), $logEntry['meta']);
-        return $this->html->buildTag(
-            'li',
-            $this->logEntryAttribs,
-            "\n" . $this->table->build($logEntry['args'][0], $tableOptions) . "\n"
-        );
-    }
-
-    /**
-     * Handle trace methods
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return string
-     */
-    protected function methodTrace(LogEntry $logEntry)
-    {
-        $inclContext = $logEntry->getMeta('inclContext', false);
-        if ($inclContext === false) {
-            // not including context... add no-quotes class to filepath column
-            $meta = $logEntry['meta'];
-            $this->debug->arrayUtil->pathSet($meta, 'tableInfo.columns.0.attribs.class.__push__', 'no-quotes');
-            $logEntry['meta'] = $meta;
-        }
-        if ($inclContext) {
-            $this->helper->addContextRows($logEntry);
-        }
-        return $this->methodTabular($logEntry);
+        return $this->methodDefault($logEntry);
     }
 
     /**

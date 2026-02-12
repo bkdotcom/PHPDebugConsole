@@ -167,23 +167,6 @@ class Helper
     }
 
     /**
-     * Test if only need to populate traverseValues
-     *
-     * @param ObjectAbstraction $abs Abstraction instance
-     *
-     * @return bool
-     */
-    public function isTraverseOnly(ObjectAbstraction $abs)
-    {
-        if ($abs['debugMethod'] === 'table' && \count($abs['hist']) < 4) {
-            $abs['cfgFlags'] &= ~AbstractObject::CONST_COLLECT;  // set collect constants to "false"
-            $abs['cfgFlags'] &= ~AbstractObject::METHOD_COLLECT;  // set collect methods to "false"
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * Get Constant, Property, or Parameter's type or Method's return type
      * Priority given to phpDoc type, followed by reflection type (if available)
      *

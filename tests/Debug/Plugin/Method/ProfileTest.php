@@ -2,7 +2,6 @@
 
 namespace bdk\Test\Debug\Plugin\Method;
 
-use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
@@ -63,70 +62,40 @@ class ProfileTest extends DebugTestFramework
             array(
                 'custom' => static function (LogEntry $logEntry) {
                     self::assertSame('profileEnd', $logEntry['method']);
-                    $data = $logEntry['args'][0];
-                    $a = $data['bdk\Test\Debug\Plugin\Method\ProfileTest::a'];
-                    $b = $data['bdk\Test\Debug\Plugin\Method\ProfileTest::b'];
-                    $c = $data['bdk\Test\Debug\Plugin\Method\ProfileTest::c'];
+                    $tableAbs = $logEntry['args'][0];
+                    $rows = $tableAbs['rows'];
+                    // \bdk\Debug::varDump('rows', $rows);
+                    // $a = $rows['bdk\Test\Debug\Plugin\Method\ProfileTest::a'];
+                    // $b = $rows['bdk\Test\Debug\Plugin\Method\ProfileTest::b'];
+                    // $c = $rows['bdk\Test\Debug\Plugin\Method\ProfileTest::c'];
+                    self::assertCount(3, $rows);
+                    self::assertSame('Profile \'Profile 1\' Results', $tableAbs['caption']);
                     // test a
-                    self::assertCount(3, $data);
-                    self::assertSame(1, $a[0]);
-                    self::assertGreaterThanOrEqual(0.25 + 0.75 * 2, $a[1]);
-                    self::assertLessThan(0.01, $a[2]);
+                    self::assertEquals(new Abstraction(Type::TYPE_IDENTIFIER, array(
+                        'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
+                        'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::a',
+                    )), $rows[0][0]['value']);
+                    self::assertSame(1, $rows[0][1]);
+                    self::assertGreaterThanOrEqual(0.25 + 0.75 * 2, $rows[0][2]);
+                    self::assertLessThan(0.01, $rows[0][3]);
                     // test b
-                    self::assertSame(1, $b[0]);
-                    self::assertGreaterThanOrEqual(0.25 + 0.75 * 2, $b[1]);
-                    self::assertLessThanOrEqual(0.25 + 0.01, \round($b[2], 2));
+                    self::assertEquals(new Abstraction(Type::TYPE_IDENTIFIER, array(
+                        'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
+                        'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::b',
+                    )), $rows[1][0]['value']);
+                    self::assertSame(1, $rows[1][1]);
+                    self::assertGreaterThanOrEqual(0.25 + 0.75 * 2, $rows[1][2]);
+                    self::assertLessThanOrEqual(0.25 + 0.01, \round($rows[1][3], 2));
                     // test c
-                    self::assertSame(2, $c[0]);
-                    self::assertGreaterThanOrEqual(0.75 * 2, $c[1]);
-                    self::assertLessThanOrEqual(0.75 * 2 + 0.02, \round($c[2], 2));
-                    \ksort($logEntry['meta']);
-                    $expect = array(
-                        'caption' => "Profile 'Profile 1' Results",
-                        'name' => 'Profile 1',
-                        'sortable' => true,
-                        'tableInfo' => array(
-                            'class' => null,
-                            'columns' => array(
-                                array(
-                                    'key' => 'calls',
-                                ),
-                                array(
-                                    'key' => 'totalTime',
-                                ),
-                                array(
-                                    'total' => $a[2] + $b[2] + $c[2],
-                                    'key' => 'ownTime',
-                                ),
-                            ),
-                            'haveObjRow' => false,
-                            'indexLabel' => null,
-                            'rows' => array(
-                                'bdk\Test\Debug\Plugin\Method\ProfileTest::a' => array(
-                                    'key' => new Abstraction(Type::TYPE_IDENTIFIER, array(
-                                        'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
-                                        'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::a',
-                                    )),
-                                ),
-                                'bdk\Test\Debug\Plugin\Method\ProfileTest::b' => array(
-                                    'key' => new Abstraction(Type::TYPE_IDENTIFIER, array(
-                                        'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
-                                        'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::b',
-                                    )),
-                                ),
-                                'bdk\Test\Debug\Plugin\Method\ProfileTest::c' => array(
-                                    'key' => new Abstraction(Type::TYPE_IDENTIFIER, array(
-                                        'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
-                                        'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::c',
-                                    )),
-                                ),
-                            ),
-                            'summary' => '',
-                        ),
-                    );
-                    // \bdk\Debug::varDump('expect', \bdk\Test\Debug\Helper::deObjectifyData($expect));
-                    // \bdk\Debug::varDump('actual', \bdk\Test\Debug\Helper::deObjectifyData($logEntry['meta']));
-                    self::assertEquals($expect, $logEntry['meta']);
+                    self::assertEquals(new Abstraction(Type::TYPE_IDENTIFIER, array(
+                        'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
+                        'value' => 'bdk\Test\Debug\Plugin\Method\ProfileTest::c',
+                    )), $rows[2][0]['value']);
+                    self::assertSame(2, $rows[2][1]);
+                    self::assertGreaterThanOrEqual(0.75 * 2, $rows[2][2]);
+                    self::assertLessThanOrEqual(0.75 * 2 + 0.02, \round($rows[2][3], 2));
+                    // meta
+                    self::assertSame('Profile 1', $logEntry['meta']['name']);
                 },
                 'chromeLogger' => '[[{"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::a":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::b":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::c":{"calls":2,"totalTime":%f,"ownTime":%f}}],null,"table"]',
                 'firephp' => 'X-Wf-1-1-1-2: %d|[{"Label":"Profile \'Profile 1\' Results","Type":"TABLE"},[["","calls","totalTime","ownTime"],["bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::a",1,%f,%f],["bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::b",1,%f,%f],["bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::c",2,%f,%f]]]|',
@@ -134,21 +103,48 @@ class ProfileTest extends DebugTestFramework
                     <table class="sortable table-bordered">
                     <caption>Profile ' . (PHP_VERSION_ID >= 80100 ? '&#039;Profile 1&#039;' : '\'Profile 1\'') . ' Results</caption>
                     <thead>
-                        <tr><th>&nbsp;</th><th scope="col">calls</th><th scope="col">totalTime</th><th scope="col">ownTime</th></tr>
+                        <tr>
+                            <th class="t_string" scope="col"></th>
+                            <th class="t_string" scope="col">calls</th>
+                            <th class="t_string" scope="col">totalTime</th>
+                            <th class="t_string" scope="col">ownTime</th>
+                        </tr>
                     </thead>
                     <tbody>
-                        <tr><th class="t_identifier t_key" data-type-more="method" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_name">a</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
-                        <tr><th class="t_identifier t_key" data-type-more="method" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_name">b</span></th><td class="t_int">1</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
-                        <tr><th class="t_identifier t_key" data-type-more="method" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_name">c</span></th><td class="t_int">2</td><td class="t_float">%f</td><td class="t_float">%f</td></tr>
+                        <tr>
+                            <th class="t_identifier t_key" data-type-more="method" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_name">a</span></th>
+                            <td class="t_int">1</td>
+                            <td class="t_float">%f</td>
+                            <td class="t_float">%f</td>
+                        </tr>
+                        <tr>
+                            <th class="t_identifier t_key" data-type-more="method" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_name">b</span></th>
+                            <td class="t_int">1</td>
+                            <td class="t_float">%f</td>
+                            <td class="t_float">%f</td>
+                        </tr>
+                        <tr>
+                            <th class="t_identifier t_key" data-type-more="method" scope="row"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>ProfileTest</span><span class="t_operator">::</span><span class="t_name">c</span></th>
+                            <td class="t_int">2</td>
+                            <td class="t_float">%f</td>
+                            <td class="t_float">%f</td>
+                        </tr>
                     </tbody>
                     <tfoot>
-                        <tr><td>&nbsp;</td><td></td><td></td><td class="t_float">%f</td></tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td class="t_float">%f</td>
+                        </tr>
                     </tfoot>
                     </table>
                     </li>',
                 'script' => 'console.log("%%cProfile \'Profile 1\' Results", "font-size:1.20em; font-weight:bold;")' . "\n"
                     . 'console.table({"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::a":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::b":{"calls":1,"totalTime":%f,"ownTime":%f},"bdk\\\Test\\\Debug\\\Plugin\\\Method\\\ProfileTest::c":{"calls":2,"totalTime":%f,"ownTime":%f}});',
-                'text' => 'Profile \'Profile 1\' Results = array(
+                'text' => 'Profile \'Profile 1\' Results
+                    ---------------------------
+                    array(
                     [bdk\Test\Debug\Plugin\Method\ProfileTest::a] => array(
                         [calls] => 1
                         [totalTime] => %f

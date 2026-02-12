@@ -1,6 +1,7 @@
 <?php
 
-use \bdk\HttpMessage\ServerRequest;
+use bdk\HttpMessage\ServerRequest;
+use bdk\HttpMessage\Utility\ServerRequest as ServerRequestUtility;
 
 /**
  * php -S 127.0.0.1:8080 frontController.php
@@ -14,7 +15,7 @@ if (!\defined('STDERR')) {
     \define('STDERR', \fopen('php://stderr', 'wb'));
 }
 
-$serverRequest = ServerRequest::fromGlobals();
+$serverRequest = ServerRequestUtility::fromGlobals();
 $serverParams = $serverRequest->getServerParams();
 $requestUri = $serverRequest->getUri();
 

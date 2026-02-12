@@ -41,7 +41,7 @@ class Emailer extends AbstractComponent implements SubscriberInterface
      *
      * @SuppressWarnings(PHPMD.Superglobals)
      */
-    public function __construct($cfg = array())
+    public function __construct(array $cfg = array())
     {
         $this->serverParams = $_SERVER;
         $this->cfg = array(

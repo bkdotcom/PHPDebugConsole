@@ -119,7 +119,7 @@ class Debug extends AbstractDebug
     const EVENT_STREAM_WRAP = 'debug.streamWrap';
 
     const META = "\x00meta\x00";
-    const VERSION = '3.5';
+    const VERSION = '3.6';
 
     /** @var array<string,mixed> */
     protected $cfg = array(
@@ -270,7 +270,7 @@ class Debug extends AbstractDebug
      *
      * @param array $cfg config
      */
-    public function __construct($cfg = array())
+    public function __construct(array $cfg = array())
     {
         $this->cfg['errorMask'] = E_ERROR | E_PARSE | E_COMPILE_ERROR | E_CORE_ERROR
             | E_WARNING | E_USER_ERROR | E_RECOVERABLE_ERROR;
@@ -302,7 +302,7 @@ class Debug extends AbstractDebug
      *
      * @return static
      */
-    public static function getInstance($cfg = array())
+    public static function getInstance(array $cfg = array())
     {
         if (!isset(self::$instance)) {
             // self::$instance set in __construct

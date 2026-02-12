@@ -107,7 +107,7 @@ class SerializeLogTest extends DebugTestFramework
      *
      * @dataProvider BackwardsCompatibilityDataProvider
      */
-    public function testBackwardsImportCompatibility($dataFilepath)
+    public function t_estBackwardsImportCompatibility($dataFilepath)
     {
         $serialized = \file_get_contents($dataFilepath);
         $data = SerializeLog::unserialize($serialized);

@@ -55,7 +55,7 @@ abstract class AbstractDebug
      *
      * @param array $cfg config
      */
-    public function __construct($cfg = array())
+    public function __construct(array $cfg = array())
     {
         if (!isset(self::$instance)) {
             // self::getInstance() will always return initial/first instance
@@ -80,7 +80,7 @@ abstract class AbstractDebug
         $this->publishBubbleEvent(Debug::EVENT_CUSTOM_METHOD, $logEntry);
         if ($logEntry['handled'] !== true) {
             $logEntry->setMeta('isCustomMethod', true);
-            $this->rootInstance->getPlugin('methodBasic')->log($logEntry);
+            $this->rootInstance->log($logEntry);
         }
         return $logEntry['return'];
     }

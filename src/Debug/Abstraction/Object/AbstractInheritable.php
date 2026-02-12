@@ -47,7 +47,7 @@ abstract class AbstractInheritable
      *
      * @return array
      */
-    public static function buildValues($values = array())
+    public static function buildValues(array $values = array())
     {
         return \array_merge(static::$values, $values);
     }

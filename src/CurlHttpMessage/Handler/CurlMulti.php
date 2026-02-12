@@ -48,7 +48,7 @@ class CurlMulti extends Curl
      *
      * @throws RuntimeException
      */
-    public function __construct($options = array())
+    public function __construct(array $options = array())
     {
         $this->options = \array_replace_recursive(array(
             'curlMulti' => array(),

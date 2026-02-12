@@ -141,8 +141,8 @@ class PhpTest extends TestCase
         }
         if (PHP_VERSION_ID >= 80100) {
             $tests = \array_merge($tests, array(
-                'enum' => array(\bdk\Test\Debug\Fixture\Enum\Meals::BREAKFAST, 'bdk\Test\Debug\Fixture\Enum\Meals'),
                 'enum.backed' => array(\bdk\Test\Debug\Fixture\Enum\MealsBacked::BREAKFAST, 'bdk\Test\Debug\Fixture\Enum\MealsBacked'),
+                'enum.pure' => array(\bdk\Test\Debug\Fixture\Enum\Meals::BREAKFAST, 'bdk\Test\Debug\Fixture\Enum\Meals'),
             ));
         }
         return $tests;

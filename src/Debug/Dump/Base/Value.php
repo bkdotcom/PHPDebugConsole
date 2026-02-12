@@ -17,6 +17,7 @@ use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\AbstractValue;
 use bdk\Debug\Dump\Base\BaseObject;
 use bdk\Debug\Utility\Utf8;
+use bdk\Table\Table as BdkTable;
 
 /**
  * Dump values
@@ -102,11 +103,7 @@ class Value extends AbstractValue
     }
 
     /**
-     * Dump identifier
-     *
-     * @param Abstraction $abs constant abstraction
-     *
-     * @return string
+     * {@inheritDoc}
      */
     protected function dumpIdentifier(Abstraction $abs)
     {
@@ -245,6 +242,23 @@ class Value extends AbstractValue
                 ? '\\x' . \str_replace(' ', ' \\x', $chunk[1])
                 : $this->dumpString($chunk[1]);
         }, $abs['chunks'] ?: array()));
+    }
+
+    /**
+     * Dump Table
+     *
+     * @param Abstraction $abs Table abstraction
+     *
+     * @return array
+     */
+    protected function dumpTable(Abstraction $abs)
+    {
+        $data = $abs->getValues();
+        $table = new BdkTable($data);
+        $tableAsArray = \bdk\Table\Utility::asArray($table, array(
+            'undefinedAs' => $this->cfg['undefinedAs'],
+        ));
+        return $this->dumpArray($tableAsArray);
     }
 
     /**

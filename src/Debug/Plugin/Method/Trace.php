@@ -18,6 +18,7 @@ use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\CustomMethodTrait;
 use bdk\PubSub\SubscriberInterface;
+use bdk\Table\Table as BdkTable;
 
 /**
  * Trace method
@@ -92,17 +93,21 @@ class Trace implements SubscriberInterface
      */
     public function doTrace(LogEntry $logEntry)
     {
-        $this->debug = $logEntry->getSubject();
-        $meta = $this->getMeta($logEntry);
-        $trace = $this->getTrace($logEntry);
-        if ($meta['inclContext']) {
+        $this->debug = $logEntry->getSubject(); // setting debug here as doTrace may be called directly
+        $this->setMetaDefaults($logEntry);
+        if ($logEntry->getMeta('inclContext')) {
             $this->debug->addPlugin($this->debug->pluginHighlight, 'highlight');
         }
-        unset($meta['trace']);
-        $logEntry['args'] = [$trace];
-        $logEntry['meta'] = $meta;
-        $this->evalRows($logEntry);
+        $trace = $this->getTrace($logEntry);
+        $logEntry['args'] = [$trace]; // $trace is still array here
         $this->debug->rootInstance->getPlugin('methodTable')->doTable($logEntry);
+        $this->updateMeta($logEntry);
+        /** @var \bdk\Table\Table */
+        $table = $logEntry['args'][0];
+        $this->updateTable($table, $trace);
+        $columnMeta = $table->getMeta('columns');
+        $columnMeta[1]['attribs']['class'][] = 'no-quotes'; // file column
+        $table->setMeta('columns', $columnMeta);
     }
 
     /**
@@ -114,7 +119,7 @@ class Trace implements SubscriberInterface
      */
     private function getTrace(LogEntry $logEntry)
     {
-        $meta = $this->getMeta($logEntry);
+        $meta = $logEntry['meta'];
         $getOptions = $meta['inclArgs'] ? Backtrace::INCL_ARGS : 0;
         $getOptions |= $meta['inclInternal'] ? Backtrace::INCL_INTERNAL : 0;
         $trace = \is_array($meta['trace'])
@@ -131,115 +136,6 @@ class Trace implements SubscriberInterface
             $trace = $this->debug->backtrace->addContext($trace);
         }
         return $this->getTraceFinish($trace, $meta);
-    }
-
-    /**
-     * Apply final adjustments to the trace
-     *
-     * @param array $trace Backtrace frames
-     *
-     * @return array
-     */
-    private function getTraceFinish(array $trace)
-    {
-        $trace = $this->mapFilepaths($trace);
-        $this->setCommonFilePrefix($trace);
-        return \array_map(function ($frame) {
-            if ($frame['file'] === null) {
-                $frame['file'] = Abstracter::UNDEFINED;
-            } elseif ($frame['file'] !== 'eval()\'d code') {
-                $frame['file'] = $this->parseFilePath($frame['file'], $this->commonFilePrefix);
-            }
-            $frame['function'] = isset($frame['function'])
-                ? new Abstraction(Type::TYPE_IDENTIFIER, array(
-                    'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
-                    'value' => $frame['function'],
-                ))
-                : Abstracter::UNDEFINED; // either not set or null
-            return $frame;
-        }, $trace);
-    }
-
-    /**
-     * Remove Internal Frames
-     *
-     * @param array $trace Backtrace frames
-     *
-     * @return array
-     */
-    private function removeMinInternal(array $trace)
-    {
-        $count = \count($trace);
-        $internalClasses = [
-            __CLASS__,
-            'bdk\PubSub\Manager',
-        ];
-        for ($i = 3; $i < $count; $i++) {
-            $frame = $trace[$i];
-            \preg_match('/^(?P<classname>.+)->(?P<function>.+)$/', $frame['function'], $matches);
-            $isInternal = \in_array($matches['classname'], $internalClasses, true) || $matches['function'] === 'publishBubbleEvent';
-            if ($isInternal === false) {
-                break;
-            }
-        }
-        return \array_slice($trace, $i);
-    }
-
-    /**
-     * Set default meta values
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return array meta values
-     */
-    private function getMeta(LogEntry $logEntry)
-    {
-        $meta = \array_merge(array(
-            'caption' => $this->debug->i18n->trans('method.trace'),
-            'columns' => ['file','line','function'],
-            'inclArgs' => null,  // incl arguments with context?
-                                 // will default to $inclContext
-                                 //   may want to set meta['cfg']['objectsExclude'] = '*'
-            'inclContext' => false,
-            'inclInternal' => false,
-            'limit' => 0,
-            'sortable' => false,
-            'trace' => null,  // set to array or Exception to specify trace
-        ), $logEntry['meta']);
-
-        if ($meta['inclArgs'] === null) {
-            $meta['inclArgs'] = $meta['inclContext'];
-        }
-        return $meta;
-    }
-
-    /**
-     * Handle "eval()'d code" frames
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return void
-     */
-    private function evalRows(LogEntry $logEntry)
-    {
-        $meta = \array_replace_recursive(array(
-            'tableInfo' => array(
-                'rows' => array(),
-            ),
-        ), $logEntry['meta']);
-        $trace = $logEntry['args'][0];
-        foreach ($trace as $i => $frame) {
-            if (!empty($frame['evalLine'])) {
-                $meta['tableInfo']['rows'][$i]['attribs'] = array(
-                    'data-file' => (string) $frame['file'],
-                    'data-line' => $frame['line'],
-                );
-                $trace[$i]['file'] = 'eval()\'d code';
-                $trace[$i]['line'] = $frame['evalLine'];
-            }
-        }
-        $logEntry['meta'] = $meta;
-        $logEntry['args'] = [$trace];
     }
 
     /**
@@ -275,23 +171,37 @@ class Trace implements SubscriberInterface
             ? $this->debug->i18n->trans('method.trace')
                 . ' (' . $this->debug->i18n->trans('method.trace.limited', array('limit' => $argsTyped['limit'])) . ')'
             : $this->debug->i18n->trans('method.trace');
-        $args = \array_merge($argsDefault, $argsTyped);
-        return \array_values($args);
+        return \array_values(\array_merge($argsDefault, $argsTyped));
     }
 
     /**
-     * Update filepaths in trace according to filepathMap config
+     * Apply final adjustments to the trace
      *
      * @param array $trace Backtrace frames
      *
      * @return array
      */
-    private function mapFilepaths(array $trace)
+    private function getTraceFinish(array $trace)
     {
-        return \array_map(function ($frame) {
+        $trace = \array_map(function ($frame) {
             if (isset($frame['file'])) {
                 $frame['file'] = $this->debug->filepathMap($frame['file']);
             }
+            return $frame;
+        }, $trace);
+        $this->setCommonFilePrefix($trace);
+        return \array_map(function ($frame) {
+            if ($frame['file'] === null) {
+                $frame['file'] = Abstracter::UNDEFINED;
+            } elseif ($frame['file'] !== 'eval()\'d code') {
+                $frame['file'] = $this->parseFilePath($frame['file'], $this->commonFilePrefix);
+            }
+            $frame['function'] = isset($frame['function'])
+                ? new Abstraction(Type::TYPE_IDENTIFIER, array(
+                    'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
+                    'value' => $frame['function'],
+                ))
+                : Abstracter::UNDEFINED; // either not set or null
             return $frame;
         }, $trace);
     }
@@ -334,6 +244,27 @@ class Trace implements SubscriberInterface
     }
 
     /**
+     * Remove Internal Frames
+     *
+     * @param array $trace Backtrace frames
+     *
+     * @return array
+     */
+    private function removeMinInternal(array $trace)
+    {
+        $count = \count($trace);
+        $internalClasses = [__CLASS__, 'bdk\PubSub\Manager'];
+        for ($i = 3; $i < $count; $i++) {
+            \preg_match('/^(?P<classname>.+)->(?P<function>.+)$/', $trace[$i]['function'], $matches);
+            $isInternal = \in_array($matches['classname'], $internalClasses, true) || $matches['function'] === 'publishBubbleEvent';
+            if ($isInternal === false) {
+                break;
+            }
+        }
+        return \array_slice($trace, $i);
+    }
+
+    /**
      * Determine the common file prefix for the given trace
      *
      * @param array $trace Backtrace frames
@@ -346,15 +277,42 @@ class Trace implements SubscriberInterface
         if (\count($trace) < 2) {
             return;
         }
-        $trace = \array_filter($trace, static function ($frame) {
+        $files = \array_column(\array_filter($trace, static function ($frame) {
             return isset($frame['file']) && empty($frame['evalLine']);
-        });
-        $files = \array_column($trace, 'file');
+        }), 'file');
         $commonPrefix = $this->debug->stringUtil->commonPrefix($files);
         // don't treat "/" as common prefix
         $this->commonFilePrefix = \strlen($commonPrefix) > 1
             ? $commonPrefix
             : '';
+    }
+
+    /**
+     * Set default meta values
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return void
+     */
+    private function setMetaDefaults(LogEntry $logEntry)
+    {
+        $meta = \array_merge(array(
+            'caption' => $this->debug->i18n->trans('method.trace'),
+            'columns' => ['file','line','function'],
+            'inclArgs' => null,  // incl arguments with context?
+                                 // will default to $inclContext
+                                 //   may want to set meta['cfg']['objectsExclude'] = '*'
+            'inclContext' => false,
+            'inclInternal' => false,
+            'limit' => 0,
+            'sortable' => false,
+            'trace' => null,  // set to array or Exception to specify trace
+        ), $logEntry['meta']);
+
+        if ($meta['inclArgs'] === null) {
+            $meta['inclArgs'] = $meta['inclContext'];
+        }
+        $logEntry['meta'] = $meta;
     }
 
     /**
@@ -367,12 +325,60 @@ class Trace implements SubscriberInterface
      */
     private function slice(array $trace, array $meta)
     {
-        if ($meta['inclInternal']) {
-            $trace = $this->removeMinInternal($trace);
-        }
-        if ($meta['limit'] > 0) {
-            $trace = \array_slice($trace, 0, $meta['limit']);
-        }
+        $trace = $meta['inclInternal']
+            ? $this->removeMinInternal($trace)
+            : $trace;
+        $trace = $meta['limit'] > 0
+            ? \array_slice($trace, 0, $meta['limit'])
+            : $trace;
         return $trace;
+    }
+
+    /**
+     * Move some meta vals from LogEntry to table arg
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return void
+     */
+    private function updateMeta(LogEntry $logEntry)
+    {
+        $table = $logEntry['args'][0];
+        $meta = $logEntry['meta'];
+        unset($meta['trace']);
+        $keys = ['inclArgs', 'inclContext'];
+        foreach ($keys as $key) {
+            $table->setMeta($key, $meta[$key]);
+            unset($meta[$key]);
+        }
+        $logEntry['meta'] = $meta;
+    }
+
+    /**
+     * Add context and eval info to table rows
+     *
+     * @param BdkTable $table Table instance
+     * @param array    $trace Backtrace frames
+     *
+     * @return void
+     */
+    private function updateTable(BdkTable $table, array $trace)
+    {
+        $inclContext = $table->getMeta('inclContext');
+        $rows = $table->getRows();
+        \array_walk($rows, static function ($row, $i) use ($inclContext, $trace) {
+            $cells = $row->getCells();
+            $frame = $trace[$i];
+            if ($frame['evalLine']) {
+                $row->setAttrib('data-file', (string) $frame['file']);
+                $row->setAttrib('data-line', $frame['line']);
+                $cells[1]->setValue('eval()\'d code');
+                $cells[2]->setValue($frame['evalLine']);
+            }
+            if ($inclContext && !empty($frame['context'])) {
+                $row->setMeta('context', $frame['context']);
+                $row->setMeta('args', $frame['args']);
+            }
+        });
     }
 }

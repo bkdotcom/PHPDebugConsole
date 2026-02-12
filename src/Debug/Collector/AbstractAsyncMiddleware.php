@@ -59,7 +59,7 @@ class AbstractAsyncMiddleware extends AbstractComponent
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct($cfg = array(), $debug = null)
+    public function __construct(array $cfg = array(), $debug = null)
     {
         \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
         $this->setCfg($cfg);

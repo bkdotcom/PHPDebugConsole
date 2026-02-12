@@ -47,7 +47,7 @@ class LogTarget extends Target
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct($debug = null, $config = array())
+    public function __construct($debug = null, array $config = array())
     {
         \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
 

@@ -53,40 +53,64 @@ class WampTest extends DebugTestFramework
                     'error',
                     ['Fatal Error', 'trace'],
                     array(
-                        'caption' => 'trace',
-                        // 'evalLine' => null,
                         'file' => $this->file,
-                        'inclArgs' => false,
                         'inclInternal' => false,
                         'limit' => 0,
                         'line' => $this->line,
-                        'sortable' => false,
-                        'tableInfo' => array(
-                            'class' => null,
-                            'columns' => array(
-                                array('key' => 'file'),
-                                array('key' => 'line'),
-                                array('key' => 'function'),
+                        'trace' => array(
+                            'caption' => 'trace',
+                            'debug' => Abstracter::ABSTRACTION,
+                            'header' => ['', 'file', 'line', 'function'],
+                            'meta' => array(
+                                'class' => null,
+                                'columns' => array(
+                                    array(
+                                        'attribs' => array(
+                                            'class' => ['t_key'],
+                                            'scope' => 'row',
+                                        ),
+                                        'key' => \bdk\Table\Factory::KEY_INDEX,
+                                        'tagName' => 'th',
+                                    ),
+                                    array(
+                                        'attribs' => array(
+                                            'class' => ['no-quotes'],
+                                        ),
+                                        'key' => 'file',
+                                    ),
+                                    array('key' => 'line'),
+                                    array('key' => 'function'),
+                                ),
+                                'haveObjectRow' => false,
+                                'inclArgs' => false,
+                                'inclContext' => false,
+                                'sortable' => false,
                             ),
-                            'haveObjRow' => false,
-                            'indexLabel' => null,
-                            'rows' => array(),
-                            'summary' => '',
+                            'rows' => [
+                                [
+                                    0,
+                                    array(
+                                        'baseName' => 'file.php',
+                                        'debug' => Abstracter::ABSTRACTION,
+                                        'docRoot' => false,
+                                        'pathCommon' => '',
+                                        'pathRel' => '/path/to/',
+                                        'type' => 'string',
+                                        'typeMore' => 'filepath',
+                                        'value' => null,
+                                    ),
+                                    42,
+                                    array(
+                                        'debug' => Abstracter::ABSTRACTION,
+                                        'type' => 'identifier',
+                                        'typeMore' => 'method',
+                                        'value' => 'Foo::bar',
+                                    ),
+                                ],
+                            ],
+                            'type' => 'table',
+                            'value' => null,
                         ),
-                        'trace' => \array_map(static function ($frame) {
-                            $frame['file'] = (new Abstraction(Type::TYPE_STRING, array(
-                                'typeMore' => Type::TYPE_STRING_FILEPATH,
-                                'docRoot' => false,
-                                'pathCommon' => '',
-                                'pathRel' => \dirname($frame['file']) . '/',
-                                'baseName' => \basename($frame['file']),
-                            )))->jsonSerialize();
-                            $frame['function'] = (new Abstraction(Type::TYPE_IDENTIFIER, array(
-                                'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
-                                'value' => $frame['function'],
-                            )))->jsonSerialize();
-                            return \array_values($frame);
-                        }, $frames),
                         'uncollapse' => true,
                     ),
                 ],

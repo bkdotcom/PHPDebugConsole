@@ -116,7 +116,7 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
                 'type' => $uploadedFile->getClientMediaType(),
             );
         }, $files);
-        $this->debug->log('$_FILES', $files);
+        $this->debug->log('$_FILES', $files, $this->debug->meta('detectFiles'));
     }
 
     /**

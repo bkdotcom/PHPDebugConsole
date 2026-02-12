@@ -2,6 +2,7 @@
 
 namespace bdk\Test\Debug\Collector;
 
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Collector\MonologHandler;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Test\Debug\DebugTestFramework;
@@ -141,8 +142,40 @@ class MonologHandlerTest extends DebugTestFramework
             array('Naughty' => true, 'name' => 'Sally', 'extracol' => 'yes', 'sex' => 'F', 'age' => '10'),
         ];
         $tableDataLogged = [
-            ['Bob', '12'],
-            ['Sally', '10'],
+            'caption' => 'table caption',
+            'debug' => Abstracter::ABSTRACTION,
+            'header' => ['','name','age'],
+            'meta' => [
+                'class' => null,
+                'columns' => [
+                    [
+                        'attribs' => array(
+                            'class' => ['t_key'],
+                            'scope' => 'row',
+                        ),
+                        'key' => \bdk\Table\Factory::KEY_INDEX,
+                        'tagName' => 'th',
+                    ],
+                    ['key' => 'name'],
+                    ['key' => 'age'],
+                ],
+                'haveObjectRow' => false,
+                'sortable' => true,
+            ],
+            'rows' => [
+                [
+                    0,
+                    'Bob',
+                    '12',
+                ],
+                [
+                    1,
+                    'Sally',
+                    '10',
+                ],
+            ],
+            'type' => 'table',
+            'value' => null,
         ];
 
         $monolog->debug('table caption', array(
@@ -155,25 +188,8 @@ class MonologHandlerTest extends DebugTestFramework
                 $tableDataLogged,
             ),
             'meta' => array(
-                'caption' => 'table caption',
                 'channel' => 'general.PHPDebugConsole',
                 'psr3level' => 'debug',
-                'sortable' => true,
-                'tableInfo' => array(
-                    'class' => null,
-                    'columns' => array(
-                        array(
-                            'key' => 'name',
-                        ),
-                        array(
-                            'key' => 'age',
-                        ),
-                    ),
-                    'haveObjRow' => false,
-                    'indexLabel' => null,
-                    'rows' => array(),
-                    'summary' => '',
-                ),
             ),
         ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }

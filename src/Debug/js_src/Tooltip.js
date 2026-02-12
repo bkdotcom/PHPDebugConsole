@@ -113,9 +113,9 @@ function refTitleThrows ($ref, title) {
   var $dl = $('<dl class="dl-horizontal"></dl>')
   for (i = 0, count = throws.length; i < count; i++) {
     info = throws[i]
-    $dl.append($('<dt></dt>').html(markupClassname(info.type)))
+    $dl.append($('<dt>').html(markupClassname(info.type)))
     if (info.desc) {
-      $dl.append($('<dd></dd>').html(info.desc))
+      $dl.append($('<dd>').html(info.desc))
     }
   }
   return title + $dl[0].outerHTML

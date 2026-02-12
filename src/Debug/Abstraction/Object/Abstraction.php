@@ -32,9 +32,9 @@ class Abstraction extends BaseAbstraction
         'collectPropertyValues',
         'fullyQualifyPhpDocType',
         'hist',
-        'isTraverseOnly',
         'propertyOverrideValues',
         'reflector',
+        'unstructuredValue',
     ];
 
     /** @var ValueStore */
@@ -49,7 +49,7 @@ class Abstraction extends BaseAbstraction
      * @param ValueStore $inherited Inherited values
      * @param array      $values    Abstraction values
      */
-    public function __construct(ValueStore $inherited, $values = array())
+    public function __construct(ValueStore $inherited, array $values = array())
     {
         $this->inherited = $inherited;
         parent::__construct(Type::TYPE_OBJECT, $values);
@@ -137,6 +137,7 @@ class Abstraction extends BaseAbstraction
     {
         $values = $this->inherited->getValues();
         unset($values['cfgFlags']);
+        unset($values['__isUsed']);
         return $values;
     }
 
@@ -197,7 +198,7 @@ class Abstraction extends BaseAbstraction
         foreach ($order as $what) {
             $multiSortArgs[] = $sortData[$what];
         }
-        // array_multisort reindexes nunmeric keys,
+        // array_multisort reindexes numeric keys,
         // so... we sort the keys -> array_fill -> array_replace
         $multiSortArgs[] = &$sortData['key'];
         \call_user_func_array('array_multisort', $multiSortArgs);

@@ -182,7 +182,7 @@ class HtmlObject
         return '<dt class="attributes">' . $this->debug->i18n->trans('object.attributes') . '</dt>' . "\n"
             . \implode(\array_map(function ($info) {
                 return '<dd class="attribute">'
-                    . $this->valDumper->markupIdentifier($info['name'], 'className')
+                    . $this->valDumper->markupIdentifier($info['name'], Type::TYPE_IDENTIFIER_CLASSNAME)
                     . $this->dumpAttributeArgs($info['arguments'])
                     . '</dd>' . "\n";
             }, $attributes));

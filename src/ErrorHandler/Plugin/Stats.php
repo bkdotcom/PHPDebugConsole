@@ -32,7 +32,7 @@ class Stats extends AbstractComponent implements SubscriberInterface
      *
      * @param array $cfg Configuration
      */
-    public function __construct($cfg = array())
+    public function __construct(array $cfg = array())
     {
         $this->cfg = array(
             'dataStoreFactory' => function () {
@@ -134,7 +134,7 @@ class Stats extends AbstractComponent implements SubscriberInterface
      *
      * @return void
      */
-    protected function postSetCfg($cfg = array(), $prev = array())
+    protected function postSetCfg(array $cfg = array(), array $prev = array())
     {
         $cfgDataStore = \array_diff_key($cfg, array('dataStoreFactory' => null));
         if (isset($cfg['dataStoreFactory'])) {

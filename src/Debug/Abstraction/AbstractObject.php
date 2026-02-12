@@ -21,6 +21,7 @@ use bdk\Debug\Abstraction\Object\Methods;
 use bdk\Debug\Abstraction\Object\Properties;
 use bdk\Debug\Abstraction\Object\PropertiesInstance;
 use bdk\Debug\Abstraction\Object\Subscriber;
+use bdk\Table\Element;
 use ReflectionClass;
 use ReflectionEnumUnitCase;
 use RuntimeException;
@@ -185,7 +186,6 @@ class AbstractObject extends AbstractComponent
         'sectionOrder' => array(),  // cfg.objectSectionOrder
         'sort' => '',  // cfg.objectSort
         'stringified' => null,
-        'traverseValues' => array(),  // populated if method is table
         'viaDebugInfo' => false,
     );
 
@@ -205,10 +205,11 @@ class AbstractObject extends AbstractComponent
         $this->propertiesInstance = new PropertiesInstance($this);
         $this->definition = new Definition($this);
 
-        if ($abstracter->debug->parentInstance === null) {
-            // we only need to subscribe to these events from root channel
-            $abstracter->debug->eventManager->addSubscriberInterface(new Subscriber($this));
-        }
+        // if we are the root instance, subscribe to events
+        //  otherwise ensure root instance is instantiated
+        $abstracter->debug->parentInstance === null
+            ? $abstracter->debug->eventManager->addSubscriberInterface(new Subscriber($this))
+            : $abstracter->debug->rootInstance->abstracter;
 
         self::$values['sectionOrder'] = $abstracter->getCfg('objectSectionOrder');
         self::$values['sort'] = $abstracter->getCfg('objectSort');
@@ -221,7 +222,7 @@ class AbstractObject extends AbstractComponent
      * @param string        $method Method requesting abstraction
      * @param array         $hist   (@internal) array & object history
      *
-     * @return ObjectAbstraction
+     * @return ObjectAbstraction|mixed
      * @throws RuntimeException
      */
     public function getAbstraction($obj, $method = null, array $hist = array())
@@ -236,6 +237,11 @@ class AbstractObject extends AbstractComponent
         $abs->setSubject($obj);
         $abs['hist'][] = $obj;
         $this->doAbstraction($abs);
+        if ($abs['unstructuredValue']) {
+            return $abs['unstructuredValue'];
+        }
+        // Mark definition as used
+        $this->definition->markAsUsed($definitionValueStore);
         return $abs->clean();
     }
 
@@ -258,25 +264,6 @@ class AbstractObject extends AbstractComponent
     }
 
     /**
-     * Populate rows or columns (traverseValues) if we're outputting as a table
-     *
-     * @param ObjectAbstraction $abs Abstraction instance
-     *
-     * @return void
-     */
-    private function addTraverseValues(ObjectAbstraction $abs)
-    {
-        if ($abs['traverseValues']) {
-            return;
-        }
-        $obj = $abs->getSubject();
-        $abs['hist'][] = $obj;
-        foreach ($obj as $k => $v) {
-            $abs['traverseValues'][$k] = $this->abstracter->crate($v, $abs['debugMethod'], $abs['hist']);
-        }
-    }
-
-    /**
      * Collect instance info
      * Property values & static method variables
      *
@@ -289,7 +276,6 @@ class AbstractObject extends AbstractComponent
         if ($abs['isMaxDepth'] || $abs['isRecursion']) {
             return;
         }
-        $abs['isTraverseOnly'] = $this->helper->isTraverseOnly($abs);
         /*
             Debug::EVENT_OBJ_ABSTRACT_START subscriber may
             set isExcluded
@@ -297,14 +283,10 @@ class AbstractObject extends AbstractComponent
             set cfgFlags (int / bitmask)
             set propertyOverrideValues
             set stringified
-            set traverseValues
         */
         $this->debug->publishBubbleEvent(Debug::EVENT_OBJ_ABSTRACT_START, $abs, $this->debug);
         if ($abs['isExcluded']) {
             return;
-        }
-        if ($abs['isTraverseOnly']) {
-            $this->addTraverseValues($abs);
         }
         $this->methods->addInstance($abs);  // method static variables
         $this->propertiesInstance->add($abs);
@@ -347,7 +329,6 @@ class AbstractObject extends AbstractComponent
                 'collectPropertyValues' => true,
                 'fullyQualifyPhpDocType' => $this->cfg['fullyQualifyPhpDocType'],
                 'hist' => $hist,
-                'isTraverseOnly' => false,
                 'propertyOverrideValues' => array(),
                 'reflector' => $reflector,
             )
@@ -394,6 +375,9 @@ class AbstractObject extends AbstractComponent
     private function getScopeClass(array &$hist)
     {
         for ($i = \count($hist) - 1; $i >= 0; $i--) {
+            if ($hist[$i] instanceof Element) {
+                continue;
+            }
             if (\is_object($hist[$i])) {
                 return \get_class($hist[$i]);
             }

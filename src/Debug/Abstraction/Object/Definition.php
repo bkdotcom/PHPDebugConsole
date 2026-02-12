@@ -150,13 +150,29 @@ class Definition
             return $this->default;
         }
         $values = $this->object->buildValues(static::buildValues());
-        $classValueStore = new ValueStore($values);
-        $this->default = $classValueStore;
-        $this->debug->data->set([
-            'classDefinitions',
-            $values['className'], // "\x00default\x00"
-        ], $classValueStore);
-        return $classValueStore;
+        $this->default = new ValueStore($values);
+        $dataPath = ['classDefinitions', $values['className']];
+        $this->debug->data->set($dataPath, $this->default);
+        return $this->default;
+    }
+
+    /**
+     * Mark a definition as used (referenced by a logged ObjectAbstraction)
+     *
+     * @param ValueStore $valueStore The definition ValueStore
+     *
+     * @return void
+     */
+    public function markAsUsed(ValueStore $valueStore)
+    {
+        if ($valueStore['__isUsed']) {
+            return; // already marked
+        }
+        $valueStore['__isUsed'] = true;
+        if ($valueStore['inherited']) {
+            // also mark "parent" definition as used
+            $this->markAsUsed($valueStore['inherited']);
+        }
     }
 
     /**

@@ -137,6 +137,7 @@ class Abstraction extends BaseAbstraction
     {
         $values = $this->inherited->getValues();
         unset($values['cfgFlags']);
+        unset($values['__isUsed']);
         return $values;
     }
 

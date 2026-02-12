@@ -237,9 +237,12 @@ class AbstractObject extends AbstractComponent
         $abs->setSubject($obj);
         $abs['hist'][] = $obj;
         $this->doAbstraction($abs);
-        return $abs['unstructuredValue']
-            ? $abs['unstructuredValue']
-            : $abs->clean();
+        if ($abs['unstructuredValue']) {
+            return $abs['unstructuredValue'];
+        }
+        // Mark definition as used
+        $this->definition->markAsUsed($definitionValueStore);
+        return $abs->clean();
     }
 
     /**

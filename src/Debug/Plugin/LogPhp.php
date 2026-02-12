@@ -283,12 +283,12 @@ class LogPhp implements SubscriberInterface
             $this->debug->abstracter->crateWithVals(
                 $iniFiles,
                 array(
+                    'detectFiles' => true,
                     'options' => array(
                         'showListKeys' => false,
                     ),
                 )
-            ),
-            $this->debug->meta('detectFiles')
+            )
         );
     }
 

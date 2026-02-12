@@ -8,6 +8,8 @@ class Utility extends UtilityBase
 {
     public static $gitBranch = null;
 
+    public static $filePaths = [];
+
     /**
      * {@inheritDoc}
      */
@@ -16,5 +18,13 @@ class Utility extends UtilityBase
         return self::$gitBranch !== null
             ? self::$gitBranch
             : parent::gitBranch();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public static function isFile($val)
+    {
+        return parent::isFile($val) || \in_array($val, self::$filePaths, true);
     }
 }

@@ -174,7 +174,7 @@ class Abstracter extends AbstractComponent
     public function crateWithVals($mixed, array $values = array())
     {
         /*
-            Note: this->crateValues is the raw values passed to this method
+            Note: this->crateVals is the raw values passed to this method
                the values may end up being processed in Abstraction::onSet
                ie, converting attribs.class to an array
         */
@@ -189,9 +189,17 @@ class Abstracter extends AbstractComponent
             ? \array_values($typeInfo)
             : array();
         unset($values['type']);
+        $cfgRestore = array();
+        if (isset($values['detectFiles'])) {
+            $cfgRestore['detectFiles'] = $this->abstractString->setCfg('detectFiles', $values['detectFiles']);
+            unset($values['detectFiles']);
+        }
         $abs = $this->getAbstraction($mixed, __FUNCTION__, $typeInfo);
         foreach ($values as $k => $v) {
             $abs[$k] = $v;
+        }
+        if ($cfgRestore) {
+            $this->debug->setCfg($cfgRestore, Debug::CONFIG_NO_RETURN);
         }
         $this->crateVals = array();
         return $abs;

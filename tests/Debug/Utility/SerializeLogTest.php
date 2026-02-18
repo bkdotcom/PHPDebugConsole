@@ -85,6 +85,10 @@ class SerializeLogTest extends DebugTestFramework
                 $filepath,
             );
         }
+        if (PHP_VERSION_ID < 70400) {
+            return \array_intersect_key($tests, \array_flip(['2.3']));
+        }
+
         /*
         return \array_intersect_key($tests, \array_flip([
             '2.3',

@@ -83,7 +83,7 @@ class LogEntryTest extends DebugTestFramework
 
     public function testJsonEncode()
     {
-        $this->debug->getChannel('Request / Response', array('nested' => false));
+        $this->debug->getChannel('request-response', array('nested' => false));
         $logEntry = new LogEntry(
             $this->debug->getChannel('php', array('nested' => false)),
             'log',

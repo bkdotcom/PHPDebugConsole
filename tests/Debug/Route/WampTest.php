@@ -121,7 +121,7 @@ class WampTest extends DebugTestFramework
     public function testCrateAbstraction()
     {
         $base64 = 'j/v9wNrF5i1abMXFW/4vVw==';
-        $binary = \base64_decode($base64);
+        $binary = \base64_decode($base64, true);
         $this->testMethod(
             'log',
             [

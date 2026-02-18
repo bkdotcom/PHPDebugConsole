@@ -14,6 +14,7 @@ use bdk\Test\Debug\DebugTestFramework;
  *
  * @covers \bdk\Debug\AbstractComponent
  * @covers \bdk\Debug\AbstractDebug
+ * @covers \bdk\Debug\Abstraction\Abstraction
  * @covers \bdk\Debug\Abstraction\Object\Properties
  * @covers \bdk\Debug\Abstraction\Object\PropertiesInstance
  * @covers \bdk\Debug\Dump\Base

@@ -12,6 +12,7 @@ use bdk\Test\Debug\Helper;
 /**
  * PHPUnit tests for Debug class
  *
+ * @covers \bdk\Debug\Abstraction\Abstraction
  * @covers \bdk\Debug\Abstraction\AbstractString
  * @covers \bdk\Debug\Dump\Base
  * @covers \bdk\Debug\Dump\Base\Value

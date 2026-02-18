@@ -55,7 +55,8 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
      */
     public function onBootstrap(Event $event)
     {
-        $this->debug = $event->getSubject()->getChannel($this->cfg['channelKey'], $this->cfg['channelOptions']);
+        // logResponse will update to request/response channel
+        $this->debug = $event->getSubject();
     }
 
     /**
@@ -97,6 +98,7 @@ class LogResponse extends AbstractLogReqRes implements SubscriberInterface
         if ($this->debug->rootInstance->getCfg('logResponse', Debug::CONFIG_DEBUG) === false) {
             return;
         }
+        $this->debug = $this->debug->rootInstance->getChannel($this->cfg['channelKey'], $this->cfg['channelOptions']);
         $this->debug->log(
             $this->debug->i18n->trans('response'),
             $this->debug->meta(array(

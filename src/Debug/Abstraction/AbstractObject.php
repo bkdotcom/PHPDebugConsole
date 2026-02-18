@@ -182,7 +182,7 @@ class AbstractObject extends AbstractComponent
         'keys' => array(),
         // methods may be populated with __toString info, or methods with staticVars
         'properties' => array(),
-        'scopeClass' => '',
+        'scopeClass' => null,
         'sectionOrder' => array(),  // cfg.objectSectionOrder
         'sort' => '',  // cfg.objectSort
         'stringified' => null,
@@ -260,7 +260,9 @@ class AbstractObject extends AbstractComponent
                 return $carry | $val;
             }, 0) & ~self::BRIEF & ~self::PROP_VIRTUAL_VALUE_COLLECT;
         }
-        return \array_merge(self::$values, $values);
+        $values = \array_merge(self::$values, $values);
+        \ksort($values);
+        return $values;
     }
 
     /**

@@ -304,9 +304,12 @@ class Subscriber implements SubscriberInterface
         $debug = $this->abstractObject->debug;
         $this->isAbstractingTable = true;
         $debug->eventManager->subscribe(Debug::EVENT_OBJ_ABSTRACT_END, [$this, 'tableCellValueAbstracter']);
-        $values = $obj->jsonSerialize();
-        $values = $debug->abstracter->crate($values, $abs['debugMethod'], $abs['hist']);
-        $values['type'] = Type::TYPE_TABLE;
+        try {
+            $values = $obj->jsonSerialize();
+            $values = $debug->abstracter->crate($values, $abs['debugMethod'], $abs['hist']);
+        } catch (Exception $e) {
+            $values = array();
+        }
         $debug->eventManager->unsubscribe(Debug::EVENT_OBJ_ABSTRACT_END, [$this, 'tableCellValueAbstracter']);
         $this->isAbstractingTable = false;
         $abs['unstructuredValue'] = new Abstraction(Type::TYPE_TABLE, $values);

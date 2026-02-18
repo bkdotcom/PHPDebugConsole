@@ -105,7 +105,9 @@ class Definition
      */
     public static function buildValues(array $values = array())
     {
-        return \array_merge(self::$values, $values);
+        $values = \array_merge(self::$values, $values);
+        \ksort($values);
+        return $values;
     }
 
     /**

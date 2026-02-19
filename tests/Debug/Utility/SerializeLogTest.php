@@ -86,6 +86,8 @@ class SerializeLogTest extends DebugTestFramework
             );
         }
         if (PHP_VERSION_ID < 70400) {
+            // objects serialized with __serialize can not be unserialized in php < 7.4
+            //  v2.3 did not use __serialize, so can still test that
             return \array_intersect_key($tests, \array_flip(['2.3']));
         }
 

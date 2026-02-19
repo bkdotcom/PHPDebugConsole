@@ -24,6 +24,8 @@ use Serializable;
  * Note:
  *   - The Serializable interface - since PHP 5.1.  Deprecated in php 8.1
  *   - __serialize and __unserialize magic methods : since PHP 7.4
+ *   - if __serialize is present, it will be used instead of Serializable::serialize
+ *   -   objects serialized with __serialize can not be unserialized
  *
  * @template TKey   of array-key
  * @template TValue of mixed

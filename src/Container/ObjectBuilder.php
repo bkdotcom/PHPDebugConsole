@@ -70,16 +70,17 @@ class ObjectBuilder
      *
      * We will look for the class in the container
      * If it is not found, we will try to instantiate it via reflection and obtaining dependencies via the container
-     * We will save the instance in the container
      *
-     * @param string $classname    Fully qualified class name
-     * @param bool   $useContainer (true) Pull obj from container if available / store obj in container after build
+     * if $save is true, we will save the instance in the container
+     *
+     * @param string $classname Fully qualified class name
+     * @param bool   $save      (true) store built object in container after build
      *
      * @return object
      *
      * @throws RuntimeException
      */
-    public function build($classname, $useContainer = true)
+    public function build($classname, $save = true)
     {
         if ($this->container->has($classname)) {
             return $this->container->get($classname);
@@ -90,7 +91,7 @@ class ObjectBuilder
             ? $this->resolveConstructorArgs($refConstructor)
             : [];
         $return = $refClass->newInstanceArgs($paramValues);
-        if ($useContainer) {
+        if ($save) {
             $this->container->offsetSet($classname, $return);
         }
         return $return;

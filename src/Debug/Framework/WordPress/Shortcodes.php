@@ -6,9 +6,10 @@ use bdk\Debug;
 use bdk\Debug\AbstractComponent;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Utility\TableRow;
 use bdk\PubSub\Event;
 use bdk\PubSub\SubscriberInterface;
+use bdk\Table\TableCell;
+use bdk\Table\TableRow;
 
 /**
  * WordPress "shortcode" info
@@ -61,14 +62,24 @@ class Shortcodes extends AbstractComponent implements SubscriberInterface
             return;
         }
 
-        $this->debug->eventManager->subscribe(Debug::EVENT_LOG, [$this, 'onLog'], 1000);
-        $this->debug->table('shortcodes', $this->getShortCodeData(), $this->debug->meta(array(
-            'columnNames' => array(
-                'links' => \_x('links', 'shortcode.links', 'debug-console-php'),
-                TableRow::INDEX => 'shortcode',
-            ),
-        )));
-        $this->debug->eventManager->unsubscribe(Debug::EVENT_LOG, [$this, 'onLog']);
+        $logEntry = new LogEntry(
+            $this->debug,
+            'table',
+            [
+                'shortcodes',
+                $this->getShortCodeData(),
+            ],
+            array(
+                'columnLabels' => array(
+                    'links' => \_x('links', 'shortcode.links', 'debug-console-php'),
+                    \bdk\Table\Factory::KEY_INDEX => 'shortcode',
+                ),
+                'sortable' => true,
+            )
+        );
+        $this->debug->rootInstance->getPlugin('methodTable')->doTable($logEntry);
+        $this->modifyShortcodeTable($logEntry);
+        $this->debug->log($logEntry);
     }
 
     /**
@@ -79,31 +90,53 @@ class Shortcodes extends AbstractComponent implements SubscriberInterface
      *
      * @return void
      */
-    public function onLog(LogEntry $logEntry)
+    protected function modifyShortcodeTable(LogEntry $logEntry)
     {
-        if ($logEntry['method'] !== 'table') {
-            return;
+        $table = $logEntry['args'][0];
+        $rowsNew = [];
+        foreach ($table->getRows() as $row) {
+            $rowsNew[] = $row;
+            $cells = $row->getCells();
+            $shortcode = $cells[0]->getValue();
+            $links = $cells[2]->getValue();
+            $cells[2]->setValue(
+                $links . ' <a href="#" data-toggle="#shortcode_' . $shortcode . '_doc" title="handler phpDoc"><i class="fa fa-code"></i></a>'
+            );
+            $rowsNew[] = $this->buildInfoRow($row);
         }
+        $table->setRows($rowsNew);
+    }
 
-        $dataNew = array();
-        $rowsMeta = $logEntry['meta']['tableInfo']['rows'];
-        foreach ($logEntry['args'][0] as $shortcode => $row) {
-            $phpDoc = $this->debug->phpDoc->getParsed($row[0] . '()');
-            $row[1] .= ' <a href="#" data-toggle="#shortcode_' . $shortcode . '_doc" title="handler phpDoc"><i class="fa fa-code"></i></a>';
-            $dataNew[$shortcode] = $row;
-            $dataNew[$shortcode . ' info'] = [$this->debug->abstracter->crateWithVals(
-                $this->buildPhpDoc($shortcode, $phpDoc),
-                array(
-                    'addQuotes' => false,
-                    'sanitize' => false,
-                    'visualWhiteSpace' => false,
-                )
-            )];
-            $rowsMeta[$shortcode . ' info'] = $this->buildInfoMeta($shortcode);
-        }
-        $logEntry['args'][0] = $dataNew;
-        $logEntry['meta']['tableInfo']['rows'] = $rowsMeta;
-        unset($logEntry['meta']['tableInfo']['columns'][2]);
+    /**
+     * Build the phpDoc info row for the shortcode
+     *
+     * @param TableRow $row TableRow instance
+     *
+     * @return TableRow
+     */
+    private function buildInfoRow(TableRow $row)
+    {
+        $cells = $row->getCells();
+        $shortcode = $cells[0]->getValue();
+        $method = $cells[1]->getValue();
+        $phpDoc = $this->debug->phpDoc->getParsed($method . '()');
+        $infoCell = new TableCell($this->debug->abstracter->crateWithVals(
+            $this->buildPhpDoc($shortcode, $phpDoc),
+            array(
+                'addQuotes' => false,
+                'sanitize' => false,
+                'visualWhiteSpace' => false,
+            )
+        ));
+        $infoCell->setAttribs(array(
+            'colspan' => 3,
+        ));
+        return (new TableRow())
+            ->setAttribs(array(
+                'id' => 'shortcode_' . $shortcode . '_doc',
+                'style' => 'display: none;',
+            ))
+            ->appendCell($infoCell);
     }
 
     /**
@@ -127,31 +160,6 @@ class Shortcodes extends AbstractComponent implements SubscriberInterface
                 '<i class="fa fa-external-link"></i>'
             )
             : '';
-    }
-
-    /**
-     * Build the table meta info for the phpdoc row
-     *
-     * @param string $shortcode shortcode
-     *
-     * @return array
-     */
-    private function buildInfoMeta($shortcode)
-    {
-        return array(
-            'attribs' => array(
-                'id' => 'shortcode_' . $shortcode . '_doc',
-                'style' => 'display: none;',
-            ),
-            'columns' => array(
-                array(
-                    'attribs' => array(
-                        'colspan' => 3,
-                    ),
-                ),
-            ),
-            'keyOutput' => false,
-        );
     }
 
     /**
@@ -186,7 +194,7 @@ class Shortcodes extends AbstractComponent implements SubscriberInterface
      */
     private function getShortCodeData()
     {
-        $tags = $GLOBALS['shortcode_tags']; // + array('whatgives' => [$this, 'onBootstrap']
+        $tags = $GLOBALS['shortcode_tags']; // + array('whatGives' => [$this, 'onBootstrap']
         $tags['embed'] = [$GLOBALS['wp_embed'], 'shortcode'];
 
         $shortcodeData = $this->debug->arrayUtil->mapWithKeys(function ($callable, $shortcode) {
@@ -217,7 +225,7 @@ class Shortcodes extends AbstractComponent implements SubscriberInterface
     /**
      * {@inheritDoc}
      */
-    protected function postSetCfg($cfg = array(), $prev = array())
+    protected function postSetCfg(array $cfg = array(), array $prev = array())
     {
         $isFirstConfig = empty($this->cfg['configured']);
         $enabledChanged = isset($cfg['enabled']) && $cfg['enabled'] !== $prev['enabled'];

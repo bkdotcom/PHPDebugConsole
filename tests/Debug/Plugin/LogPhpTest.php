@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Plugin;
 
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\LogPhp;
 use bdk\HttpMessage\ServerRequestExtended as ServerRequest;
@@ -22,8 +23,10 @@ class LogPhpTest extends DebugTestFramework
 {
     public function testLogPhpInfo1()
     {
+        $iniFiles = ['/path/to/php.ini'];
         \bdk\Test\Debug\Mock\Php::$memoryLimit = '128M';
-        \bdk\Test\Debug\Mock\Php::$iniFiles = array('/path/to/php.ini');
+        \bdk\Test\Debug\Mock\Php::$iniFiles = $iniFiles;
+        \bdk\Test\Debug\Mock\Utility::$filePaths = $iniFiles;
         $serverParams = \array_merge($this->debug->serverRequest->getServerParams(), array(
             'CONTENT_LENGTH' => 1234,
             'CONTENT_TYPE' => 'application/x-www-form-urlencoded',
@@ -90,10 +93,18 @@ class LogPhpTest extends DebugTestFramework
         self::assertTrue($found['dateTimezone']);
         self::assertSame(array(
             'method' => 'log',
-            'args' => array(
+            'args' => [
                 'ini location',
-                '/path/to/php.ini',
-            ),
+                array(
+                    'baseName' => 'php.ini',
+                    'debug' => Abstracter::ABSTRACTION,
+                    'docRoot' => false,
+                    'pathCommon' => '',
+                    'pathRel' => '/path/to/',
+                    'type' => Type::TYPE_STRING,
+                    'typeMore' => Type::TYPE_STRING_FILEPATH,
+                ),
+            ],
             'meta' => array(
                 'channel' => 'php',
                 'detectFiles' => true,
@@ -103,11 +114,13 @@ class LogPhpTest extends DebugTestFramework
 
     public function testLogPhpInfo2()
     {
-        \bdk\Test\Debug\Mock\Php::$memoryLimit = '-1';
-        \bdk\Test\Debug\Mock\Php::$iniFiles = array(
+        $iniFiles = [
             '/path/to/php.ini',
             '/path/to/ext-xdebug.ini',
-        );
+        ];
+        \bdk\Test\Debug\Mock\Php::$memoryLimit = '-1';
+        \bdk\Test\Debug\Mock\Php::$iniFiles = $iniFiles;
+        \bdk\Test\Debug\Mock\Utility::$filePaths = $iniFiles;
         $this->debug->setCfg(array(
             'logEnvInfo' => true,
             'logServerKeys' => array(),
@@ -160,15 +173,31 @@ class LogPhpTest extends DebugTestFramework
                             'showListKeys' => false,
                         ),
                         'type' => 'array',
-                        'value' => array(
-                            '/path/to/php.ini',
-                            '/path/to/ext-xdebug.ini',
-                        ),
+                        'value' => [
+                            array(
+                                'baseName' => 'php.ini',
+                                'debug' => Abstracter::ABSTRACTION,
+                                'docRoot' => false,
+                                'pathCommon' => '',
+                                'pathRel' => '/path/to/',
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_FILEPATH,
+                            ),
+                            array(
+                                'baseName' => 'ext-xdebug.ini',
+                                'debug' => Abstracter::ABSTRACTION,
+                                'docRoot' => false,
+                                'pathCommon' => '',
+                                'pathRel' => '/path/to/',
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_FILEPATH,
+                            ),
+                        ],
                     ),
                 ),
                 'meta' => array(
                     'channel' => 'php',
-                    'detectFiles' => true,
+                    // 'detectFiles' => true,
                 ),
             ),
             'memoryLimitWarning' => true,

@@ -6,9 +6,8 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Utility\Table;
+use bdk\Debug\Utility\ArrayUtil;
 use bdk\Test\Debug\DebugTestFramework;
-use ReflectionMethod;
 
 /**
  * PHPUnit tests for Debug class
@@ -30,8 +29,6 @@ use ReflectionMethod;
  * @covers \bdk\Debug\Route\Firephp
  * @covers \bdk\Debug\Route\Script
  * @covers \bdk\Debug\ServiceProvider
- * @covers \bdk\Debug\Utility\Table
- * @covers \bdk\Debug\Utility\TableRow
  *
  * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */
@@ -44,6 +41,7 @@ class TableTest extends DebugTestFramework
      *
      * @return void
      */
+    /*
     public function testColKeys()
     {
         $table = new Table(null, array(), $this->debug);
@@ -66,6 +64,7 @@ class TableTest extends DebugTestFramework
         $colKeys = $colKeysMeth->invoke($table, $array);
         self::assertSame(array(0, 1, 2, 3), $colKeys);
     }
+    */
 
     /**
      * @return array
@@ -77,21 +76,67 @@ class TableTest extends DebugTestFramework
             4 => array('name' => 'Bob', 'age' => '12', 'sex' => 'M', 'Naughty' => false),
             2 => array('Naughty' => true, 'name' => 'Sally', 'extracol' => 'yes', 'sex' => 'F', 'age' => '10'),
         );
-        $rowsAProcessed = array(
-            4 => [
-                'Bob',
-                '12',
-                'M',
-                false,
-                Abstracter::UNDEFINED,
+        $tableAProperties = array(
+            'caption' => 'arg1',
+            'debug' => Abstracter::ABSTRACTION,
+            'header' => [
+                '',
+                'name',
+                'age',
+                'sex',
+                'Naughty',
+                'extracol',
             ],
-            2 => [
-                'Sally',
-                '10',
-                'F',
-                true,
-                'yes',
+            'meta' => array(
+                'class' => null,
+                'columns' => array(
+                    array(
+                        'attribs' => array(
+                            'class' => ['t_key'],
+                            'scope' => 'row',
+                        ),
+                        'key' => \bdk\Table\Factory::KEY_INDEX,
+                        'tagName' => 'th',
+                    ),
+                    array(
+                        'key' => 'name',
+                    ),
+                    array(
+                        'key' => 'age',
+                    ),
+                    array(
+                        'key' => 'sex',
+                    ),
+                    array(
+                        'key' => 'Naughty',
+                    ),
+                    array(
+                        'key' => 'extracol',
+                    ),
+                ),
+                'haveObjectRow' => false,
+                'sortable' => true,
+            ),
+            'rows' => [
+                [
+                    4,
+                    'Bob',
+                    '12',
+                    'M',
+                    false,
+                    Abstracter::UNDEFINED,
+                ],
+                [
+                    2,
+                    'Sally',
+                    '10',
+                    'F',
+                    true,
+                    'yes',
+                ],
             ],
+            'type' => 'table',
+            'value' => null,
         );
 
         // not all date2 values of same type
@@ -110,17 +155,38 @@ class TableTest extends DebugTestFramework
 <table class="sortable table-bordered">
 <caption>table caption</caption>
 <thead>
-<tr><th>&nbsp;</th><th scope="col">name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
+<tr>
+<th class="t_string" scope="col"></th>
+<th class="t_string" scope="col">name</th>
+<th class="t_string" scope="col">age</th>
+<th class="t_string" scope="col">sex</th>
+<th class="t_string" scope="col">Naughty</th>
+<th class="t_string" scope="col">extracol</th>
+</tr>
 </thead>
 <tbody>
-<tr><th class="t_int t_key" scope="row">4</th><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool text-center" data-type-more="false"></td><td class="t_undefined"></td></tr>
-<tr><th class="t_int t_key" scope="row">2</th><td class="t_string">Sally</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">F</td><td class="t_bool text-center" data-type-more="true"><i class="fa fa-check"></i></td><td class="t_string">yes</td></tr>
+<tr>
+<th class="t_int t_key" scope="row">4</th>
+<td class="t_string">Bob</td>
+<td class="t_string" data-type-more="numeric">12</td>
+<td class="t_string">M</td>
+<td class="t_bool text-center" data-type-more="false"></td>
+<td class="t_undefined"></td>
+</tr>
+<tr>
+<th class="t_int t_key" scope="row">2</th>
+<td class="t_string">Sally</td>
+<td class="t_string" data-type-more="numeric">10</td>
+<td class="t_string">F</td>
+<td class="t_bool text-center" data-type-more="true"><i class="fa fa-check"></i></td>
+<td class="t_string">yes</td>
+</tr>
 </tbody>
 </table>
 </li>
 EOD;
         $rowsAText = <<<'EOD'
-table caption = array(
+array(
     [4] => array(
         [name] => "Bob"
         [age] => "12"
@@ -260,47 +326,31 @@ EOD;
 
             'superfluousArgs' => array(
                 'table',
-                ['arg1', 'arg2 is not logged', $rowsA, 'arg4 is not logged', \bdk\Debug::meta('tableInfo', array(
-                    'columns' => array(
-                        'Naughty' => array(
-                            'attribs' => array('class' => ['text-center']),
-                            'falseAs' => '',
-                            'trueAs' => '<i class="fa fa-check"></i>',
-                        ),
+                ['arg1', 'arg2 is not logged', $rowsA, 'arg4 is not logged', Debug::meta('columnMeta', array(
+                    'Naughty' => array(
+                        'attribs' => array('class' => ['text-center']),
+                        'falseAs' => '',
+                        'trueAs' => '<i class="fa fa-check"></i>',
                     ),
                 ))],
                 array(
                     'entry' => array(
                         'method' => 'table',
-                        'args' => [$rowsAProcessed],
-                        'meta' => array(
-                            'caption' => 'arg1',
-                            'sortable' => true,
-                            'tableInfo' => array(
-                                'class' => null,
+                        'args' => [ArrayUtil::mergeDeep($tableAProperties, array(
+                            'meta' => array(
                                 'columns' => array(
-                                    array('key' => 'name'),
-                                    array('key' => 'age'),
-                                    array('key' => 'sex'),
-                                    array(
-                                        'attribs' => array(
-                                            'class' => ['text-center'],
-                                        ),
+                                    4 => array(
+                                        'attribs' => array('class' => ['text-center']),
                                         'falseAs' => '',
                                         'trueAs' => '<i class="fa fa-check"></i>',
-                                        'key' => 'Naughty',
                                     ),
-                                    array('key' => 'extracol'),
                                 ),
-                                'haveObjRow' => false,
-                                'indexLabel' => null,
-                                'rows' => array(),
-                                'summary' => '',
                             ),
-                        ),
+                        ))],
+                        'meta' => array(),
                     ),
                     'html' => \str_replace('table caption', 'arg1', $rowsAHtml),
-                    'text' => \str_replace('table caption', 'arg1', $rowsAText),
+                    'text' => "arg1\n----\n" . $rowsAText,
                     'script' => 'console.log("%%carg1", "' . self::$captionStyle . '")' . "\n"
                         . $rowsAScript,
                     'firephp' => \str_replace('table caption', 'arg1', $rowsAFirephp),
@@ -317,75 +367,60 @@ EOD;
                 array(
                     'entry' => array(
                         'method' => 'table',
-                        'args' => [$rowsAProcessed],
-                        'meta' => array(
+                        'args' => [\array_merge($tableAProperties, array(
                             'caption' => 'table caption',
-                            'sortable' => true,
-                            'tableInfo' => array(
-                                'class' => null,
-                                'columns' => array(
-                                    array('key' => 'name'),
-                                    array('key' => 'age'),
-                                    array('key' => 'sex'),
-                                    array('key' => 'Naughty'),
-                                    array('key' => 'extracol'),
-                                ),
-                                'haveObjRow' => false,
-                                'indexLabel' => null,
-                                'rows' => array(),
-                                'summary' => '',
-                            ),
-                        ),
+                        ))],
+                        'meta' => array(),
                     ),
                 ),
             ),
 
-            // 5 rowsA
+            // rowsA
             array(
                 'table',
-                ['table caption', $rowsA, \bdk\Debug::meta('tableInfo', array(
-                    'columns' => array(
+                [
+                    'table caption',
+                    $rowsA,
+                    Debug::meta('columnMeta', array(
                         'Naughty' => array(
                             'attribs' => array('class' => ['text-center']),
                             'falseAs' => '',
                             'trueAs' => '<i class="fa fa-check"></i>',
                         ),
-                    ),
-                ))],
+                    )),
+                ],
                 array(
                     'entry' => array(
                         'method' => 'table',
-                        'args' => [$rowsAProcessed],
-                        'meta' => array(
+                        'args' => [ArrayUtil::mergeDeep($tableAProperties, array(
                             'caption' => 'table caption',
-                            'sortable' => true,
-                            'tableInfo' => array(
-                                'class' => null,
+                            'meta' => array(
                                 'columns' => array(
-                                    array('key' => 'name'),
-                                    array('key' => 'age'),
-                                    array('key' => 'sex'),
-                                    array(
-                                        'attribs' => array(
-                                            'class' => ['text-center'],
-                                        ),
+                                    4 => array(
+                                        'attribs' => array('class' => ['text-center']),
                                         'falseAs' => '',
                                         'trueAs' => '<i class="fa fa-check"></i>',
-                                        'key' => 'Naughty',
                                     ),
-                                    array('key' => 'extracol'),
                                 ),
-                                'haveObjRow' => false,
-                                'indexLabel' => null,
-                                'rows' => array(),
-                                'summary' => '',
                             ),
-                        ),
+                        ))],
+                        'meta' => array(),
                     ),
                     'html' => $rowsAHtml,
-                    'text' => $rowsAText,
+                    'text' => "table caption\n-------------\n" . $rowsAText,
                     'script' => 'console.log("%%ctable caption", "' . self::$captionStyle . '")' . "\n"
                         . $rowsAScript,
+
+                    'streamAnsi' => static function ($output, LogEntry $logEntry) {
+                        $tableValues = $logEntry['args'][0]->getValues();
+                        $table = new \bdk\Table\Table($tableValues);
+                        $tableAsArray = \bdk\Table\Utility::asArray($table);
+                        $expect = "\e[1mtable caption\n-------------\e[0m\n" . $logEntry->getSubject()->getDump('textAnsi')->valDumper->dump($tableAsArray);
+                        // \bdk\Debug::varDump('expect', $expect);
+                        // \bdk\Debug::varDump('output', $output);
+                        // echo $output;
+                        self::assertSame($expect, \trim($output));
+                    },
                     'firephp' => $rowsAFirephp,
                 ),
             ),
@@ -399,39 +434,75 @@ EOD;
                         'method' => 'table',
                         'args' => [
                             array(
-                                4 => ['Bob', Abstracter::UNDEFINED],
-                                2 => ['Sally', 'yes'],
+                                'caption' => 'table caption',
+                                'debug' => Abstracter::ABSTRACTION,
+                                'header' => ['', 'name', 'extracol'],
+                                'meta' => array(
+                                    'class' => null,
+                                    'columns' => array(
+                                        array(
+                                            'attribs' => array(
+                                                'class' => ['t_key'],
+                                                'scope' => 'row',
+                                            ),
+                                            'key' => \bdk\Table\Factory::KEY_INDEX,
+                                            'tagName' => 'th',
+                                        ),
+                                        array(
+                                            'key' => 'name',
+                                        ),
+                                        array(
+                                            'key' => 'extracol',
+                                        ),
+                                    ),
+                                    'haveObjectRow' => false,
+                                    'sortable' => true,
+                                ),
+                                'rows' => array(
+                                    [
+                                        4,
+                                        'Bob',
+                                        Abstracter::UNDEFINED,
+                                    ],
+                                    [
+                                        2,
+                                        'Sally',
+                                        'yes',
+                                    ],
+                                ),
+                                'type' => 'table',
+                                'value' => null,
                             ),
                         ],
-                        'meta' => array(
-                            'caption' => 'table caption',
-                            'sortable' => true,
-                            'tableInfo' => array(
-                                'class' => null,
-                                'columns' => array(
-                                    array('key' => 'name'),
-                                    array('key' => 'extracol'),
-                                ),
-                                'haveObjRow' => false,
-                                'indexLabel' => null,
-                                'rows' => array(),
-                                'summary' => '',
-                            ),
-                        ),
+                        'meta' => array(),
                     ),
                     'html' => '<li class="m_table">
                         <table class="sortable table-bordered">
                         <caption>table caption</caption>
                         <thead>
-                        <tr><th>&nbsp;</th><th scope="col">name</th><th scope="col">extracol</th></tr>
+                        <tr>
+                            <th class="t_string" scope="col"></th>
+                            <th class="t_string" scope="col">name</th>
+                            <th class="t_string" scope="col">extracol</th>
+                        </tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key" scope="row">4</th><td class="t_string">Bob</td><td class="t_undefined"></td></tr>
-                        <tr><th class="t_int t_key" scope="row">2</th><td class="t_string">Sally</td><td class="t_string">yes</td></tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">4</th>
+                            <td class="t_string">Bob</td>
+                            <td class="t_undefined"></td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">2</th>
+                            <td class="t_string">Sally</td>
+                            <td class="t_string">yes</td>
+                        </tr>
                         </tbody>
                         </table>
                         </li>',
-                    'text' => 'table caption = array(
+                    'text' => 'table caption
+                        -------------
+                        array(
                             [4] => array(
                                 [name] => "Bob"
                             )
@@ -452,6 +523,135 @@ EOD;
                     'flat',
                     array(
                         'a',
+                        42,
+                        true,
+                        false,
+                        null,
+                    ),
+                ],
+                array(
+                    'entry' => array(
+                        'method' => 'table',
+                        'args' => [
+                            array(
+                                'caption' => 'flat',
+                                'debug' => Abstracter::ABSTRACTION,
+                                'header' => array('', 'value'),
+                                'meta' => array(
+                                    'class' => null,
+                                    'columns' => array(
+                                        array(
+                                            'attribs' => array(
+                                                'class' => ['t_key'],
+                                                'scope' => 'row',
+                                            ),
+                                            'key' => \bdk\Table\Factory::KEY_INDEX,
+                                            'tagName' => 'th',
+                                        ),
+                                        array(
+                                            'key' => \bdk\Table\Factory::KEY_SCALAR,
+                                        ),
+                                    ),
+                                    'haveObjectRow' => false,
+                                    'sortable' => true,
+                                ),
+                                'rows' => [
+                                    [
+                                        0,
+                                        'a',
+                                    ],
+                                    [
+                                        1,
+                                        42,
+                                    ],
+                                    [
+                                        2,
+                                        true,
+                                    ],
+                                    [
+                                        3,
+                                        false,
+                                    ],
+                                    [
+                                        4,
+                                        null,
+                                    ],
+                                ],
+                                'type' => 'table',
+                                'value' => null,
+                            ),
+                        ],
+                        'meta' => array(),
+                    ),
+                    'html' => '<li class="m_table">
+                        <table class="sortable table-bordered">
+                        <caption>flat</caption>
+                        <thead>
+                        <tr>
+                            <th class="t_string" scope="col"></th>
+                            <th class="t_string" scope="col">value</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <th class="t_int t_key" scope="row">0</th>
+                            <td class="t_string">a</td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">1</th>
+                            <td class="t_int">42</td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">2</th>
+                            <td class="t_bool" data-type-more="true">true</td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">3</th>
+                            <td class="t_bool" data-type-more="false">false</td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">4</th>
+                            <td class="t_null">null</td>
+                        </tr>
+                        </tbody>
+                        </table>
+                        </li>',
+                    'text' => 'flat
+                        ----
+                        array(
+                            [0] => "a"
+                            [1] => 42
+                            [2] => true
+                            [3] => false
+                            [4] => null
+                        )',
+                    'script' => 'console.log("%%cflat", "' . self::$captionStyle . '")' . "\n"
+                        . 'console.table(['
+                            . '"a",'
+                            . '42,'
+                            . 'true,'
+                            . 'false,'
+                            . 'null'
+                            . ']);',
+                    'firephp' => 'X-Wf-1-1-1-4: %d|[{"Label":"flat","Type":"TABLE"},['
+                        . '["","value"],'
+                        . '[0,"a"],'
+                        . '[1,42],'
+                        . '[2,true],'
+                        . '[3,false],'
+                        . '[4,null]'
+                    . ']]|',
+
+
+                ),
+            ),
+
+            'flatWithClass' => array(
+                'table',
+                [
+                    'flat',
+                    array(
+                        'a',
                         $vals['datetime']['raw'],
                         $vals['resource']['raw'],
                         $vals['callable']['raw'],
@@ -463,87 +663,148 @@ EOD;
                         'method' => 'table',
                         'args' => [
                             array(
-                                ['a'],
-                                [$vals['datetime']['crated']['stringified']],
-                                [$vals['resource']['crated']],
-                                [$vals['callable']['crated']],
-                                [$vals['closure']['crated']],
+                                'caption' => 'flat',
+                                'debug' => Abstracter::ABSTRACTION,
+                                'header' => array('', '', 'value'),
+                                'meta' => array(
+                                    'class' => null,
+                                    'columns' => array(
+                                        array(
+                                            'attribs' => array(
+                                                'class' => ['t_key'],
+                                                'scope' => 'row',
+                                            ),
+                                            'key' => \bdk\Table\Factory::KEY_INDEX,
+                                            'tagName' => 'th',
+                                        ),
+                                        array(
+                                            'key' => '___class_name',
+                                        ),
+                                        array(
+                                            'key' => \bdk\Table\Factory::KEY_SCALAR,
+                                        ),
+                                    ),
+                                    'haveObjectRow' => true,
+                                    'sortable' => true,
+                                ),
+                                'rows' => [
+                                    [
+                                        0,
+                                        Abstracter::UNDEFINED,
+                                        'a',
+                                    ],
+                                    [
+                                        1,
+                                        'DateTime',
+                                        $vals['datetime']['crated']['stringified'],
+                                    ],
+                                    [
+                                        2,
+                                        Abstracter::UNDEFINED,
+                                        $vals['resource']['crated'],
+                                    ],
+                                    [
+                                        3,
+                                        Abstracter::UNDEFINED,
+                                        $vals['callable']['crated'],
+                                    ],
+                                    [
+                                        4,
+                                        'Closure',
+                                        $vals['closure']['crated'],
+                                    ],
+                                ],
+                                'type' => 'table',
+                                'value' => null,
                             ),
                         ],
-                        'meta' => array(
-                            'caption' => 'flat',
-                            'sortable' => true,
-                            'tableInfo' => array(
-                                'class' => null,
-                                'columns' => array(
-                                    array('key' => 'value'),
-                                ),
-                                'haveObjRow' => false,
-                                'indexLabel' => null,
-                                'rows' => array(
-                                    array('isScalar' => true),
-                                    array(
-                                        // 'class' => 'DateTime',
-                                        'isScalar' => true,
-                                    ),
-                                    array('isScalar' => true), // resource
-                                    array('isScalar' => true), // callable
-                                    array('isScalar' => true), // closure
-                                ),
-                                'summary' => '',
-                            ),
-                        ),
+                        'meta' => array(),
                     ),
                     'html' => '<li class="m_table">
                         <table class="sortable table-bordered">
                         <caption>flat</caption>
                         <thead>
-                        <tr><th>&nbsp;</th><th scope="col">value</th></tr>
+                        <tr>
+                            <th class="t_string" scope="col"></th>
+                            <th class="t_string" scope="col"></th>
+                            <th class="t_string" scope="col">value</th>
+                        </tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key" scope="row">0</th><td class="t_string">a</td></tr>
-                        <tr><th class="t_int t_key" scope="row">1</th><td class="t_string">2233-03-22T00:00:00%i:00</td></tr>
-                        <tr><th class="t_int t_key" scope="row">2</th><td class="t_resource">Resource id #%d: stream</td></tr>
-                        <tr><th class="t_int t_key" scope="row">3</th><td><span class="t_type">callable</span> <span class="t_identifier" data-type-more="callable"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>TableTest</span><span class="t_operator">::</span><span class="t_name">providerTestMethod</span></span></td></tr>
-                        <tr><th class="t_int t_key" scope="row">4</th><td class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">Closure</span></span>
-                            <dl class="object-inner">
-                            <dt class="modifiers">modifiers</dt>
-                            <dd class="t_modifier_final">final</dd>
-                            <dt class="constants">constants <i>not collected</i></dt>
-                            <dt class="properties">properties</dt>
-                            <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">file</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="filepath"><span class="file-path-rel">' . \dirname(__FILE__) . '/</span><span class="file-basename">' . \basename(__FILE__) . '</span></span></dd>
-                            <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string">line</span> <span class="t_operator">=</span> <span class="t_int">%i</span></dd>
-                            <dt class="methods">methods <i>not collected</i></dt>
-                            </dl>
-                        </td></tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">0</th>
+                            <td class="t_undefined"></td>
+                            <td class="t_string">a</td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">1</th>
+                            <td class="classname">DateTime</td>
+                            <td class="t_string">2233-03-22T00:00:00%i:00</td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">2</th>
+                            <td class="t_undefined"></td>
+                            <td class="t_resource">Resource id #%d: stream</td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">3</th>
+                            <td class="t_undefined"></td>
+                            <td><span class="t_type">callable</span> <span class="t_identifier" data-type-more="callable"><span class="classname"><span class="namespace">bdk\Test\Debug\Plugin\Method\</span>TableTest</span><span class="t_operator">::</span><span class="t_name">providerTestMethod</span></span></td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">4</th>
+                            <td class="classname">Closure</td>
+                            <td class="groupByInheritance t_object" data-accessible="public"><span class="t_identifier" data-type-more="className"><span class="classname">Closure</span></span>
+                                <dl class="object-inner">
+                                    <dt class="modifiers">modifiers</dt>
+                                    <dd class="t_modifier_final">final</dd>
+                                    <dt class="properties">properties</dt>
+                                    <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">string</span> <span class="no-quotes t_identifier t_string">file</span> <span class="t_operator">=</span> <span class="t_string" data-type-more="filepath"><span class="file-path-rel">' . \dirname(__FILE__) . '/</span><span class="file-basename">' . \basename(__FILE__) . '</span></span></dd>
+                                    <dd class="debug-value property"><span class="t_modifier_debug">debug</span> <span class="t_type">int</span> <span class="no-quotes t_identifier t_string">line</span> <span class="t_operator">=</span> <span class="t_int">%i</span></dd>
+                                    <dt class="methods">methods</dt>
+                                    %A
+                                </dl>
+                            </td>
+                        </tr>
                         </tbody>
                         </table>
                         </li>',
-                    'text' => 'flat = array(
-                        [0] => "a"
-                        [1] => "2233-03-22T00:00:00%i:00"
-                        [2] => Resource id #%d: stream
-                        [3] => callable: bdk\Test\Debug\Plugin\Method\TableTest::providerTestMethod
-                        [4] => Closure
-                            properties:
-                                (debug) file = "' . __FILE__ . '"
-                                (debug) line = %i
-                    )',
+                    'text' => 'flat
+                        ----
+                        array(
+                            [0] => "a"
+                            [1] => array(
+                                [___class_name] => "DateTime"
+                                [value] => "2233-03-22T00:00:00%i:00"
+                            )
+                            [2] => Resource id #%d: stream
+                            [3] => callable: bdk\Test\Debug\Plugin\Method\TableTest::providerTestMethod
+                            [4] => array(
+                                [___class_name] => "Closure"
+                                [value] => Closure
+                                    properties:
+                                        (debug) file = "' . __FILE__ . '"
+                                        (debug) line = %i
+                                    methods:
+                                        public: %d
+                                        private: 1
+                            )
+                        )',
                     'script' => 'console.log("%%cflat", "' . self::$captionStyle . '")' . "\n"
                         . 'console.table(['
-                            . '"a",'
-                            . '"2233-03-22T00:00:00%i:00",'
-                            . '"Resource id #%d: stream",'
-                            . \json_encode('callable: ' . __CLASS__ . '::providerTestMethod') . ','
-                            . '{"___class_name":"Closure","(debug) file":"' . __FILE__ . '","(debug) line":%i}'
+                            . '{"___class_name":undefined,"value":"a"},'
+                            . '{"___class_name":"DateTime","value":"' . $vals['datetime']['crated']['stringified'] . '"},'
+                            . '{"___class_name":undefined,"value":"Resource id #%d: stream"},'
+                            . '{"___class_name":undefined,"value":' . \json_encode('callable: ' . __CLASS__ . '::providerTestMethod') . '},'
+                            . '{"___class_name":"Closure","value":{"___class_name":"Closure","(debug) file":"' . __FILE__ . '","(debug) line":%i}}'
                             . ']);',
                     'firephp' => 'X-Wf-1-1-1-4: %d|[{"Label":"flat","Type":"TABLE"},['
-                        . '["","value"],'
-                        . '[0,"a"],'
-                        . '[1,"2233-03-22T00:00:00%i:00"],'
-                        . '[2,"Resource id #%d: stream"],'
-                        . '[3,' . \json_encode('callable: ' . __CLASS__ . '::providerTestMethod') . '],'
-                        . '[4,{"___class_name":"Closure","(debug) file":"' . __FILE__ . '","(debug) line":%i}]'
+                        . '["","","value"],'
+                        . '[0,null,"a"],'
+                        . '[1,"DateTime","2233-03-22T00:00:00%i:00"],'
+                        . '[2,null,"Resource id #%d: stream"],'
+                        . '[3,null,' . \json_encode('callable: ' . __CLASS__ . '::providerTestMethod') . '],'
+                        . '[4,"Closure",{"___class_name":"Closure","(debug) file":"' . __FILE__ . '","(debug) line":%i}]'
                     . ']]|',
                 ),
             ),
@@ -553,19 +814,18 @@ EOD;
                 [
                     'traversable',
                     new \bdk\Test\Debug\Fixture\TestTraversable($rowsA),
-                    \bdk\Debug::meta('tableInfo', array(
-                        'columns' => array(
-                            'Naughty' => array(
-                                'attribs' => array('class' => ['text-center']),
-                                'falseAs' => '',
-                                'trueAs' => '<i class="fa fa-check"></i>',
-                            ),
+                    Debug::meta('columnMeta', array(
+                        'Naughty' => array(
+                            'attribs' => array('class' => ['text-center']),
+                            'falseAs' => '',
+                            'trueAs' => '<i class="fa fa-check"></i>',
                         ),
                     )),
                 ],
                 array(
-                    'html' => \str_replace('table caption', 'traversable (<span class="classname" title="I implement Traversable!"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestTraversable</span>)', $rowsAHtml),
-                    'text' => \str_replace('table caption', 'traversable', $rowsAText),
+                    // title="I implement Traversable!"
+                    'html' => \str_replace('table caption', 'traversable (<span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestTraversable</span>)', $rowsAHtml),
+                    'text' => "traversable\n-----------\n" . $rowsAText,
                     'script' => 'console.log("%%ctraversable", "' . self::$captionStyle . '")' . "\n"
                         . $rowsAScript,
                     'firephp' => 'X-Wf-1-1-1-5: 149|[{"Label":"traversable","Type":"TABLE"},[["","name","age","sex","Naughty","extracol"],[4,"Bob","12","M",false,null],[2,"Sally","10","F",true,"yes"]]]|',
@@ -582,19 +842,46 @@ EOD;
                     )),
                 ],
                 array(
+                    // title="I implement Traversable!"
                     'html' => '<li class="m_table">
                         <table class="sortable table-bordered">
-                        <caption>traversable -o- traversables (<span class="classname" title="I implement Traversable!"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestTraversable</span>)</caption>
+                        <caption>traversable -o- traversables (<span class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestTraversable</span>)</caption>
                         <thead>
-                        <tr><th>&nbsp;</th><th>&nbsp;</th><th scope="col">name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
+                        <tr>
+                            <th class="t_string" scope="col"></th>
+                            <th class="t_string" scope="col"></th>
+                            <th class="t_string" scope="col">name</th>
+                            <th class="t_string" scope="col">age</th>
+                            <th class="t_string" scope="col">sex</th>
+                            <th class="t_string" scope="col">Naughty</th>
+                            <th class="t_string" scope="col">extracol</th>
+                        </tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key" scope="row">4</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestTraversable</td><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool" data-type-more="false">false</td><td class="t_undefined"></td></tr>
-                        <tr><th class="t_int t_key" scope="row">2</th><td class="classname" title="I implement Traversable!"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestTraversable</td><td class="t_string">Sally</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">F</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">yes</td></tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">4</th>
+                            <td class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestTraversable</td>
+                            <td class="t_string">Bob</td>
+                            <td class="t_string" data-type-more="numeric">12</td>
+                            <td class="t_string">M</td>
+                            <td class="t_bool" data-type-more="false">false</td>
+                            <td class="t_undefined"></td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">2</th>
+                            <td class="classname"><span class="namespace">bdk\Test\Debug\Fixture\</span>TestTraversable</td>
+                            <td class="t_string">Sally</td>
+                            <td class="t_string" data-type-more="numeric">10</td>
+                            <td class="t_string">F</td>
+                            <td class="t_bool" data-type-more="true">true</td>
+                            <td class="t_string">yes</td>
+                        </tr>
                         </tbody>
                         </table>
                         </li>',
-                    'text' => 'traversable -o- traversables = array(
+                    'text' => 'traversable -o- traversables
+                        ----------------------------
+                        array(
                             [4] => array(
                                 [___class_name] => "bdk\Test\Debug\Fixture\TestTraversable"
                                 [name] => "Bob"
@@ -613,8 +900,8 @@ EOD;
                         )',
                     'script' => 'console.log("%%ctraversable -o- traversables", "' . self::$captionStyle . '")' . "\n"
                         . 'console.table({"4":{"___class_name":"bdk\\\Test\\\Debug\\\Fixture\\\TestTraversable","name":"Bob","age":"12","sex":"M","Naughty":false,"extracol":undefined},"2":{"___class_name":"bdk\\\Test\\\Debug\\\Fixture\\\TestTraversable","name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
-                    'firephp' => 'X-Wf-1-1-1-6: 272|[{"Label":"traversable -o- traversables","Type":"TABLE"},['
-                        . '["","___class_name","name","age","sex","Naughty","extracol"],'
+                    'firephp' => 'X-Wf-1-1-1-6: 259|[{"Label":"traversable -o- traversables","Type":"TABLE"},['
+                        . '["","","name","age","sex","Naughty","extracol"],'
                         . '[4,"bdk\\\Test\\\Debug\\\Fixture\\\TestTraversable","Bob","12","M",false,null],'
                         . '[2,"bdk\\\Test\\\Debug\\\Fixture\\\TestTraversable","Sally","10","F",true,"yes"]]]|',
                 ),
@@ -634,15 +921,41 @@ EOD;
                         <table class="sortable table-bordered">
                         <caption>array -o- objects</caption>
                         <thead>
-                        <tr><th>&nbsp;</th><th>&nbsp;</th><th scope="col">name</th><th scope="col">age</th><th scope="col">sex</th><th scope="col">Naughty</th><th scope="col">extracol</th></tr>
+                        <tr>
+                            <th class="t_string" scope="col"></th>
+                            <th class="t_string" scope="col"></th>
+                            <th class="t_string" scope="col">name</th>
+                            <th class="t_string" scope="col">age</th>
+                            <th class="t_string" scope="col">sex</th>
+                            <th class="t_string" scope="col">Naughty</th>
+                            <th class="t_string" scope="col">extracol</th>
+                        </tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key" scope="row">4</th><td class="classname">stdClass</td><td class="t_string">Bob</td><td class="t_string" data-type-more="numeric">12</td><td class="t_string">M</td><td class="t_bool" data-type-more="false">false</td><td class="t_undefined"></td></tr>
-                        <tr><th class="t_int t_key" scope="row">2</th><td class="classname">stdClass</td><td class="t_string">Sally</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">F</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">yes</td></tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">4</th>
+                            <td class="classname">stdClass</td>
+                            <td class="t_string">Bob</td>
+                            <td class="t_string" data-type-more="numeric">12</td>
+                            <td class="t_string">M</td>
+                            <td class="t_bool" data-type-more="false">false</td>
+                            <td class="t_undefined"></td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">2</th>
+                            <td class="classname">stdClass</td>
+                            <td class="t_string">Sally</td>
+                            <td class="t_string" data-type-more="numeric">10</td>
+                            <td class="t_string">F</td>
+                            <td class="t_bool" data-type-more="true">true</td>
+                            <td class="t_string">yes</td>
+                        </tr>
                         </tbody>
                         </table>
                         </li>',
-                    'text' => 'array -o- objects = array(
+                    'text' => 'array -o- objects
+                        -----------------
+                        array(
                         [4] => array(
                             [___class_name] => "stdClass"
                             [name] => "Bob"
@@ -661,8 +974,8 @@ EOD;
                     )',
                     'script' => 'console.log("%%carray -o- objects", "' . self::$captionStyle . '")' . "\n"
                         . 'console.table({"4":{"___class_name":"stdClass","name":"Bob","age":"12","sex":"M","Naughty":false,"extracol":undefined},"2":{"___class_name":"stdClass","name":"Sally","age":"10","sex":"F","Naughty":true,"extracol":"yes"}});',
-                    'firephp' => 'X-Wf-1-1-1-7: 193|[{"Label":"array -o- objects","Type":"TABLE"},['
-                        . '["","___class_name","name","age","sex","Naughty","extracol"],'
+                    'firephp' => 'X-Wf-1-1-1-7: 180|[{"Label":"array -o- objects","Type":"TABLE"},['
+                        . '["","","name","age","sex","Naughty","extracol"],'
                         . '[4,"stdClass","Bob","12","M",false,null],'
                         . '[2,"stdClass","Sally","10","F",true,"yes"]]]|',
                 ),
@@ -672,35 +985,32 @@ EOD;
                 'table',
                 [
                     'object -o- objects',
-                    // convoluted example to get abstraction without traverseValues populated
-                    // note that columns will be in different order
-                    //    abstraction stores properties sorted by name
-                    //    whereas traverseValues are not sorted
-                    Debug::getInstance()->abstracter->crateWithVals((object) array(
-                        'b' => (object) $rowsA[4], // Bob
-                        's' => (object) $rowsA[2], // Sally
-                    )),
-                    Debug::meta('tableInfo', array(
-                        'rows' => array(
-                            // @deprecate this ability to override row keys
-                            'b' => array('key' => 'Bob'),
-                            's' => array('key' => 'Sally'),
+                    (object) array(
+                        4 => (object) $rowsA[4], // Bob
+                        2 => (object) $rowsA[2], // Sally
+                    ),
+                    Debug::meta('columnMeta', array(
+                        'Naughty' => array(
+                            'attribs' => array('class' => ['text-center']),
+                            'falseAs' => '',
+                            'trueAs' => '<i class="fa fa-check"></i>',
                         ),
                     )),
                 ],
                 array(
-                    'html' => '<li class="m_table">
-                        <table class="sortable table-bordered">
-                        <caption>object -o- objects (<span class="classname">stdClass</span>)</caption>
-                        <thead>
-                        <tr><th>&nbsp;</th><th>&nbsp;</th><th scope="col">age</th><th scope="col">extracol</th><th scope="col">name</th><th scope="col">Naughty</th><th scope="col">sex</th></tr>
-                        </thead>
-                        <tbody>
-                        <tr><th class="t_key t_string" scope="row">Bob</th><td class="classname">stdClass</td><td class="t_string" data-type-more="numeric">12</td><td class="t_undefined"></td><td class="t_string">Bob</td><td class="t_bool" data-type-more="false">false</td><td class="t_string">M</td></tr>
-                        <tr><th class="t_key t_string" scope="row">Sally</th><td class="classname">stdClass</td><td class="t_string" data-type-more="numeric">10</td><td class="t_string">yes</td><td class="t_string">Sally</td><td class="t_bool" data-type-more="true">true</td><td class="t_string">F</td></tr>
-                        </tbody>
-                        </table>
-                        </li>',
+                    'html' => \preg_replace(
+                        array(
+                            '/<caption>.*?<\/caption>/',
+                            '/(<th.*scope="row">\w+<\/th>)/',
+                            '/(<th class="t_string" scope="col"><\/th>)/',
+                        ),
+                        array(
+                            '<caption>object -o- objects (<span class="classname">stdClass</span>)</caption>',
+                            '$1' . "\n" . '<td class="classname">stdClass</td>',
+                            '$1' . "\n" . '$1',
+                        ),
+                        $rowsAHtml
+                    ),
                 ),
             ),
 
@@ -715,15 +1025,29 @@ EOD;
                         <table class="sortable table-bordered">
                         <caption>not all col values of same type</caption>
                         <thead>
-                        <tr><th>&nbsp;</th><th scope="col">d<span class="unicode" data-code-point="0251" title="U-0251: LATIN SMALL LETTER ALPHA">ɑ</span>te <span class="classname">DateTime</span></th><th scope="col">date2</th></tr>
+                        <tr>
+                            <th class="t_string" scope="col"></th>
+                            <th class="t_string" scope="col">d<span class="unicode" data-code-point="0251" title="U-0251: LATIN SMALL LETTER ALPHA">ɑ</span>te <span class="classname">DateTime</span></th>
+                            <th class="t_string" scope="col">date2</th>
+                        </tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key" scope="row">0</th><td class="t_string">1955-11-05T00:00:00%i:00</td><td class="t_string">not a datetime</td></tr>
-                        <tr><th class="t_int t_key" scope="row">1</th><td class="t_string">1985-10-26T00:00:00%i:00</td><td class="t_string">2015-10-21T00:00:00%i:00</td></tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">0</th>
+                            <td class="t_string">1955-11-05T00:00:00%i:00</td>
+                            <td class="t_string">not a datetime</td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">1</th>
+                            <td class="t_string">1985-10-26T00:00:00%i:00</td>
+                            <td class="t_string">2015-10-21T00:00:00%i:00</td>
+                            </tr>
                         </tbody>
                         </table>
                         </li>',
-                    'text' => 'not all col values of same type = array(
+                    'text' => 'not all col values of same type
+                        -------------------------------
+                        array(
                         [0] => array(
                             [d\u{0251}te] => "1955-11-05T00:00:00%i:00"
                             [date2] => "not a datetime"
@@ -741,57 +1065,42 @@ EOD;
 
             'inclContext' => array(
                 'table',
-                ['table caption', $rowsA, \bdk\Debug::meta('inclContext'), \bdk\Debug::meta('tableInfo', array(
-                    'columns' => array(
+                [
+                    'table caption',
+                    $rowsA,
+                    Debug::meta('inclContext'), // irrelevant for table.. only applies for trace
+                    Debug::meta('columnMeta', array(
                         'Naughty' => array(
                             'attribs' => array('class' => ['text-center']),
                             'falseAs' => '',
                             'trueAs' => '<i class="fa fa-check"></i>',
                         ),
-                    ),
-                ))],
+                    )),
+                ],
                 array(
                     'entry' => array(
                         'method' => 'table',
-                        'args' => [$rowsAProcessed],
-                        'meta' => array(
-                            'caption' => 'table caption',
-                            'sortable' => true,
-                            'tableInfo' => array(
-                                'class' => null,
-                                'columns' => array(
-                                    array('key' => 'name'),
-                                    array('key' => 'age'),
-                                    array('key' => 'sex'),
-                                    array(
-                                        'attribs' => array(
-                                            'class' => ['text-center'],
+                        'args' => [
+                            ArrayUtil::mergeDeep($tableAProperties, array(
+                                'caption' => 'table caption',
+                                'meta' => array(
+                                    'columns' => array(
+                                        4 => array(
+                                            'attribs' => array('class' => ['text-center']),
+                                            'falseAs' => '',
+                                            'trueAs' => '<i class="fa fa-check"></i>',
                                         ),
-                                        'falseAs' => '',
-                                        'trueAs' => '<i class="fa fa-check"></i>',
-                                        'key' => 'Naughty',
-                                    ),
-                                    array('key' => 'extracol'),
-                                ),
-                                'haveObjRow' => false,
-                                'indexLabel' => null,
-                                'rows' => array(
-                                    4 => array(
-                                        'args' => Abstracter::UNDEFINED,
-                                        'context' => Abstracter::UNDEFINED,
-                                    ),
-                                    2 => array(
-                                        'args' => Abstracter::UNDEFINED,
-                                        'context' => Abstracter::UNDEFINED,
                                     ),
                                 ),
-                                'summary' => '',
-                            ),
+                            ))
+                        ],
+                        'meta' => array(
                             'inclContext' => true,
                         ),
                     ),
-                    'html' => \str_replace('table-bordered', 'table-bordered trace-context', $rowsAHtml),
-                    'text' => $rowsAText,
+                    // 'html' => \str_replace('table-bordered', 'table-bordered trace-context', $rowsAHtml),
+                    'html' => $rowsAHtml,
+                    'text' => "table caption\n-------------\n" . $rowsAText,
                     'script' => 'console.log("%%ctable caption", "' . self::$captionStyle . '")' . "\n"
                         . $rowsAScript,
                     'firephp' => $rowsAFirephp,
@@ -803,20 +1112,55 @@ EOD;
                 [
                     'caption',
                     $rowsA,
-                    Debug::meta('totalCols', array('age', 'noSuchVal')),
+                    Debug::meta('totalCols', ['age', 'noSuchVal']),
                 ],
                 array(
-                    'entry' => static function (LogEntry $logEntry) use ($rowsAProcessed) {
-                        self::assertSame([
-                            $rowsAProcessed,
-                        ], $logEntry['args']);
-                        self::assertSame(22, $logEntry['meta']['tableInfo']['columns'][1]['total']);
-                    },
+                    'entry' => array(
+                        'method' => 'table',
+                        'args' => [
+                            ArrayUtil::mergeDeep($tableAProperties, array(
+                                'caption' => 'caption',
+                                'footer' => [
+                                    array(
+                                        'html' => '',
+                                        'value' => null,
+                                    ),
+                                    array(
+                                        'html' => '',
+                                        'value' => null,
+                                    ),
+                                    22,
+                                    array(
+                                        'html' => '',
+                                        'value' => null,
+                                    ),
+                                    array(
+                                        'html' => '',
+                                        'value' => null,
+                                    ),
+                                    array(
+                                        'html' => '',
+                                        'value' => null,
+                                    ),
+                                ],
+                            )),
+                        ],
+                        'meta' => array(),
+                    ),
                     'html' => '%A<tfoot>
-                            <tr><td>&nbsp;</td><td></td><td class="t_int">22</td><td></td><td></td><td></td></tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td class="t_int">22</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
                             </tfoot>
                             </table>%A',
-                    'text' => 'caption = array(
+                    'text' => 'caption
+                        -------
+                        array(
                         [4] => array(
                             [name] => "Bob"
                             [age] => "12"
@@ -835,8 +1179,8 @@ EOD;
             ),
         );
 
+        // return \array_intersect_key($tests, \array_flip(['traversableOfTraversable']));
         return $tests;
-        // return \array_intersect_key($tests, \array_flip(['flat']));
     }
 
     public function testSpecialValues()
@@ -871,15 +1215,23 @@ EOD;
                     <table class="sortable table-bordered">
                     <caption>foo</caption>
                     <thead>
-                        <tr><th>&nbsp;</th><th scope="col">value</th></tr>
+                        <tr>
+                            <th class="t_string" scope="col"></th>
+                            <th class="t_string" scope="col">value</th>
+                        </tr>
                     </thead>
                     <tbody>
-                        <tr><th class="t_int t_key" scope="row">0</th><td><span class="t_keyword">string</span><span class="text-muted">(binary)</span>
-                            <ul class="list-unstyled value-container" data-type="string" data-type-more="binary">
-                                <li>size = <span class="t_int">16</span></li>
-                                <li class="t_string"><span class="binary">' . $binaryStr . '</span></li>
-                            </ul></td></tr>
-                        <tr><th class="t_int t_key" scope="row">1</th><td class="string-encoded tabs-container" data-type-more="json">
+                        <tr>
+                            <th class="t_int t_key" scope="row">0</th>
+                            <td><span class="t_keyword">string</span><span class="text-muted">(binary)</span>
+                                <ul class="list-unstyled value-container" data-type="string" data-type-more="binary">
+                                    <li>size = <span class="t_int">16</span></li>
+                                    <li class="t_string"><span class="binary">' . $binaryStr . '</span></li>
+                                </ul></td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">1</th>
+                            <td class="string-encoded tabs-container" data-type-more="json">
                             <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">parsed</a></nav>
                             <div class="tab-1 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
                                 &quot;poop&quot;: &quot;\ud83d\udca9&quot;,
@@ -892,15 +1244,23 @@ EOD;
                                     <li><span class="t_key">int</span><span class="t_operator">=&gt;</span><span class="t_int">42</span></li>
                                     <li><span class="t_key">password</span><span class="t_operator">=&gt;</span><span class="t_string">secret</span></li>
                                 </ul><span class="t_punct">)</span></span></div>
-                            </td></tr>
-                        <tr><th class="t_int t_key" scope="row">2</th><td class="timestamp value-container" title="' . \gmdate(self::DATETIME_FORMAT, $time) . '"><span class="t_int" data-type-more="timestamp">' . $time . '</span></td></tr>
-                        <tr><th class="t_int t_key" scope="row">3</th><td class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-xml no-quotes t_string">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;
-                        &lt;fart/&gt;
-                        </span></td></tr>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">2</th>
+                            <td class="timestamp value-container" title="' . \gmdate(self::DATETIME_FORMAT, $time) . '"><span class="t_int" data-type-more="timestamp">' . $time . '</span></td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">3</th>
+                            <td class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-xml no-quotes t_string">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;
+                        &lt;fart/&gt;</span></td>
+                        </tr>
                     </tbody>
                     </table>
                     </li>',
-                'text' => 'foo = array(
+                'text' => 'foo
+                    ---
+                    array(
                     [0] => "8f fb fd c0 da c5 e6 2d 5a 6c c5 c5 5b fe 2f 57"
                     [1] => {
                         "poop": "\ud83d\udca9",
@@ -916,14 +1276,14 @@ EOD;
                         . '"8f fb fd c0 da c5 e6 2d 5a 6c c5 c5 5b fe 2f 57",'
                         . '"{\n    \"poop\": \"\\\ud83d\\\udca9\",\n    \"int\": 42,\n    \"password\": \"secret\"\n}",'
                         . '"' . $time . ' (' . \gmdate(self::DATETIME_FORMAT, $time) . ')",'
-                        . '"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<fart/>\n"'
+                        . '"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<fart/>"'
                         . ']);',
                 'firephp' => 'X-Wf-1-1-1-4: %d|[{"Label":"foo","Type":"TABLE"},['
                         . '["","value"],'
                         . '[0,"8f fb fd c0 da c5 e6 2d 5a 6c c5 c5 5b fe 2f 57"],'
                         . '[1,"{\n    \"poop\": \"\\\ud83d\\\udca9\",\n    \"int\": 42,\n    \"password\": \"secret\"\n}"],'
                         . '[2,"' . $time . ' (' . \gmdate(self::DATETIME_FORMAT, $time) . ')"],'
-                        . '[3,"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<fart/>\n"]'
+                        . '[3,"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<fart/>"]'
                     . ']]|',
             )
         );

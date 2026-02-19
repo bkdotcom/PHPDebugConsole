@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 
 /**
@@ -251,10 +252,6 @@ class LoggerTest extends DebugTestFramework
             array('name' => 'Bob', 'age' => '12', 'sex' => 'M', 'Naughty' => false),
             array('Naughty' => true, 'name' => 'Sally', 'extracol' => 'yes', 'sex' => 'F', 'age' => '10'),
         ];
-        $tableDataLogged = [
-            ['Bob', '12'],
-            ['Sally', '10'],
-        ];
         $this->debug->logger->info('table caption', array(
             'table' => $tableData,
             'columns' => array('name', 'age'),
@@ -262,27 +259,49 @@ class LoggerTest extends DebugTestFramework
         $this->assertSame(array(
             'method' => 'table',
             'args' => [
-                $tableDataLogged
+                array(
+                    'caption' => 'table caption',
+                    'debug' => Abstracter::ABSTRACTION,
+                    'header' => [
+                        '',
+                        'name',
+                        'age',
+                    ],
+                    'meta' => array(
+                        'class' => null,
+                        'columns' => [
+                            array(
+                                'attribs' => array(
+                                    'class' => ['t_key'],
+                                    'scope' => 'row',
+                                ),
+                                'key' => \bdk\Table\Factory::KEY_INDEX,
+                                'tagName' => 'th',
+                            ),
+                            array('key' => 'name'),
+                            array('key' => 'age'),
+                        ],
+                        'haveObjectRow' => false,
+                        'sortable' => true,
+                    ),
+                    'rows' => [
+                        [
+                            0,
+                            'Bob',
+                            '12',
+                        ],
+                        [
+                            1,
+                            'Sally',
+                            '10',
+                        ],
+                    ],
+                    'type' => 'table',
+                    'value' => null,
+                ),
             ],
             'meta' => array(
-                'caption' => 'table caption',
                 'psr3level' => 'info',
-                'sortable' => true,
-                'tableInfo' => array(
-                    'class' => null,
-                    'columns' => array(
-                        array(
-                            'key' => 'name',
-                        ),
-                        array(
-                            'key' => 'age',
-                        ),
-                    ),
-                    'haveObjRow' => false,
-                    'indexLabel' => null,
-                    'rows' => array(),
-                    'summary' => '',
-                ),
             ),
         ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }
@@ -307,10 +326,6 @@ class LoggerTest extends DebugTestFramework
             array('name' => 'Bob', 'age' => '12', 'sex' => 'M', 'Naughty' => false),
             array('Naughty' => true, 'name' => 'Sally', 'extracol' => 'yes', 'sex' => 'F', 'age' => '10'),
         ];
-        $tableDataLogged = [
-            ['Bob', '12'],
-            ['Sally', '10'],
-        ];
         $this->debug->logger->debug('table caption', array(
             'table' => $tableData,
             'columns' => ['name', 'age'],
@@ -318,27 +333,49 @@ class LoggerTest extends DebugTestFramework
         $this->assertSame(array(
             'method' => 'table',
             'args' => [
-                $tableDataLogged
+                array(
+                    'caption' => 'table caption',
+                    'debug' => Abstracter::ABSTRACTION,
+                    'header' => [
+                        '',
+                        'name',
+                        'age',
+                    ],
+                    'meta' => array(
+                        'class' => null,
+                        'columns' => [
+                            array(
+                                'attribs' => array(
+                                    'class' => ['t_key'],
+                                    'scope' => 'row',
+                                ),
+                                'key' => \bdk\Table\Factory::KEY_INDEX,
+                                'tagName' => 'th',
+                            ),
+                            array('key' => 'name'),
+                            array('key' => 'age'),
+                        ],
+                        'haveObjectRow' => false,
+                        'sortable' => true,
+                    ),
+                    'rows' => [
+                        [
+                            0,
+                            'Bob',
+                            '12',
+                        ],
+                        [
+                            1,
+                            'Sally',
+                            '10',
+                        ],
+                    ],
+                    'type' => 'table',
+                    'value' => null,
+                ),
             ],
             'meta' => array(
-                'caption' => 'table caption',
                 'psr3level' => 'debug',
-                'sortable' => true,
-                'tableInfo' => array(
-                    'class' => null,
-                    'columns' => array(
-                        array(
-                            'key' => 'name',
-                        ),
-                        array(
-                            'key' => 'age',
-                        ),
-                    ),
-                    'haveObjRow' => false,
-                    'indexLabel' => null,
-                    'rows' => array(),
-                    'summary' => '',
-                ),
             ),
         ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }

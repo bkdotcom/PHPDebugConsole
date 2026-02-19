@@ -50,10 +50,8 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
      */
     public function onBootstrap(Event $event)
     {
-        $this->debug = $event->getSubject()->getChannel($this->cfg['channelKey'], $this->cfg['channelOptions']);
-        $collectWas = $this->debug->setCfg('collect', true);
+        $this->debug = $event->getSubject();
         $this->logRequest();
-        $this->debug->setCfg('collect', $collectWas, Debug::CONFIG_NO_RETURN);
     }
 
     /**
@@ -66,6 +64,8 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
         if ($this->testLogRequest() === false) {
             return;
         }
+        $this->debug = $this->debug->rootInstance->getChannel($this->cfg['channelKey'], $this->cfg['channelOptions']);
+        $collectWas = $this->debug->setCfg('collect', true);
         $this->debug->log(
             $this->debug->i18n->trans('request'),
             $this->debug->meta(array(
@@ -87,6 +87,7 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
         $this->logRequestCookies();
         $this->logPostOrInput();
         $this->logFiles();
+        $this->debug->setCfg('collect', $collectWas, Debug::CONFIG_NO_RETURN);
     }
 
     /**
@@ -116,7 +117,7 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
                 'type' => $uploadedFile->getClientMediaType(),
             );
         }, $files);
-        $this->debug->log('$_FILES', $files);
+        $this->debug->log('$_FILES', $files, $this->debug->meta('detectFiles'));
     }
 
     /**

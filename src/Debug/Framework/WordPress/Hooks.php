@@ -89,20 +89,18 @@ class Hooks extends AbstractComponent implements SubscriberInterface
     private function hookTableMeta()
     {
         return array(
-            'columns' => ['isFilter', 'count'],
-            'tableInfo' => array(
-                'columns' => array(
-                    'count' => array(
-                        'key' => \_x('count', 'hooks.count.label', 'debug-console-php'),
-                    ),
-                    'isFilter' => array(
-                        'attribs' => array('class' => ['text-center']),
-                        'falseAs' => '',
-                        'key' => \_x('isFilter', 'hooks.isFilter.label', 'debug-console-php'),
-                        'trueAs' => '<i class="fa fa-check"></i>',
-                    ),
+            'columnLabels' => array(
+                'count' => \_x('count', 'hooks.count.label', 'debug-console-php'),
+                'isFilter' => \_x('isFilter', 'hooks.isFilter.label', 'debug-console-php'),
+            ),
+            'columnMeta' => array(
+                'isFilter' => array(
+                    'attribs' => array('class' => ['text-center']),
+                    'falseAs' => '',
+                    'trueAs' => '<i class="fa fa-check"></i>',
                 ),
             ),
+            'columns' => ['isFilter', 'count'],
             'totalCols' => ['count'],
         );
     }
@@ -110,7 +108,7 @@ class Hooks extends AbstractComponent implements SubscriberInterface
     /**
      * {@inheritDoc}
      */
-    protected function postSetCfg($cfg = array(), $prev = array())
+    protected function postSetCfg(array $cfg = array(), array $prev = array())
     {
         $isFirstConfig = empty($this->cfg['configured']);
         $enabledChanged = isset($cfg['enabled']) && $cfg['enabled'] !== $prev['enabled'];

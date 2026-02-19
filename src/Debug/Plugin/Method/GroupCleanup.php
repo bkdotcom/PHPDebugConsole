@@ -31,7 +31,6 @@ class GroupCleanup implements SubscriberInterface
     /** @var array<string,mixed> */
     private $cleanupInfo = array(
         'stack' => array(),
-        'stackCount' => 0,
     );
 
     /** @var Debug|null */
@@ -167,7 +166,6 @@ class GroupCleanup implements SubscriberInterface
                     'groupCount' => 0,
                 ),
             ),
-            'stackCount' => 1,
         );
         $reindex = false;
         for ($i = 0, $count = \count($this->log); $i < $count; $i++) {
@@ -224,7 +222,7 @@ class GroupCleanup implements SubscriberInterface
     {
         $logEntry = $this->log[$index];
         $method = $logEntry['method'];
-        $stackCount = $this->cleanupInfo['stackCount'];
+        $stackCount = \count($this->cleanupInfo['stack']);
         if (\in_array($method, ['group', 'groupCollapsed'], true)) {
             $this->cleanupInfo['stack'][] = array(
                 'childCount' => 0,  // includes any child groups
@@ -236,13 +234,11 @@ class GroupCleanup implements SubscriberInterface
             );
             $this->cleanupInfo['stack'][$stackCount - 1]['childCount']++;
             $this->cleanupInfo['stack'][$stackCount - 1]['groupCount']++;
-            $this->cleanupInfo['stackCount']++;
             return false;
         }
         if ($method === 'groupEnd') {
             $group = \array_pop($this->cleanupInfo['stack']);
             $group['indexEnd'] = $index;
-            $this->cleanupInfo['stackCount']--;
             return $this->outputCleanupGroup($group);
         }
         $this->cleanupInfo['stack'][$stackCount - 1]['childCount']++;

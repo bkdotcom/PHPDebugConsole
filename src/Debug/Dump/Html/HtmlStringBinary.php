@@ -64,7 +64,7 @@ class HtmlStringBinary
         }
         if ($abs['percentBinary'] > 33 || $abs['contentType']) {
             $this->valDumper->optionSet('tagName', null);
-            $this->valDumper->optionSet('postDump', $this->dumpPost($abs, $tagName));
+            $this->valDumper->optionSet('postDump', $this->buildPostDump($abs, $tagName));
         }
         return $str;
     }
@@ -116,7 +116,7 @@ class HtmlStringBinary
      *
      * @return Closure
      */
-    private function dumpPost(Abstraction $abs, $tagName)
+    private function buildPostDump(Abstraction $abs, $tagName)
     {
         return function ($dumped) use ($abs, $tagName) {
             $lis = [];
@@ -127,7 +127,8 @@ class HtmlStringBinary
             $lis[] = $dumped
                 ? '<li class="t_string">' . $dumped . '</li>'
                 : '<li>' . $this->debug->i18n->trans('string.binary-not-collected') . '</li>';
-            $wrapped = '<span class="t_keyword">string</span><span class="text-muted">(binary)</span>' . "\n"
+            $this->valDumper->optionSet('attribs', []); // ensure attribs not output
+            $dumped = '<span class="t_keyword">string</span><span class="text-muted">(binary)</span>' . "\n"
                 . $this->debug->html->buildTag(
                     'ul',
                     \array_filter(array(
@@ -137,11 +138,9 @@ class HtmlStringBinary
                     )),
                     "\n" . \implode("\n", $lis) . "\n"
                 );
-            if ($tagName === 'td') {
-                // wrap with td without adding class="binary t_string"
-                $wrapped = '<td>' . $wrapped . '</td>';
-            }
-            return $wrapped;
+            return $tagName === 'td'
+                ? '<td>' . $dumped . '</td>'
+                : $dumped;
         };
     }
 }

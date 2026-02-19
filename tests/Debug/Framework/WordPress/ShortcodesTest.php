@@ -70,69 +70,81 @@ class ShortcodesTest extends DebugTestFramework
             'method' => 'table',
             'args' => array(
                 array(
-                    'embed' => array(
-                        array(
-                            'brief' => false,
-                            'debug' => Abstracter::ABSTRACTION,
-                            'type' => Type::TYPE_IDENTIFIER,
-                            'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
-                            'value' => 'wpEmbed::shortcode',
-                        ),
-                        '<a href="http://codex.wordpress.org/Embed_Shortcode" target="_blank" title="Codex documentation"><i class="fa fa-external-link"></i></a> <a href="#" data-toggle="#shortcode_embed_doc" title="handler phpDoc"><i class="fa fa-code"></i></a>',
-                    ),
-                    'embed info' => array(
-                        array(
-                            'addQuotes' => false,
-                            'brief' => false,
-                            'debug' => Abstracter::ABSTRACTION,
-                            'sanitize' => false,
-                            'type' => Type::TYPE_STRING,
-                            'typeMore' => null,
-                            'value' => $phpDoc['return']['desc'] . "\n\n"
-                                . $params . "\n\n"
-                                . 'Since:' . "\n"
-                                . \implode("\n", \array_map(static function ($since) {
-                                    return \trim($since['version'] . ' '. $since['desc']);
-                                }, $phpDoc['since'] ?: [])),
-                            'visualWhiteSpace' => false,
-                        ),
-                    ),
-                ),
-            ),
-            'meta' => array(
-                'caption' => 'shortcodes',
-                'channel' => 'WordPress',
-                'sortable' => true,
-                'tableInfo' => array(
-                    'class' => null,
-                    'columns' => [
-                        array(
-                            'key' => 'callable',
-                        ),
-                        array(
-                            'key' => 'links',
-                        ),
+                    'caption' => 'shortcodes',
+                    'debug' => Abstracter::ABSTRACTION,
+                    'header' => [
+                        'shortcode',
+                        'callable',
+                        'links',
                     ],
-                    'haveObjRow' => false,
-                    'indexLabel' => 'shortcode',
-                    'rows' => array(
-                        'embed info' => array(
+                    'meta' => array(
+                        'class' => null,
+                        'columns' => [
+                            array(
+                                'attribs' => array(
+                                    'class' => [ "t_key" ],
+                                    'scope' => "row"
+                                ),
+                                'key' => \bdk\Table\Factory::KEY_INDEX,
+                                'tagName' => 'th',
+                            ),
+                            array(
+                                'key' => 'callable',
+                            ),
+                            array(
+                                'key' => 'links',
+                            ),
+                        ],
+                        'haveObjectRow' => false,
+                        'sortable' => true,
+                    ),
+                    'rows' => [
+                        [
+                            'embed',
+                            array(
+                                'brief' => false,
+                                'debug' => Abstracter::ABSTRACTION,
+                                'type' => Type::TYPE_IDENTIFIER,
+                                'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
+                                'value' => 'wpEmbed::shortcode',
+                            ),
+                            '<a href="http://codex.wordpress.org/Embed_Shortcode" target="_blank" title="Codex documentation"><i class="fa fa-external-link"></i></a> <a href="#" data-toggle="#shortcode_embed_doc" title="handler phpDoc"><i class="fa fa-code"></i></a>',
+                        ],
+                        array(
                             'attribs' => array(
                                 'id' => 'shortcode_embed_doc',
                                 'style' => 'display: none;',
                             ),
-                            'columns' => array(
+                            'children' => [
                                 array(
                                     'attribs' => array(
-                                        'colspan' => 3
+                                        'colspan' => 3,
+                                    ),
+                                    'value' => array(
+                                        'addQuotes' => false,
+                                        'brief' => false,
+                                        'debug' => Abstracter::ABSTRACTION,
+                                        'sanitize' => false,
+                                        'type' => Type::TYPE_STRING,
+                                        'typeMore' => null,
+                                        'value' => $phpDoc['return']['desc'] . "\n\n"
+                                            . $params . "\n\n"
+                                            . 'Since:' . "\n"
+                                            . \implode("\n", \array_map(static function ($since) {
+                                                return \trim($since['version'] . ' ' . $since['desc']);
+                                            }, $phpDoc['since'] ?: [])),
+                                        'visualWhiteSpace' => false,
                                     ),
                                 ),
-                            ),
-                            'keyOutput' => false,
-                        ),
-                    ),
-                    'summary' => '',
+                            ],
+                        ), // end row 2
+                    ],
+                    'type' => 'table',
+                    'value' => null,
                 ),
+            ),
+            'meta' => array(
+                'channel' => 'WordPress',
             ),
         ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }

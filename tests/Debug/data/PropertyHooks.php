@@ -253,7 +253,7 @@ return array(
     ),
     'sort' => 'inheritance visibility name',
     'stringified' => null,
-    'traverseValues' => array(),
+    // 'traverseValues' => array(),
     'type' => Type::TYPE_OBJECT,
     'typeMore' => null,
     'viaDebugInfo' => false,

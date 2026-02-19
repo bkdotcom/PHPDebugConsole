@@ -33,7 +33,7 @@ class StopWatch
      *
      * @param array{requestTime?:float} $vals Initial values
      */
-    public function __construct($vals = array())
+    public function __construct(array $vals = array())
     {
         $requestTimeDefault = isset($_SERVER['REQUEST_TIME_FLOAT'])
             ? (float) $_SERVER['REQUEST_TIME_FLOAT']

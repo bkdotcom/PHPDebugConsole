@@ -10,8 +10,8 @@
 
 namespace bdk\Debug\Utility;
 
-use bdk\Debug\Utility\Php;
 use bdk\Debug\Utility;
+use bdk\Debug\Utility\Php;
 
 /**
  * Generic stream-wrapper which publishes Debug::EVENT_STREAM_WRAP when file is required/included

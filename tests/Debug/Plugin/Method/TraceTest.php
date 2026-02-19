@@ -42,56 +42,59 @@ class TraceTest extends DebugTestFramework
             array(),
             array(
                 'entry' => static function (LogEntry $logEntry) use ($values) {
-                    $trace = $logEntry['args'][0];
+                    $traceValues = $logEntry['args'][0]->getValues();
+                    // \bdk\Debug::varDump('traceValues', \print_r($traceValues, true));
 
-                    self::assertSame('eval()\'d code', $trace[0][0]);
-                    self::assertSame(1, $trace[0][1]);
-                    self::assertSame(Abstracter::UNDEFINED, $trace[0][2]);
+                    // row[0] has attribs and children
+                    self::assertSame(['data-file', 'data-line'], \array_keys($traceValues['rows'][0]['attribs']));
+                    self::assertSame('eval()\'d code', $traceValues['rows'][0]['children'][1]);
+                    self::assertSame(1, $traceValues['rows'][0]['children'][2]);
+                    self::assertSame(Abstracter::UNDEFINED, $traceValues['rows'][0]['children'][3]);
 
                     // file
-                    self::assertInstanceOf('bdk\Debug\Abstraction\Abstraction', $trace[1][0]);
-                    self::assertSame(\bdk\Debug\Abstraction\Type::TYPE_STRING_FILEPATH, $trace[1][0]->getValue('typeMore'));
-                    self::assertSame($values['file0'], (string) $trace[1][0]);
+                    self::assertInstanceOf('bdk\Debug\Abstraction\Abstraction', $traceValues['rows'][1][1]);
+                    // self::assertSame(\bdk\Debug\Abstraction\Type::TYPE_STRING_FILEPATH, $traceArray['rows'][1][1]['typeMore']);
+                    self::assertSame($values['file0'], (string) $traceValues['rows'][1][1]);
 
                     // line
-                    self::assertIsInt($trace[1][1]);
-                    self::assertSame($values['line0'], $trace[1][1]);
+                    self::assertIsInt($traceValues['rows'][1][2]);
+                    self::assertSame($values['line0'], $traceValues['rows'][1][2]);
 
                     // function
                     self::assertEquals(new Abstraction(Type::TYPE_IDENTIFIER, array(
                         'value' => 'eval',
                         'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
-                    )), $trace[1][2]);
+                    )), $traceValues['rows'][1][3]);
                     self::assertEquals(new Abstraction(Type::TYPE_IDENTIFIER, array(
                         'value' => $values['function1'],
                         'typeMore' => Type::TYPE_IDENTIFIER_METHOD,
-                    )), $trace[2][2]);
+                    )), $traceValues['rows'][2][3]);
 
-                    self::assertSame('trace', $logEntry->getMeta('caption'));
-                    self::assertNull($logEntry->getMeta('inclContext'));
-                    self::assertFalse($logEntry->getMeta('sortable'));
+                    self::assertSame('trace', $traceValues['caption']);
+                    self::assertFalse($traceValues['meta']['inclContext']);
+                    self::assertFalse($traceValues['meta']['sortable']);
                 },
                 'chromeLogger' => static function ($outputArray, LogEntry $logEntry) {
-                    $cols = ['file', 'line', 'function'];
-                    $traceExpect = \array_map(static function ($row) use ($cols) {
-                        $row = \array_combine($cols, $row);
+                    $tableValues = $logEntry['args'][0]->getValues();
+                    $table = new \bdk\Table\Table($tableValues);
+                    $tableAsArray = \bdk\Table\Utility::asArray($table);
+                    foreach ($tableAsArray as $iRow => $row) {
                         foreach ($row as $k => $v) {
-                            if ($v === Abstracter::UNDEFINED) {
-                                unset($row[$k]);
-                            } elseif ($v instanceof Abstraction) {
-                                $row[$k] = (string) $v;
+                            if ($v instanceof Abstraction) {
+                                $tableAsArray[$iRow][$k] = (string) $v;
                             }
                         }
-                        return $row;
-                    }, $logEntry['args'][0]);
-                    // \bdk\Debug::varDump('traceExpect', $traceExpect);
-                    // \bdk\Debug::varDump('outputArray', $outputArray[0][0]);
-                    self::assertSame($traceExpect, $outputArray[0][0]);
+                    }
+                    // \bdk\Debug::varDump('tableAsArray', \print_r($tableAsArray, true));
+                    // \bdk\Debug::varDump('outputArray', \print_r($outputArray[0][0], true));
+                    self::assertSame($tableAsArray, $outputArray[0][0]);
                     self::assertSame(null, $outputArray[1]);
                     self::assertSame('table', $outputArray[2]);
                 },
                 'firephp' => static function ($output, LogEntry $logEntry) {
-                    $trace = $logEntry['args'][0];
+                    $traceData = $logEntry['args'][0]->getValues();
+                    $traceTable = new \bdk\Table\Table($traceData);
+                    $traceRows = $traceTable->getRows();
                     \preg_match('#\|(.+)\|#', $output, $matches);
                     $output = \json_decode($matches[1], true);
                     list($logEntryMeta, $logEntryTable) = $output;
@@ -107,13 +110,14 @@ class TraceTest extends DebugTestFramework
                     ), $logEntryTable[0]);
                     $count = \count($logEntryTable);
                     for ($i = 1; $i < $count; $i++) {
-                        $tracei = $i - 1;
+                        $iRow = $i - 1;
+                        $cells = $traceRows[$iRow]->getChildren();
                         $valuesExpect = array(
-                            $tracei,
-                            (string) $trace[$tracei][0], // file
-                            $trace[$tracei][1],
-                            isset($trace[$tracei][2]) && $trace[$tracei][2] !== Abstracter::UNDEFINED
-                                ? (string) $trace[$tracei][2]
+                            $iRow,
+                            (string) $cells[1]->getValue(), // file
+                            $cells[2]->getValue(),          // line
+                            $cells[3]->getValue() !== Abstracter::UNDEFINED
+                                ? (string) $cells[3]->getValue()
                                 : null,
                         );
                         // \bdk\Debug::varDump('traceExpect', $valuesExpect);
@@ -125,8 +129,13 @@ class TraceTest extends DebugTestFramework
                     $trace = $logEntry['args'][0];
                     self::assertStringContainsString('<caption>trace</caption>' . "\n"
                         . '<thead>' . "\n"
-                        . '<tr><th>&nbsp;</th><th scope="col">file</th><th scope="col">line</th><th scope="col">function</th></tr>' . "\n"
-                        . '</thead>', $output);
+                        . '<tr>' . "\n"
+                        . '<th class="t_string" scope="col"></th>' . "\n"
+                        . '<th class="t_string" scope="col">file</th>' . "\n"
+                        . '<th class="t_string" scope="col">line</th>' . "\n"
+                        . '<th class="t_string" scope="col">function</th>' . "\n"
+                        . '</tr>' . "\n"
+                        . '</thead>', self::normalizeString($output));
                     $matches = array();
                     \preg_match_all('#<tr[^>]*>'
                         . '<th[^>]*>(.*?)</th>'
@@ -163,40 +172,59 @@ class TraceTest extends DebugTestFramework
                     }
                 },
                 'script' => static function ($output, LogEntry $logEntry) {
-                    $traceExpect = \array_map(static function (array $frame) {
-                        $row = \array_combine(['file', 'line', 'function'], $frame);
-                        $row['file'] = (string) $row['file'];
-                        $row['function'] = (string) $row['function'];
-                        return $row;
-                    }, $logEntry['args'][0]);
+                    $tableValues = $logEntry['args'][0]->getValues();
+                    $table = new \bdk\Table\Table($tableValues);
+                    $tableAsArray = \bdk\Table\Utility::asArray($table, array('undefinedAs' => \bdk\Table\Factory::VAL_UNDEFINED));
+                    foreach ($tableAsArray as $iRow => $row) {
+                        foreach ($row as $k => $v) {
+                            if ($v instanceof Abstraction) {
+                                $tableAsArray[$iRow][$k] = (string) $v;
+                            }
+                        }
+                    }
+                    $expect = \str_replace(\json_encode(Abstracter::UNDEFINED), 'undefined', \json_encode($tableAsArray, JSON_UNESCAPED_SLASHES));
+
                     \preg_match('#console.table\((.+)\);#', $output, $matches);
-                    $expect = \str_replace(\json_encode(Abstracter::UNDEFINED), 'undefined', \json_encode($traceExpect, JSON_UNESCAPED_SLASHES));
                     // \bdk\Debug::varDump('expect', $expect);
                     // \bdk\Debug::varDump('actual', $matches[1]);
                     self::assertSame($expect, $matches[1]);
                 },
+                'streamAnsi' => static function ($output, LogEntry $logEntry) {
+                    $tableValues = $logEntry['args'][0]->getValues();
+                    $table = new \bdk\Table\Table($tableValues);
+                    $tableAsArray = \bdk\Table\Utility::asArray($table);
+                    $expect = "\e[1mtrace\n-----\e[0m\n" . $logEntry->getSubject()->getDump('textAnsi')->valDumper->dump($tableAsArray);
+                    // \bdk\Debug::varDump('expect', $expect);
+                    // \bdk\Debug::varDump('output', $output);
+                    // echo $output;
+                    self::assertSame($expect, \trim($output));
+                },
                 'text' => function ($output, LogEntry $logEntry) {
-                    $trace = \array_map(static function (array $frame) {
-                        return \array_combine(['file', 'line', 'function'], $frame);
-                    }, $logEntry['args'][0]);
-                    $traceExpect = \array_map(function ($row) {
-                        foreach ($row as $k => $v) {
-                            if ($v === Abstracter::UNDEFINED) {
-                                unset($row[$k]);
-                            } elseif ($v instanceof Abstraction) {
-                                $row[$k] = $this->debug->getDump('text')->valDumper->dump($v, array('addQuotes' => false));
-                            }
-                        }
-                        return $row;
-                    }, $trace);
-                    self::assertNotEmpty($traceExpect);
                     // @todo this isn't a very good test
-                    $expect = 'trace = ' . $this->debug->getDump('text')->valDumper->dump($traceExpect);
+                    $tableValues = $logEntry['args'][0]->getValues();
+                    $table = new \bdk\Table\Table($tableValues);
+                    $tableAsArray = \bdk\Table\Utility::asArray($table);
+                    self::assertNotEmpty($tableAsArray);
+                    $expect = "trace\n-----\n" . $this->debug->getDump('text')->valDumper->dump($tableAsArray);
                     // \bdk\Debug::varDump('expect', $expect);
                     // \bdk\Debug::varDump('output', $output);
                     self::assertSame($expect, \trim($output));
                 },
-                // 'wamp' => @todo
+                'wamp' => static function (array $messages, LogEntry $logEntry) use ($values) {
+                    $trace = $messages[0]['args'][1][0];
+                    self::assertSame(array(
+                        'attribs' => array(
+                            'data-file' => __FILE__,
+                            'data-line' => $values['line0'],
+                        ),
+                        'children' => [
+                            0,
+                            'eval()\'d code',
+                            1,
+                            Abstracter::UNDEFINED,
+                        ],
+                    ), $trace['rows'][0]);
+                },
             )
         );
     }
@@ -213,48 +241,62 @@ class TraceTest extends DebugTestFramework
                 'file' => '/fakepath/to/otherfile.php',
                 'line' => 69,
                 'function' => 'dingus',
-            )
-        );
-        $metaExpect = array(
-            'caption' => 'trace',
-            'inclArgs' => false,
-            'inclInternal' => false,
-            'limit' => 0,
-            'sortable' => false,
-            'tableInfo' => array(
-                'class' => null,
-                'columns' => array(
-                    array('key' => 'file'),
-                    array('key' => 'line'),
-                    array('key' => 'function'),
-                ),
-                'haveObjRow' => false,
-                'indexLabel' => null,
-                'rows' => array(),
-                'summary' => '',
             ),
+        );
+        $tableMetaExpect = array(
+            'class' => null,
+            'columns' => array(
+                array(
+                    'attribs' => array(
+                        'class' => ['t_key'],
+                        'scope' => 'row',
+                    ),
+                    'key' => \bdk\Table\Factory::KEY_INDEX,
+                    'tagName' => 'th',
+                ),
+                array(
+                    'attribs' => array(
+                        'class' => ['no-quotes'],
+                    ),
+                    'key' => 'file',
+                ),
+                array('key' => 'line'),
+                array('key' => 'function'),
+            ),
+            'haveObjectRow' => false,
+            'inclArgs' => false,
+            'inclContext' => false,
+            'sortable' => false,
         );
         $this->testMethod(
             'trace',
             [$this->debug->meta('trace', $frames)],
             array(
-                'entry' => static function (LogEntry $logEntry) use ($frames, $metaExpect) {
+                'entry' => static function (LogEntry $logEntry) use ($frames, $tableMetaExpect) {
                     self::assertSame('trace', $logEntry['method']);
-                    $tableDataExpect = \array_map(static function (array $frame) {
-                        return \array_values($frame);
+                    self::assertSame('trace', $logEntry['args'][0]['caption']);
+                    $i = 0;
+                    $tableDataExpect = \array_map(static function (array $frame) use (&$i) {
+                        return \array_merge([$i++], \array_values($frame));
                     }, $frames);
-                    $tableDataExpect[1][0] = \str_replace('/fakepath', '/fakepathNew', $tableDataExpect[1][0]);
+                    $tableDataExpect[1][1] = \str_replace('/fakepath', '/fakepathNew', $tableDataExpect[1][1]);
                     $tableDataActual = \array_map(static function ($row) {
-                        $row[0] = (string) $row[0];
-                        $row[2] = (string) $row[2];
+                        $row[0] = $row[0];
+                        $row[1] = (string) $row[1]; // filepath abstraction
+                        $row[3] = (string) $row[3]; // method abstraction
                         return $row;
-                    }, $logEntry['args'][0]);
+                    }, $logEntry['args'][0]['rows']);
+                    // \bdk\Debug::varDump('tableDataExpect', $tableDataExpect);
+                    // \bdk\Debug::varDump('tableDataActual', $tableDataActual);
                     self::assertSame($tableDataExpect, $tableDataActual);
-                    self::assertSame($metaExpect, $logEntry['meta']);
+                    // \bdk\Debug::varDump('tableMetaExpect', $tableMetaExpect);
+                    // \bdk\Debug::varDump('tableMetaActual', $logEntry['args'][0]['meta']);
+                    self::assertEquals($tableMetaExpect, $logEntry['args'][0]['meta']);
                 },
                 'wamp' => array(
                     'trace',
                     [
+                        /*
                         \array_map(static function ($frame) {
                             $row = \array_values($frame);
                             $row[0] = \str_replace('/fakepath', '/fakepathNew', $row[0]);
@@ -275,10 +317,62 @@ class TraceTest extends DebugTestFramework
                             $row[2] = $funcAbsValues;
                             return $row;
                         }, $frames),
+                        */
+                        array(
+                            'caption' => 'trace',
+                            'debug' => Abstracter::ABSTRACTION,
+                            'header' => ['', 'file', 'line', 'function'],
+                            'meta' => $tableMetaExpect,
+                            'rows' => [
+                                [
+                                    0,
+                                    array(
+                                        'baseName' => 'file.php',
+                                        'debug' => Abstracter::ABSTRACTION,
+                                        'docRoot' => false,
+                                        'pathCommon' => '',
+                                        'pathRel' => '/path/to/',
+                                        'type' => 'string',
+                                        'typeMore' => 'filepath',
+                                        'value' => null,
+                                    ),
+                                    42,
+                                    array(
+                                        'debug' => Abstracter::ABSTRACTION,
+                                        'type' => 'identifier',
+                                        'typeMore' => 'method',
+                                        'value' => 'Foo::bar',
+                                    ),
+                                ],
+                                [
+                                    1,
+                                    array(
+                                        'baseName' => 'otherfile.php',
+                                        'debug' => Abstracter::ABSTRACTION,
+                                        'docRoot' => false,
+                                        'pathCommon' => '',
+                                        'pathRel' => '/fakepathNew/to/',
+                                        'type' => 'string',
+                                        'typeMore' => 'filepath',
+                                        'value' => null,
+                                    ),
+                                    69,
+                                    array(
+                                        'debug' => Abstracter::ABSTRACTION,
+                                        'type' => 'identifier',
+                                        'typeMore' => 'method',
+                                        'value' => 'dingus',
+                                    ),
+                                ],
+                            ],
+                            'type' => 'table',
+                            'value' => null,
+                        ),
                     ],
-                    \array_merge(array(
-                        // 'foundFiles' => array(),
-                    ), $metaExpect),
+                    array(
+                        'inclInternal' => false,
+                        'limit' => 0,
+                    ),
                 ),
             )
         );
@@ -294,13 +388,15 @@ class TraceTest extends DebugTestFramework
             ),
             array(
                 'entry' => static function (LogEntry $logEntry) {
-                    $tableInfo = $logEntry->getMeta('tableInfo');
-                    self::assertSame('trace', $logEntry->getMeta('caption'));
-                    self::assertTrue($logEntry->getMeta('inclContext'));
-                    self::assertFalse($logEntry->getMeta('sortable'));
+                    // $tableInfo = $logEntry->getMeta('tableInfo');
+                    $tableArray = $logEntry['args'][0]->getValues();
+                    // \bdk\Debug::varDump('traceArray', \print_r($tableArray, true));
+                    self::assertSame('trace', $tableArray['caption']);
+                    self::assertTrue($tableArray['meta']['inclContext']);
+                    self::assertFalse($tableArray['meta']['sortable']);
 
-                    self::assertIsArray($tableInfo['rows'][0]['args']);
-                    self::assertIsArray($tableInfo['rows'][0]['context']);
+                    self::assertIsArray($tableArray['rows'][0]['meta']['args']);
+                    self::assertIsArray($tableArray['rows'][0]['meta']['context']);
                 },
                 'html' => static function ($output, LogEntry $logEntry) {
                     $expectStartsWith = <<<'EOD'
@@ -308,16 +404,25 @@ class TraceTest extends DebugTestFramework
 <table class="table-bordered trace-context">
 <caption>trace</caption>
 <thead>
-<tr><th>&nbsp;</th><th scope="col">file</th><th scope="col">line</th><th scope="col">function</th></tr>
+<tr>
+<th class="t_string" scope="col"></th>
+<th class="t_string" scope="col">file</th>
+<th class="t_string" scope="col">line</th>
+<th class="t_string" scope="col">function</th>
+</tr>
 </thead>
 <tbody>
 <tr class="expanded" data-toggle="next">
 EOD;
-                    self::assertStringContainsString($expectStartsWith, $output);
-                    $expectMatch = '%a<tr class="context" style="display:table-row;"><td colspan="4"><pre class="highlight line-numbers" data-line="%d" data-line-offset="%d" data-start="%d"><code class="language-php">%a';
-                    self::assertStringMatchesFormat($expectMatch, $output);
+                    // \bdk\Debug::varDump('output', $output);
+                    self::assertStringContainsString($expectStartsWith, self::normalizeString($output));
+                    $expectMatch = '%a<tr class="context" style="display:table-row;">' . "\n"
+                        . '<td colspan="4"><pre class="highlight line-numbers" data-line="%d" data-line-offset="%d" data-start="%d"><code class="language-php">%a';
+                    // \bdk\Debug::varDump('expectMatch', $expectMatch);
+                    // \bdk\Debug::varDump('output', $output);
+                    self::assertStringMatchesFormatNormalized($expectMatch, $output);
                     $expectContains = '</code></pre><hr />Arguments = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>';
-                    self::assertStringContainsString($expectContains, $output);
+                    self::assertStringContainsString($expectContains, self::normalizeString($output));
                 },
             )
         );
@@ -361,11 +466,26 @@ EOD;
                         <table class="table-bordered">
                         <caption>trace</caption>
                         <thead>
-                            <tr><th>&nbsp;</th><th scope="col">file</th><th scope="col">line</th><th scope="col">function</th></tr>
+                            <tr>
+                                <th class="t_string" scope="col"></th>
+                                <th class="t_string" scope="col">file</th>
+                                <th class="t_string" scope="col">line</th>
+                                <th class="t_string" scope="col">function</th>
+                            </tr>
                         </thead>
                         <tbody>
-                            <tr><th class="t_int t_key" scope="row">0</th><td class="no-quotes t_string" data-type-more="filepath"><span class="file-path-common">/var/w<span class="unicode" data-code-point="1D568" title="U-1D568: MATHEMATICAL DOUBLE-STRUCK SMALL W">𝕨</span>w/site/</span><span class="file-basename">file.php</span></td><td class="t_int">123</td><td class="t_identifier" data-type-more="method"><span class="t_name">func</span></td></tr>
-                            <tr><th class="t_int t_key" scope="row">1</th><td class="no-quotes t_string" data-type-more="filepath"><span class="file-path-common">/var/w<span class="unicode" data-code-point="1D568" title="U-1D568: MATHEMATICAL DOUBLE-STRUCK SMALL W">𝕨</span>w/site/</span><span class="file-path-rel"><span class="unicode" data-code-point="1D4CB" title="U-1D4CB: MATHEMATICAL SCRIPT SMALL V">𝓋</span>endor/</span><span class="file-basename"><span class="unicode" data-code-point="1D4BB" title="U-1D4BB: MATHEMATICAL SCRIPT SMALL F">𝒻</span>ile.php</span></td><td class="t_int">123</td><td class="t_identifier" data-type-more="method"><span class="t_name">func</span></td></tr>
+                            <tr>
+                                <th class="t_int t_key" scope="row">0</th>
+                                <td class="no-quotes t_string" data-type-more="filepath"><span class="file-path-common">/var/w<span class="unicode" data-code-point="1D568" title="U-1D568: MATHEMATICAL DOUBLE-STRUCK SMALL W">𝕨</span>w/site/</span><span class="file-basename">file.php</span></td>
+                                <td class="t_int">123</td>
+                                <td class="t_identifier" data-type-more="method"><span class="t_name">func</span></td>
+                            </tr>
+                            <tr>
+                                <th class="t_int t_key" scope="row">1</th>
+                                <td class="no-quotes t_string" data-type-more="filepath"><span class="file-path-common">/var/w<span class="unicode" data-code-point="1D568" title="U-1D568: MATHEMATICAL DOUBLE-STRUCK SMALL W">𝕨</span>w/site/</span><span class="file-path-rel"><span class="unicode" data-code-point="1D4CB" title="U-1D4CB: MATHEMATICAL SCRIPT SMALL V">𝓋</span>endor/</span><span class="file-basename"><span class="unicode" data-code-point="1D4BB" title="U-1D4BB: MATHEMATICAL SCRIPT SMALL F">𝒻</span>ile.php</span></td>
+                                <td class="t_int">123</td>
+                                <td class="t_identifier" data-type-more="method"><span class="t_name">func</span></td>
+                            </tr>
                         </tbody>
                         </table>
                         </li>';
@@ -400,11 +520,23 @@ EOD;
                         <table class="table-bordered">
                         <caption>trace</caption>
                         <thead>
-                            <tr><th>&nbsp;</th><th scope="col">file</th><th scope="col">line</th></tr>
+                            <tr>
+                                <th class="t_string" scope="col"></th>
+                                <th class="t_string" scope="col">file</th>
+                                <th class="t_string" scope="col">line</th>
+                            </tr>
                         </thead>
                         <tbody>
-                        <tr><th class="t_int t_key" scope="row">0</th><td class="no-quotes t_string" data-type-more="filepath"><span class="file-path-common">/var/w<span class="unicode" data-code-point="1D568" title="U-1D568: MATHEMATICAL DOUBLE-STRUCK SMALL W">𝕨</span>w/site/</span><span class="file-basename">file.php</span></td><td class="t_int">123</td></tr>
-                        <tr><th class="t_int t_key" scope="row">1</th><td class="no-quotes t_string" data-type-more="filepath"><span class="file-path-common">/var/w<span class="unicode" data-code-point="1D568" title="U-1D568: MATHEMATICAL DOUBLE-STRUCK SMALL W">𝕨</span>w/site/</span><span class="file-path-rel"><span class="unicode" data-code-point="1D4CB" title="U-1D4CB: MATHEMATICAL SCRIPT SMALL V">𝓋</span>endor/</span><span class="file-basename"><span class="unicode" data-code-point="1D4BB" title="U-1D4BB: MATHEMATICAL SCRIPT SMALL F">𝒻</span>ile.php</span></td><td class="t_int">123</td></tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">0</th>
+                            <td class="no-quotes t_string" data-type-more="filepath"><span class="file-path-common">/var/w<span class="unicode" data-code-point="1D568" title="U-1D568: MATHEMATICAL DOUBLE-STRUCK SMALL W">𝕨</span>w/site/</span><span class="file-basename">file.php</span></td>
+                            <td class="t_int">123</td>
+                        </tr>
+                        <tr>
+                            <th class="t_int t_key" scope="row">1</th>
+                            <td class="no-quotes t_string" data-type-more="filepath"><span class="file-path-common">/var/w<span class="unicode" data-code-point="1D568" title="U-1D568: MATHEMATICAL DOUBLE-STRUCK SMALL W">𝕨</span>w/site/</span><span class="file-path-rel"><span class="unicode" data-code-point="1D4CB" title="U-1D4CB: MATHEMATICAL SCRIPT SMALL V">𝓋</span>endor/</span><span class="file-basename"><span class="unicode" data-code-point="1D4BB" title="U-1D4BB: MATHEMATICAL SCRIPT SMALL F">𝒻</span>ile.php</span></td>
+                            <td class="t_int">123</td>
+                        </tr>
                         </tbody>
                         </table>
                         </li>';
@@ -420,13 +552,13 @@ EOD;
         $this->testMethod(
             'trace',
             [
-                \bdk\Debug::meta('inclInternal')
+                \bdk\Debug::meta('inclInternal'),
             ],
             array(
                 'entry' => static function (LogEntry $logEntry) {
                     // bdk\AbstractDebug for php 5.x
                     // bdk\Debug for php 7.x +
-                    self::assertStringMatchesFormat('bdk\%ADebug->__call(\'trace\')', (string) $logEntry['args'][0][0][2]);
+                    self::assertStringMatchesFormat('bdk\%ADebug->__call(\'trace\')', (string) $logEntry['args'][0]['rows'][0][3]);
                 },
             )
         );

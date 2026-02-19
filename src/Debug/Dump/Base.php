@@ -12,8 +12,6 @@ namespace bdk\Debug\Dump;
 
 use bdk\Debug;
 use bdk\Debug\AbstractComponent;
-use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Base\Value;
 use bdk\Debug\Dump\Substitution;
@@ -58,6 +56,14 @@ class Base extends AbstractComponent
             color: #8a6d3b;',
     );
 
+    /** @var array<string,mixed> */
+    protected $cfg = array(
+        // ChromeLogger: 'unset'
+        // FirePhp: null
+        // Script: Abstracter::UNDEFINED
+        'undefinedAs' => 'unset',
+    );
+
     /** @var string */
     protected $channelKeyRoot;
 
@@ -72,9 +78,6 @@ class Base extends AbstractComponent
     /** @var Value */
     protected $valDumper;
 
-    /** @var array */
-    private $tableInfo = array();
-
     /**
      * Constructor
      *
@@ -84,7 +87,7 @@ class Base extends AbstractComponent
     {
         $this->debug = $debug;
         $this->substitution = new Substitution($this);
-        $this->valDumper = $this->getValDumper();
+        $this->valDumper = $this->initValDumper();
         $this->channelKeyRoot = $this->debug->rootInstance->getCfg('channelKey', Debug::CONFIG_DEBUG);
     }
 
@@ -149,12 +152,11 @@ class Base extends AbstractComponent
      *
      * @return Value
      */
-    protected function getValDumper()
+    protected function initValDumper()
     {
-        if (!$this->valDumper) {
-            $this->valDumper = new Value($this);
-        }
-        return $this->valDumper;
+        $valDumper = new Value($this);
+        $valDumper->setCfg($this->cfg);
+        return $valDumper;
     }
 
     /**
@@ -231,111 +233,27 @@ class Base extends AbstractComponent
     }
 
     /**
-     * Normalize table data
-     *
-     * Ensures each row has all key/values and that they're in the same order
-     * if any row is an object, each row will get a ___class_name value
+     * Handle the "output" of tabular methods: profileEnd, table, trace
      *
      * This builds table rows usable by ChromeLogger, FirePhp, Text, and Script
      *
-     * undefinedAs values
-     *   ChromeLogger: 'unset'
-     *   FirePhp: null
-     *   Text: 'unset'
-     *   Script: Abstracter::UNDEFINED
-     *
      * @param LogEntry $logEntry LogEntry instance
      *
-     * @return string|null
+     * @return void
      */
     protected function methodTabular(LogEntry $logEntry)
     {
-        $forceArray = $logEntry->getMeta('forceArray', true);
-        $undefinedAs = $logEntry->getMeta('undefinedAs', 'unset');
-        $this->tableInfo = $logEntry->getMeta('tableInfo');
-        $processRows = $undefinedAs !== Abstracter::UNDEFINED
-            || $forceArray === false
-            || $this->tableInfo['haveObjRow'];
-        if (!$processRows) {
-            return null;
-        }
-        if ($undefinedAs === 'null') {
-            $undefinedAs = null;
-        }
-
-        $this->tableInfo['undefinedAs'] = $undefinedAs;
-        $this->tableInfo['columnKeys'] = \array_map(static function (array $colInfo) {
-            return $colInfo['key'];
-        }, $logEntry['meta']['tableInfo']['columns']);
-
-        $rows = $logEntry['args'][0];
-        foreach ($rows as $rowKey => $row) {
-            $rows[$rowKey] = $this->methodTabularRow($row, $rowKey, $logEntry['method'], $forceArray);
-        }
         $logEntry['method'] = 'table';
-        $logEntry['args'] = [$rows];
-        $this->tableInfo = array();
+        // copy caption to meta so that script route can access it
+        $logEntry->setMeta('caption', $logEntry['args'][0]['caption']);
+        $this->methodDefault($logEntry);
     }
 
     /**
-     * Process table row
-     *
-     * @param array      $row        row
-     * @param int|string $rowKey     row's key/index
-     * @param string     $method     log method (trace|table|profileEnd)
-     * @param bool       $forceArray whether "scalar" rows should be wrapped in array
-     *
-     * @return array
+     * {@inheritDoc}
      */
-    private function methodTabularRow(array $row, $rowKey, $method, $forceArray)
+    protected function postSetCfg(array $cfg = array(), array $prev = array())
     {
-        $rowInfo = isset($this->tableInfo['rows'][$rowKey])
-            ? $this->tableInfo['rows'][$rowKey]
-            : array();
-        $rowInfo = \array_merge(
-            array(
-                'class' => null,
-                'isScalar' => false,
-            ),
-            $rowInfo
-        );
-        if ($rowInfo['isScalar'] === true && $forceArray === false) {
-            return \current($row);
-        }
-        $row = $this->methodTabularRowPrep($row, $method);
-        if ($this->tableInfo['haveObjRow']) {
-            $row = \array_merge(
-                array('___class_name' => $rowInfo['class']),
-                $row
-            );
-        }
-        return $row;
-    }
-
-    /**
-     * Set (or unset) any undefined values
-     *
-     * @param array  $row    row
-     * @param string $method log method (trace|table|profileEnd)
-     *
-     * @return array
-     */
-    private function methodTabularRowPrep(array $row, $method)
-    {
-        // handle undefined values
-        $rowNew = array();
-        \array_walk($row, function ($val, $i) use (&$rowNew) {
-            if ($val === Abstracter::UNDEFINED) {
-                $val = $this->tableInfo['undefinedAs'];
-                if ($this->tableInfo['undefinedAs'] === 'unset') {
-                    return;
-                }
-            } elseif ($val instanceof Abstraction) {
-                $val = $this->valDumper->dump($val, array('addQuotes' => false));
-            }
-            $k = $this->tableInfo['columnKeys'][$i];
-            $rowNew[$k] = $val;
-        });
-        return $rowNew;
+        $this->valDumper->setCfg($cfg);
     }
 }

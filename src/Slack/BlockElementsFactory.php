@@ -50,7 +50,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      *
      * @return array<string,mixed>
      */
-    public static function button($actionId, $label, $value = null, $values = array())
+    public static function button($actionId, $label, $value = null, array $values = array())
     {
         $default = array(
             'accessibility_label' => null,
@@ -78,7 +78,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      *
      * @return array<string,mixed>
      */
-    public static function checkboxes($actionId, array $options, $values = array())
+    public static function checkboxes($actionId, array $options, array $values = array())
     {
         return self::checkboxesRadio($actionId, $options, $values, 'checkboxes');
     }
@@ -92,7 +92,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      *
      * @return array<string,mixed>
      */
-    public static function datePicker($actionId, $values = array())
+    public static function datePicker($actionId, array $values = array())
     {
         $default = array(
             'action_id' => (string) $actionId,
@@ -114,7 +114,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      *
      * @return array<string,mixed>
      */
-    public static function datetimePicker($actionId, $values = array())
+    public static function datetimePicker($actionId, array $values = array())
     {
         $default = array(
             'action_id' => (string) $actionId,
@@ -135,7 +135,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      *
      * @return array<string,mixed>
      */
-    public static function email($actionId, $values = array())
+    public static function email($actionId, array $values = array())
     {
         $default = array(
             'action_id' => (string) $actionId,
@@ -155,7 +155,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      *
      * @return array<string,mixed>
      */
-    public static function number($values = array())
+    public static function number(array $values = array())
     {
         $default = array(
             'action_id' => null,
@@ -180,7 +180,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      *
      * @return array<string,mixed>
      */
-    public static function overflow($actionId, array $options, $values = array())
+    public static function overflow($actionId, array $options, array $values = array())
     {
         $default = array(
             'action_id' => $actionId,
@@ -201,7 +201,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      *
      * @return array<string,mixed>
      */
-    public static function radio($actionId, array $options, $values = array())
+    public static function radio($actionId, array $options, array $values = array())
     {
         return self::checkboxesRadio($actionId, $options, $values, 'radio_buttons');
     }
@@ -218,7 +218,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      *
      * @throws UnexpectedValueException
      */
-    public static function select($actionId, array $options = array(), $multiple = false, $values = array())
+    public static function select($actionId, array $options = array(), $multiple = false, array $values = array())
     {
         $default = array(
             'action_id' => (string) $actionId,
@@ -259,7 +259,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      *
      * @return array<string,mixed>
      */
-    public static function textInput($actionId, $values = array())
+    public static function textInput($actionId, array $values = array())
     {
         $default = array(
             'action_id' => $actionId,
@@ -284,7 +284,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      *
      * @return array<string,mixed>
      */
-    public static function timePicker($actionId, $values = array())
+    public static function timePicker($actionId, array $values = array())
     {
         $default = array(
             'action_id' => $actionId,
@@ -306,7 +306,7 @@ class BlockElementsFactory extends AbstractBlockFactory
      *
      * @return array<string,mixed>
      */
-    public static function url($actionId, $values = array())
+    public static function url($actionId, array $values = array())
     {
         $default = array(
             'action_id' => $actionId,

@@ -105,6 +105,9 @@ class WampCrate
                     $clone['valueDecoded'] = $this->crate($clone['valueDecoded']);
                 }
                 return $clone;
+            case Type::TYPE_TABLE:
+                $clone['rows'] = $this->crateArray($clone['rows']);
+                return $clone;
         }
         return $clone;
     }
@@ -204,6 +207,7 @@ class WampCrate
             $meta
         );
         $this->debug->rootInstance->getPlugin('methodTrace')->doTrace($logEntryTmp);
+        $logEntryTmp->crate();
         return \array_replace_recursive(
             $logEntryTmp['meta'],
             array(

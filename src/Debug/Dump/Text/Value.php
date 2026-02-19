@@ -15,6 +15,7 @@ use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Base\Value as BaseValue;
 use bdk\Debug\Dump\Text\TextObject;
+use bdk\Table\Table as BdkTable;
 
 /**
  * Dump val as plain text
@@ -180,6 +181,28 @@ class Value extends BaseValue
         return $date
             ? '📅 ' . $val . ' (' . $date . ')'
             : $val;
+    }
+
+    /**
+     * Dump Table
+     *
+     * @param Abstraction $abs Table abstraction
+     *
+     * @return string
+     */
+    protected function dumpTable(Abstraction $abs)
+    {
+        $data = $abs->getValues();
+        $table = new BdkTable($data);
+        $tableAsArray = \bdk\Table\Utility::asArray($table);
+        $caption = $table->getCaption()
+            ? $this->dump($table->getCaption()->getHtml(), array(
+                'addQuotes' => false,
+            ))
+            : '';
+        return $caption
+            ? $caption .  "\n" . \str_repeat('-', \strlen($caption)) . "\n" . $this->dumpArray($tableAsArray)
+            : $this->dumpArray($tableAsArray);
     }
 
     /**

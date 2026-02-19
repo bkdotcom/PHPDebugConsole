@@ -11,14 +11,8 @@
 namespace bdk\Debug\Utility;
 
 use bdk\Debug;
-use bdk\Debug\Abstraction\Abstracter;
-use bdk\Debug\Abstraction\Abstraction;
-use bdk\Debug\Abstraction\AbstractObject;
-use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
-use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
-use bdk\Debug\Utility\Php;
-use bdk\Debug\Utility\StringUtil;
+use bdk\Debug\Utility\UnserializeLog;
 
 /**
  * Serialize / compress / base64 encode log data
@@ -27,8 +21,6 @@ class SerializeLog
 {
     /** @var Debug */
     protected static $debug;
-    /** @var bool */
-    protected static $isLegacyData = false;
 
     /**
      * Import the config and data into the debug instance
@@ -37,29 +29,12 @@ class SerializeLog
      * @param Debug|null $debug (optional) Debug instance
      *
      * @return Debug
+     *
+     * @deprecated 3.6 use UnserializeLog::import instead
      */
     public static function import(array $data, $debug = null)
     {
-        \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
-
-        if (!$debug) {
-            $debug = new Debug();
-        }
-        self::$isLegacyData = \version_compare($data['version'], '3.0', '<');
-        self::$debug = $debug;
-        // set config for any channels already present in debug
-        foreach (\array_intersect_key($debug->getChannels(true, true), $data['config']['channels']) as $fqn => $channel) {
-            $channel->setCfg($data['config']['channels'][$fqn], Debug::CONFIG_NO_RETURN);
-        }
-        $debug->setCfg($data['config'], Debug::CONFIG_NO_RETURN);
-        unset($data['config'], $data['version']);
-        foreach (['alerts', 'log', 'logSummary'] as $cat) {
-            $data[$cat] = self::importGroup($cat, $data[$cat]);
-        }
-        foreach ($data as $k => $v) {
-            $debug->data->set($k, $v);
-        }
-        return $debug;
+        return UnserializeLog::import($data, $debug);
     }
 
     /**
@@ -93,178 +68,12 @@ class SerializeLog
      * @param string $str serialized log data
      *
      * @return array|false
+     *
+     * @deprecated 3.6 use UnserializeLog::unserialize instead
      */
     public static function unserialize($str)
     {
-        $str = self::extractLog($str);
-        $str = self::unserializeDecodeAndInflate($str);
-        $data = self::unserializeSafe($str);
-        if (!$data) {
-            return false;
-        }
-        $data = \array_merge(array(
-            'config' => array(
-                'channels' => array(),
-            ),
-            'version' => '2.3', // prior to 3.0, we didn't include version
-        ), $data);
-        if (isset($data['rootChannel'])) {
-            $data['config']['channelName'] = $data['rootChannel'];
-            $data['config']['channels'] = array();
-            unset($data['rootChannel']);
-        }
-        return $data;
-    }
-
-    /**
-     * Extract serialized/encoded log data from between "START DEBUG" & "END DEBUG"
-     *
-     * @param string $str string containing serialized log
-     *
-     * @return string
-     */
-    private static function extractLog($str)
-    {
-        $strStart = 'START DEBUG';
-        $strEnd = 'END DEBUG';
-        $regex = '/' . $strStart . '[\r\n]+(.+)[\r\n]+' . $strEnd . '/s';
-        $matches = [];
-        if (\preg_match($regex, $str, $matches)) {
-            $str = $matches[1];
-        }
-        return $str;
-    }
-
-    /**
-     * Unserialize Log entry
-     *
-     * @param array $vals method, args, & meta values
-     *
-     * @return LogEntry
-     */
-    private static function importLogEntry(array $vals)
-    {
-        $vals = \array_replace(['', array(), array()], $vals);
-        $vals[1] = self::importLegacy($vals[1]);
-        $logEntry = new LogEntry(self::$debug, $vals[0], $vals[1], $vals[2]);
-        if (self::$isLegacyData && $vals[0] === 'table') {
-            self::$debug->rootInstance->getPlugin('methodTable')->doTable($logEntry);
-        }
-        return $logEntry;
-    }
-
-    /**
-     * "unserialize" log data
-     *
-     * @param string $cat  ('alerts'|'log'|'logSummary')
-     * @param array  $data data to unserialize
-     *
-     * @return array
-     */
-    private static function importGroup($cat, $data)
-    {
-        foreach ($data as $i => $val) {
-            if ($cat !== 'logSummary') {
-                $data[$i] = self::importLogEntry($val);
-                continue;
-            }
-            foreach ($val as $priority => $val2) {
-                $data[$i][$priority] = self::importLogEntry($val2);
-            }
-        }
-        return $data;
-    }
-
-    /**
-     * Convert pre 3.0 serialized log entry args to 3.0
-     *
-     * Prior to to v3.0, abstractions were stored as an array
-     * Find these arrays and convert them to Abstraction objects
-     *
-     * @param array $vals values or properties
-     *
-     * @return array
-     */
-    private static function importLegacy(array $vals)
-    {
-        return \array_map(static function ($val) {
-            if (\is_array($val) === false) {
-                return $val;
-            }
-            return isset($val['debug']) && $val['debug'] === Abstracter::ABSTRACTION
-                ? self::importLegacyAbstraction($val)
-                : self::importLegacy($val);
-        }, $vals);
-    }
-
-    /**
-     * Import legacy abstraction
-     *
-     * @param array<string,mixed> $absValues Abstraction values
-     *
-     * @return Abstraction
-     */
-    private static function importLegacyAbstraction(array $absValues)
-    {
-        $type = $absValues['type'];
-        unset($absValues['debug'], $absValues['type']);
-        return $type === Type::TYPE_OBJECT
-            ? self::importLegacyObj($absValues)
-            : new Abstraction($type, $absValues);
-    }
-
-    /**
-     * Convert legacy object abstraction data
-     *
-     * @param array<string,mixed> $absValues Abstraction values
-     *
-     * @return ObjectAbstraction
-     */
-    private static function importLegacyObj(array $absValues)
-    {
-        $absValues['properties'] = self::importLegacy($absValues['properties']);
-        $absValues = self::importLegacyObjConvert($absValues);
-        $absValues = AbstractObject::buildValues($absValues);
-        $absValues = ObjectAbstraction::unserializeBuildValues($absValues);
-
-        $absValues['methods'] = \array_map(static function (array $methodInfo) {
-            $methodInfo['phpDoc']['desc'] = $methodInfo['phpDoc']['description'];
-            unset($methodInfo['phpDoc']['description']);
-            return $methodInfo;
-        }, $absValues['methods']);
-
-        $valueStore = self::$debug->abstracter->abstractObject->definition->getValueStoreDefault();
-        return new ObjectAbstraction($valueStore, $absValues);
-    }
-
-    /**
-     * Convert values
-     *
-     * @param array<string,mixed> $absValues Object abstraction values
-     *
-     * @return array<string,mixed>
-     */
-    private static function importLegacyObjConvert($absValues)
-    {
-        if (isset($absValues['collectMethods'])) {
-            if ($absValues['collectMethods'] === false) {
-                $absValues['cfgFlags'] &= ~AbstractObject::METHOD_COLLECT;
-            }
-            unset($absValues['collectMethods']);
-        }
-        if (\array_key_exists('inheritedFrom', $absValues)) {
-            $absValues['declaredLast'] === $absValues['inheritedFrom'];
-            unset($absValues['inheritedFrom']);
-        }
-        if (\array_key_exists('overrides', $absValues)) {
-            $absValues['declaredPrev'] === $absValues['overrides'];
-            unset($absValues['overrides']);
-        }
-        if (\array_key_exists('originallyDeclared', $absValues)) {
-            $absValues['declaredOrig'] === $absValues['originallyDeclared'];
-            unset($absValues['originallyDeclared']);
-        }
-        return $absValues;
+        return UnserializeLog::unserialize($str);
     }
 
     /**
@@ -313,10 +122,26 @@ class SerializeLog
             'requestId',
             'runtime',
         ]));
+        // Filter out orphaned definitions (not referenced by any logged abstraction)
+        $data['classDefinitions'] = self::filterOrphanedDefinitions($data['classDefinitions']);
         foreach (['alerts', 'log', 'logSummary'] as $cat) {
             $data[$cat] = self::serializeGroup($data[$cat]);
         }
         return $data;
+    }
+
+    /**
+     * Filter out orphaned class definitions (not referenced by any logged abstraction)
+     *
+     * @param array $classDefinitions Class definitions
+     *
+     * @return array
+     */
+    private static function filterOrphanedDefinitions(array $classDefinitions)
+    {
+        return \array_filter($classDefinitions, static function ($definition) {
+            return !empty($definition['__isUsed']);
+        });
     }
 
     /**
@@ -340,51 +165,5 @@ class SerializeLog
             $data[$i] = \array_values($logEntryArray);
         }
         return $data;
-    }
-
-    /**
-     * base64 decode and gzinflate
-     *
-     * @param string $str compressed / encoded log data
-     *
-     * @return string|false
-     */
-    private static function unserializeDecodeAndInflate($str)
-    {
-        $str = StringUtil::isBase64Encoded($str)
-            ? \base64_decode($str, true)
-            : false;
-        if ($str && \function_exists('gzinflate')) {
-            $strInflated = \gzinflate($str);
-            if ($strInflated) {
-                $str = $strInflated;
-            }
-        }
-        return $str;
-    }
-
-    /**
-     * Safely unserialize data
-     * Handle legacy data
-     *
-     * @param string $serialized serialized array
-     *
-     * @return array|false
-     */
-    private static function unserializeSafe($serialized)
-    {
-        $serialized = \preg_replace(
-            '/O:33:"bdk\\\Debug\\\Abstraction\\\Abstraction":((?:\d+):{s:4:"type";s:6:"object")/',
-            'O:40:"bdk\\Debug\\Abstraction\\Object\Abstraction":$1',
-            (string) $serialized
-        );
-        if (!$serialized) {
-            return false;
-        }
-        return Php::unserializeSafe($serialized, [
-            'bdk\\Debug\\Abstraction\\Abstraction',
-            'bdk\\Debug\\Abstraction\\Object\\Abstraction',
-            'bdk\\PubSub\\ValueStore',
-        ]);
     }
 }

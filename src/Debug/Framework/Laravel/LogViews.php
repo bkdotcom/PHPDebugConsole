@@ -100,7 +100,7 @@ class LogViews
                     ? 'blade'
                     : \pathinfo($path, PATHINFO_EXTENSION)),
         ));
-        $this->viewChannel->log('view', $info, $this->viewChannel->meta('detectFiles'));
+        $this->viewChannel->log('view', $info);
     }
 
     /**

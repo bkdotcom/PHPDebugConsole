@@ -110,8 +110,7 @@ class HtmlString
      */
     public function dumpAsSubstitution($val, $opts)
     {
-        $isBinary = $val instanceof Abstraction && $val['typeMore'] === Type::TYPE_STRING_BINARY;
-        if ($isBinary) {
+        if ($val instanceof Abstraction && $val['typeMore'] === Type::TYPE_STRING_BINARY) {
             $val['brief'] = true;
             return $this->binary->dump($val);
         }
@@ -297,21 +296,22 @@ class HtmlString
             if ($abs['prettifiedTag'] === false) {
                 return $dumped;
             }
-            $tagName = 'span';
-            if ($opts['tagName'] === 'td') {
-                $tagName = 'td';
+            $attribsContainer = \array_filter(array(
+                'class' => 'value-container',
+                'data-type' => $abs['type'],
+                'data-type-more' => $abs['typeMore'],
+            ));
+            if ($opts['tagName'] === null) {
+                $dumped = $this->debug->html->buildTag('span', $opts['attribs'], $dumped);
+            } elseif ($opts['tagName'] !== 'span') {
                 $parsed = $this->debug->html->parseTag($dumped);
                 $dumped = $this->debug->html->buildTag('span', $parsed['attribs'], $parsed['innerhtml']);
             }
-            return $this->debug->html->buildTag(
-                $tagName,
-                \array_filter(array(
-                    'class' => 'value-container',
-                    'data-type' => $abs['type'],
-                    'data-type-more' => $abs['typeMore'],
-                )),
-                '<span class="prettified">(' . $this->debug->i18n->trans('word.prettified') . ')</span> ' . $dumped
-            );
+            $dumped = '<span class="prettified">(' . $this->debug->i18n->trans('word.prettified') . ')</span> ' . $dumped;
+            $this->valDumper->optionSet('attribs', $attribsContainer); // replace attribs with new outer container attribs
+            return $opts['tagName'] !== null
+                ? $this->debug->html->buildTag($opts['tagName'], $attribsContainer, $dumped)
+                : $dumped;
         };
     }
 

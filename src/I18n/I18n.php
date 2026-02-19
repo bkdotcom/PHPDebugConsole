@@ -95,7 +95,7 @@ class I18n
      * @param ServerRequestInterface $serverRequest ServerRequest instance
      * @param array                  $cfg           Configuration
      */
-    public function __construct(ServerRequestInterface $serverRequest, $cfg = array())
+    public function __construct(ServerRequestInterface $serverRequest, array $cfg = array())
     {
         $this->userLocales = new UserLocales($serverRequest, $this);
         $this->fileLoader = new FileLoader();

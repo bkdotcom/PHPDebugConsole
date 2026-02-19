@@ -46,7 +46,7 @@ class ErrorHandler extends AbstractErrorHandler
      * @param EventManager $eventManager event manager
      * @param array        $cfg          config
      */
-    public function __construct(EventManager $eventManager, $cfg = array())
+    public function __construct(EventManager $eventManager, array $cfg = array())
     {
         $this->eventManager = $eventManager;
         // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
@@ -165,7 +165,7 @@ class ErrorHandler extends AbstractErrorHandler
      *
      * @return object|false
      */
-    public static function getInstance($cfg = array())
+    public static function getInstance(array $cfg = array())
     {
         if (!isset(self::$instance)) {
             return false;
@@ -190,7 +190,7 @@ class ErrorHandler extends AbstractErrorHandler
      * @link   http://php.net/manual/en/function.set-error-handler.php
      * @link   http://php.net/manual/en/language.operators.errorcontrol.php
      */
-    public function handleError($errType, $errMsg, $file, $line, $vars = array())
+    public function handleError($errType, $errMsg, $file, $line, array $vars = array())
     {
         $error = $this->cfg['errorFactory']($this, $errType, $errMsg, $file, $line, $vars);
         $this->data['uncaughtException'] = null;
@@ -388,7 +388,7 @@ class ErrorHandler extends AbstractErrorHandler
      *
      * @return Error
      */
-    protected function errorFactory(self $handler, $errType, $errMsg, $file, $line, $vars = array())
+    protected function errorFactory(self $handler, $errType, $errMsg, $file, $line, array $vars = array())
     {
         // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
         return new Error($handler, array(

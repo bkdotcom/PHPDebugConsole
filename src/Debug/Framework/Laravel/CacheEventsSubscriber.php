@@ -50,7 +50,7 @@ class CacheEventsSubscriber
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function __construct($options = array(), $debug = null)
+    public function __construct(array $options = array(), $debug = null)
     {
         \bdk\Debug\Utility\PhpType::assertType($debug, 'bdk\Debug|null', 'debug');
 

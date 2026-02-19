@@ -112,6 +112,7 @@ class FatalError
         );
         $this->debug->rootInstance->getPlugin('methodTrace')->doTrace($logEntry);
         $this->debug->setCfg($cfgWas, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
+        $logEntry->crate();
         return $this->routeHtml->dumper->processLogEntry($logEntry);
     }
 

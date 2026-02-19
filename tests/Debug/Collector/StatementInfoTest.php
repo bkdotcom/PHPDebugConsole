@@ -115,25 +115,39 @@ class StatementInfoTest extends DebugTestFramework
             "1": {
                 "method": "table",
                 "args": [
-                    [
-                        ["bkent", "s"]
-                    ]
-                ],
-                "meta": {
-                    "caption": "parameters",
-                    "sortable": true,
-                    "tableInfo": {
-                        "class": null,
-                        "columns": [
-                            {"key": "value"},
-                            {"key": "type"}
+                    {
+                        "caption": "parameters",
+                        "debug": "\u0000debug\u0000",
+                        "header": ["", "value", "type"],
+                        "meta": {
+                            "class": null,
+                            "columns": [
+                                {
+                                    "attribs": {
+                                        "class": ["t_key"],
+                                        "scope": "row"
+                                    },
+                                    "key": "\u0000index\u0000",
+                                    "tagName": "th"
+                                },
+                                {"key": "value"},
+                                {"key": "type"}
+                            ],
+                            "haveObjectRow": false,
+                            "sortable": true
+                        },
+                        "rows": [
+                            [
+                                0,
+                                "bkent",
+                                "s"
+                            ]
                         ],
-                        "haveObjRow": false,
-                        "indexLabel": null,
-                        "rows": [],
-                        "summary": ""
+                        "type": "table",
+                        "value": null
                     }
-                }
+                ],
+                "meta": {}
             },
             "2": {
                 "method": "time",
@@ -252,25 +266,39 @@ EOD;
             "1": {
                 "method": "table",
                 "args": [
-                    [
-                        ["bkent", "s"]
-                    ]
-                ],
-                "meta": {
-                    "caption": "parameters",
-                    "sortable": true,
-                    "tableInfo": {
-                        "class": null,
-                        "columns": [
-                            {"key": "value"},
-                            {"key": "type"}
+                    {
+                        "caption": "parameters",
+                        "debug": "\u0000debug\u0000",
+                        "header": ["", "value", "type"],
+                        "meta": {
+                            "class": null,
+                            "columns": [
+                                {
+                                    "attribs": {
+                                        "class": ["t_key"],
+                                        "scope": "row"
+                                    },
+                                    "key": "\u0000index\u0000",
+                                    "tagName": "th"
+                                },
+                                {"key": "value"},
+                                {"key": "type"}
+                            ],
+                            "haveObjectRow": false,
+                            "sortable": true
+                        },
+                        "rows": [
+                            [
+                                0,
+                                "bkent",
+                                "s"
+                            ]
                         ],
-                        "haveObjRow": false,
-                        "indexLabel": null,
-                        "rows": [],
-                        "summary": ""
+                        "type": "table",
+                        "value": null
                     }
-                }
+                ],
+                "meta": {}
             },
             "2": {
                 "method": "time",

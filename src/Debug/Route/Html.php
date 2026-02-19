@@ -313,7 +313,7 @@ class Html extends AbstractRoute
     /**
      * {@inheritDoc}
      */
-    protected function postSetCfg($cfg = array(), $prev = array())
+    protected function postSetCfg(array $cfg = array(), array $prev = array())
     {
         $assetTypeAndPriority = array(
             'css' => ['css', 0],

@@ -12,6 +12,7 @@ namespace bdk\Debug\Dump\TextAnsi;
 
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\Object\Abstraction as ObjectAbstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Text\TextObject;
 use bdk\Debug\Dump\TextAnsi\Value as ValDumper;
 
@@ -20,6 +21,9 @@ use bdk\Debug\Dump\TextAnsi\Value as ValDumper;
  */
 class TextAnsiObject extends TextObject
 {
+    const ANSI_UNDERLINE = "\e[4m";
+    const ANSI_NO_UNDERLINE = "\e[24m";
+
     /** @var ValDumper */
     public $valDumper;
 
@@ -32,7 +36,7 @@ class TextAnsiObject extends TextObject
      */
     public function dump(ObjectAbstraction $abs)
     {
-        $className = $this->valDumper->markupIdentifier($abs['className'], 'className');
+        $className = $this->valDumper->markupIdentifier($abs['className'], Type::TYPE_IDENTIFIER_CLASSNAME);
         $str = $this->dumpSpecialCases($abs, $className);
         if ($str) {
             return $str;
@@ -90,7 +94,7 @@ class TextAnsiObject extends TextObject
                 . $escapeCodes['numeric'] . $count . $escapeReset . "\n";
         }, \array_keys($counts), $counts);
         $header = $counts
-            ? "\e[4m" . $this->debug->i18n->trans('object.methods') . ":\e[24m"
+            ? self::ANSI_UNDERLINE . $this->debug->i18n->trans('object.methods') . ':' . self::ANSI_NO_UNDERLINE
             : $this->debug->i18n->trans('object.methods.none');
         return '  ' . $header . "\n" . \implode('', $counts);
     }

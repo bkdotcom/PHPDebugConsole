@@ -150,16 +150,17 @@ EOD;
         self::$testObj = new TestObj();
         self::$testObj->methodPublic((object) array());
         $abs1 = Debug::getInstance()->abstracter->getAbstraction(self::$testObj, 'log');
-        $cratedAbs1 = $crate->crate($abs1);
-        $cratedAbs1 = \bdk\Test\Debug\Helper::deObjectifyData($cratedAbs1);
         // as provider method is static, but test is not static...
         //   we need to populate "scopeClass"
-        $cratedAbs1['scopeClass'] = __CLASS__;
+        $abs1['scopeClass'] = __CLASS__;
+        $cratedAbs1 = $crate->crate($abs1);
+        $cratedAbs1 = \bdk\Test\Debug\Helper::deObjectifyData($cratedAbs1);
+        // $cratedAbs1['scopeClass'] = __CLASS__;
 
         $abs2 = Debug::getInstance()->abstracter->getAbstraction(new \bdk\Test\Debug\Fixture\Test2(), 'log');
+        $abs2['scopeClass'] = __CLASS__;
         $cratedAbs2 = $crate->crate($abs2);
         $cratedAbs2 = \bdk\Test\Debug\Helper::deObjectifyData($cratedAbs2);
-        $cratedAbs2['scopeClass'] = __CLASS__;
 
         $tests = array(
             'closure' => array(

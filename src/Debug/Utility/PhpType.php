@@ -11,6 +11,7 @@
 namespace bdk\Debug\Utility;
 
 use bdk\Debug\Utility\Php;
+use Closure;
 use Exception;
 use InvalidArgumentException;
 use UnitEnum;
@@ -108,7 +109,7 @@ class PhpType
      * @param int                 $opts     Bitmask of ENUM_AS_OBJECT flag
      * @param bool                $isObject Whether the value is an object
      *                                         Closure: false
-     *                                         UnitEnum: true if Php::ENUM_AS_OBJECT flag passed
+     *                                         UnitEnum: true/false depending on  Php::ENUM_AS_OBJECT flag passed
      *                                         other objects: true
      *
      * @return string
@@ -120,7 +121,7 @@ class PhpType
         if ($obj instanceof UnitEnum && !$enumAsObject) {
             return \get_class($obj) . '::' . $obj->name;
         }
-        $isObject = $obj instanceof \Closure === false;
+        $isObject = $obj instanceof Closure === false;
         $class = \is_object($obj)
             ? \get_class($obj)
             : $obj;

@@ -257,10 +257,7 @@ class LogFiles extends AbstractComponent implements SubscriberInterface
                         'expand' => true,
                     ),
                 )
-            ),
-            $this->debug->meta(array(
-                'detectFiles' => true,
-            ))
+            )
         );
         $this->debug->setCfg('maxDepth', $maxDepthBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
     }

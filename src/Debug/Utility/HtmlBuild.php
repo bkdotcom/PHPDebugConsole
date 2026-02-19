@@ -92,7 +92,7 @@ class HtmlBuild
      *
      * @return string|null
      */
-    private static function buildAttribValArray($name, $values = array())
+    private static function buildAttribValArray($name, array $values = array())
     {
         if ($name === 'style') {
             $keyValues = [];

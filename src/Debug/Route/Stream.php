@@ -303,7 +303,7 @@ class Stream extends AbstractRoute
     /**
      * {@inheritDoc}
      */
-    protected function postSetCfg($cfg = array(), $prev = array())
+    protected function postSetCfg(array $cfg = array(), array $prev = array())
     {
         if (\array_key_exists('stream', $cfg)) {
             // changing stream?

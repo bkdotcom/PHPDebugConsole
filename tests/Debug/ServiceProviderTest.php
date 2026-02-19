@@ -64,7 +64,7 @@ class ServiceProviderTest extends DebugTestFramework
         self::assertInstanceOf('\bdk\Debug\Route\Text', $debug->getRoute('text'));
         self::assertInstanceOf('\bdk\Debug\Dump\Html\Helper', $debug->getDump('html')->helper);
         self::assertInstanceOf('\bdk\Debug\Dump\Html\HtmlObject', $debug->getDump('html')->valDumper->object);
-        self::assertInstanceOf('\bdk\Debug\Dump\Html\Table', $debug->getDump('html')->table);
         self::assertInstanceOf('\bdk\Debug\Dump\Html\Value', $debug->getDump('html')->valDumper);
+        self::assertInstanceOf('\bdk\Debug\Dump\Html\Table', $debug->getDump('html')->valDumper->table);
     }
 }

@@ -197,7 +197,7 @@ class WordPress extends AbstractComponent implements SubscriberInterface
     /**
      * {@inheritDoc}
      */
-    protected function postSetCfg($cfg = array(), $prev = array())
+    protected function postSetCfg(array $cfg = array(), array $prev = array())
     {
         $isFirstConfig = empty($this->cfg['configured']);
         $enabledChanged = isset($cfg['enabled']) && $cfg['enabled'] !== $prev['enabled'];

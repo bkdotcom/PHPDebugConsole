@@ -58,7 +58,7 @@ class Substitution
      * @see https://console.spec.whatwg.org/#formatter
      * @see https://developer.mozilla.org/en-US/docs/Web/API/console#Using_string_substitutions
      */
-    public function process($args, $options = array())
+    public function process(array $args, array $options = array())
     {
         if (\is_string($args[0]) === false) {
             return $args;

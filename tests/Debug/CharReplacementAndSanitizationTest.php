@@ -159,12 +159,19 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                                 'log',
                                 array(
                                     array(
-                                        'cfgFlags' => 29360127,
+                                        // 'cfgFlags' => 29360127,
+                                        'debug' => Abstracter::ABSTRACTION,
                                         'debugMethod' => 'log',
                                         // 'interfacesCollapse' => array(), // same as inherit value
                                         // 'isLazy' => false, // same as inherit value
                                         // 'isMaxDepth' => false, // same as inherit value
                                         // 'isRecursion' => false, // same as inherit value
+                                        'inheritsFrom' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
+                                        'methods' => array(
+                                            '__toString' => array(
+                                                'returnValue' => 'Thiꮪ <b>is</b> a string',
+                                            ),
+                                        ),
                                         'properties' => array(
                                             'array' => array(
                                                 'value' => array(
@@ -207,13 +214,6 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                                             ),
                                         ), // properties
                                         'scopeClass' => "bdk\Test\Debug\CharReplacementAndSanitizationTest",
-                                        'methods' => array(
-                                            '__toString' => array(
-                                                'returnValue' => 'Thiꮪ <b>is</b> a string',
-                                            ),
-                                        ),
-                                        'debug' => Abstracter::ABSTRACTION,
-                                        'inheritsFrom' => 'bdk\Test\Debug\Fixture\Con𝘧usableIdenti𝘧iers',
                                         'type' => Type::TYPE_OBJECT,
                                         // 'typeMore' => null,
                                     ), // abstraction

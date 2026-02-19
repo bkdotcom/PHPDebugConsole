@@ -76,7 +76,7 @@ class PhpDoc
      *
      * @param array<string,mixed> $cfg Configuration
      */
-    public function __construct($cfg = array())
+    public function __construct(array $cfg = array())
     {
         $this->cfg = \array_merge(array(
             'sanitizer' => ['bdk\Debug\Utility\HtmlSanitize', 'sanitize'],

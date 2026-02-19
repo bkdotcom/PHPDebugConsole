@@ -37,7 +37,7 @@ class Profile
      *
      * @param array $namespacesIgnore array of namespaces who's methods will be excluded from profile
      */
-    public function __construct($namespacesIgnore = array())
+    public function __construct(array $namespacesIgnore = array())
     {
         $namespacesIgnore = \array_merge([$this->namespace], (array) $namespacesIgnore);
         $namespacesIgnore = \array_unique($namespacesIgnore);

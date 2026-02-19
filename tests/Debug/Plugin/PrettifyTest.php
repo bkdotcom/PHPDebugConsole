@@ -104,8 +104,7 @@ WHERE·
       <return xsi:type="xsd:string"/>
     </mns:ProcessSRLResponse>
   </SOAP-ENV:Body>
-</SOAP-ENV:Envelope>
-';
+</SOAP-ENV:Envelope>';
         $xml = $this->debug->prettify(\str_replace("\n", '', $xmlExpect), 'application/xml');
         self::assertEquals(
             new Abstraction(Type::TYPE_STRING, array(

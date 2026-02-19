@@ -67,9 +67,11 @@ class MethodParams
      *
      * @return array
      */
-    public static function buildValues($values = array())
+    public static function buildValues(array $values = array())
     {
-        return \array_merge(static::$baseParamInfo, $values);
+        $values = \array_merge(static::$baseParamInfo, $values);
+        \ksort($values);
+        return $values;
     }
 
     /**

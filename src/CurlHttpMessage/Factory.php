@@ -45,7 +45,7 @@ class Factory
      *
      * @param array $factories factory definitions
      */
-    public function __construct($factories = array())
+    public function __construct(array $factories = array())
     {
         $this->factories = \array_merge(array(
             'curlReqRes' => [$this, 'buildCurlReqRes'],
@@ -82,7 +82,7 @@ class Factory
      *
      * @return CurlReqRes
      */
-    public function buildCurlReqRes(RequestInterface $request, $options = array())
+    public function buildCurlReqRes(RequestInterface $request, array $options = array())
     {
         $curlReqRes = new CurlReqRes($request, $this->factories['response']);
         $curlReqRes->setOptions($options);
@@ -100,7 +100,7 @@ class Factory
      *
      * @return Request
      */
-    public function buildRequest($method, $uri, $headers = array(), $body = null)
+    public function buildRequest($method, $uri, array $headers = array(), $body = null)
     {
         $request = new Request($method, $uri);
         $request = $this->withHeaders($request, $headers);
@@ -119,7 +119,7 @@ class Factory
      *
      * @return Response
      */
-    public function buildResponse($code = 200, $reasonPhrase = '', $headers = array(), $body = null)
+    public function buildResponse($code = 200, $reasonPhrase = '', array $headers = array(), $body = null)
     {
         $response = new Response($code, (string) $reasonPhrase);
         $response = $this->withHeaders($response, $headers);

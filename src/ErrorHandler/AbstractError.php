@@ -166,7 +166,7 @@ class AbstractError extends Event
     /**
      * {@inheritDoc}
      */
-    protected function onSet($values = array())
+    protected function onSet(array $values = array())
     {
         $this->values['category'] = $this->valCategory();
         $this->values['isHtml'] = $this->valIsHtml();

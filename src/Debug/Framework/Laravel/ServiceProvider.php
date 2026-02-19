@@ -18,10 +18,10 @@ use bdk\Debug\Framework\Laravel\EventsSubscriber;
 use bdk\Debug\Framework\Laravel\Middleware;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Utility\ArrayUtil;
-use bdk\Debug\Utility\TableRow;
 use bdk\ErrorHandler\Error;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
+use ReflectionClass;
 
 /**
  * PhpDebugConsole
@@ -105,19 +105,18 @@ class ServiceProvider extends BaseServiceProvider
             'nested' => false,
         );
         $debug = $this->debug->getChannel($channelKey, $channelOptions);
-        $tableInfoRows = array();
-        $modelCounts = $this->buildModelCountTable($tableInfoRows);
+        $modelCounts = $this->buildModelCountTable();
         $debug->table('Model Usage', $modelCounts, $debug->meta(array(
-            'columnNames' => array(
-                TableRow::INDEX => 'model',
-                TableRow::SCALAR => 'count',
+            'columnMeta' => array(
+                'model' => array(
+                    'attribs' => array(
+                        'scope' => 'row',
+                    ),
+                    'tagName' => 'th',
+                ),
             ),
-            'detectFiles' => true,
-            'sortable' => true,
-            'tableInfo' => array(
-                'rows' => $tableInfoRows,
-            ),
-            'totalCols' => [TableRow::SCALAR],
+            'inclIndex' => false,
+            'totalCols' => ['count'],
         )));
     }
 
@@ -137,25 +136,22 @@ class ServiceProvider extends BaseServiceProvider
     /**
      * Process the stored model counts for outputting as table
      *
-     * @param array $tableInfoRows gets updated with tableInfo.rows for table
-     *
      * @return array
      */
-    private function buildModelCountTable(&$tableInfoRows)
+    private function buildModelCountTable()
     {
         $modelCounts = array();
-        $tableInfoRows = array();
         foreach ($this->modelCounts as $class => $count) {
-            $ref = new \ReflectionClass($class);
-            $modelCounts[] = $count;
-            $tableInfoRows[] = array(
-                'key' => $this->debug->abstracter->crateWithVals($class, array(
+            $ref = new ReflectionClass($class);
+            $modelCounts[] = array(
+                'model' => $this->debug->abstracter->crateWithVals($class, array(
                     'attribs' => array(
                         'data-file' => $ref->getFileName(),
                     ),
                     'type' => Type::TYPE_IDENTIFIER,
                     'typeMore' => Type::TYPE_IDENTIFIER_CLASSNAME,
                 )),
+                'count' => $count,
             );
         }
         return $modelCounts;

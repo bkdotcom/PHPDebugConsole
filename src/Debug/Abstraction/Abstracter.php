@@ -17,6 +17,7 @@ use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\AbstractObject;
 use bdk\Debug\Abstraction\AbstractString;
 use bdk\Debug\Abstraction\Type;
+use SensitiveParameterValue;
 
 /**
  * Store array/object/resource info
@@ -63,6 +64,7 @@ class Abstracter extends AbstractComponent
         'brief' => false, // collect & output less details
                           //    see also AbstractObject::$cfgFlags where each key
                           //    can be set to true/false as a cfg value here
+        'detectFiles' => false,
         'fullyQualifyPhpDocType' => false,
         'interfacesCollapse' => [
             'ArrayAccess',
@@ -117,7 +119,7 @@ class Abstracter extends AbstractComponent
      * @param Debug               $debug debug instance
      * @param array<string,mixed> $cfg   config options
      */
-    public function __construct(Debug $debug, $cfg = array())
+    public function __construct(Debug $debug, array $cfg = array())
     {
         $this->debug = $debug;  // we need debug instance so we can bubble events up channels
         $this->cfg['objectsExclude'][] = __NAMESPACE__;
@@ -150,7 +152,7 @@ class Abstracter extends AbstractComponent
      *
      * @return mixed
      */
-    public function crate($mixed, $method = null, $hist = array())
+    public function crate($mixed, $method = null, array $hist = array())
     {
         $typeInfo = self::needsAbstraction($mixed);
         if (!$typeInfo) {
@@ -169,10 +171,10 @@ class Abstracter extends AbstractComponent
      *
      * @return Abstraction
      */
-    public function crateWithVals($mixed, $values = array())
+    public function crateWithVals($mixed, array $values = array())
     {
         /*
-            Note: this->crateValues is the raw values passed to this method
+            Note: this->crateVals is the raw values passed to this method
                the values may end up being processed in Abstraction::onSet
                ie, converting attribs.class to an array
         */
@@ -187,9 +189,17 @@ class Abstracter extends AbstractComponent
             ? \array_values($typeInfo)
             : array();
         unset($values['type']);
+        $cfgRestore = array();
+        if (isset($values['detectFiles'])) {
+            $cfgRestore['detectFiles'] = $this->abstractString->setCfg('detectFiles', $values['detectFiles']);
+            unset($values['detectFiles']);
+        }
         $abs = $this->getAbstraction($mixed, __FUNCTION__, $typeInfo);
         foreach ($values as $k => $v) {
             $abs[$k] = $v;
+        }
+        if ($cfgRestore) {
+            $this->debug->setCfg($cfgRestore, Debug::CONFIG_NO_RETURN);
         }
         $this->crateVals = array();
         return $abs;
@@ -217,7 +227,7 @@ class Abstracter extends AbstractComponent
      *
      * @SuppressWarnings(PHPMD.DevelopmentCodeFragment)
      */
-    public function getAbstraction($val, $method = null, $typeInfo = [], $hist = array())
+    public function getAbstraction($val, $method = null, array $typeInfo = [], array $hist = array())
     {
         list($type, $typeMore) = $typeInfo ?: $this->type->getType($val);
         switch ($type) {
@@ -228,7 +238,7 @@ class Abstracter extends AbstractComponent
             case Type::TYPE_FLOAT:
                 return $this->getAbstractionFloat($val, $typeMore);
             case Type::TYPE_OBJECT:
-                return $val instanceof \SensitiveParameterValue
+                return $val instanceof SensitiveParameterValue
                     ? $this->abstractString->getAbstraction(\call_user_func($this->debug->getPlugin('redaction')->getCfg('redactReplace'), 'redacted'))
                     : $this->abstractObject->getAbstraction($val, $method, $hist);
             case Type::TYPE_RESOURCE:
@@ -280,13 +290,10 @@ class Abstracter extends AbstractComponent
             return false;
         }
         list($type, $typeMore) = $this->type->getType($val);
-        if ($type === Type::TYPE_BOOL) {
+        if (\in_array($typeMore, [Type::TYPE_STRING_NUMERIC, 'false', 'true'], true)) {
             return false;
         }
-        if (\in_array($typeMore, [Type::TYPE_ABSTRACTION, Type::TYPE_STRING_NUMERIC], true)) {
-            return false;
-        }
-        return $typeMore
+        return $type === Type::TYPE_OBJECT || $typeMore !== null
             ? [$type, $typeMore]
             : false;
     }
@@ -317,7 +324,7 @@ class Abstracter extends AbstractComponent
     /**
      * {@inheritDoc}
      */
-    protected function postSetCfg($cfg = array(), $prev = array())
+    protected function postSetCfg(array $cfg = array(), array $prev = array())
     {
         $debugClass = \get_class($this->debug);
         if (!\array_intersect(['*', $debugClass], $this->cfg['objectsExclude'])) {

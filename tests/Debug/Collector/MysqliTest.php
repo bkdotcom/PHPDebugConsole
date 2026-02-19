@@ -359,13 +359,49 @@ EOD;
             "1": {
                 "method": "table",
                 "args": [
-                    [
-                        ["brad was here", "s"],
-                        ["%s", "s"],
-                        [42, "i"]
-                    ]
+                    {
+                        "caption": "parameters",
+                        "debug": "\u0000debug\u0000",
+                        "header": [ "", "value", "type" ],
+                        "meta": {
+                            "class": null,
+                            "columns": [
+                                {
+                                    "attribs": {
+                                        "class": [ "t_key" ],
+                                        "scope": "row"
+                                    },
+                                    "key": "\u0000index\u0000",
+                                    "tagName": "th"
+                                },
+                                { "key": "value" },
+                                { "key": "type" }
+                            ],
+                            "haveObjectRow": false,
+                            "sortable": true
+                        },
+                        "rows": [
+                            [
+                                0,
+                                "brad was here",
+                                "s"
+                            ],
+                            [
+                                1,
+                                "%s",
+                                "s"
+                            ],
+                            [
+                                2,
+                                42,
+                                "i"
+                            ]
+                        ],
+                        "type": "table",
+                        "value":  null
+                    }
                 ],
-                "meta": {"caption": "parameters", "channel": "general.mysqli", "sortable": true, "tableInfo": {"class": null, "columns": [{"key": "value"}, {"key": "type"} ], "haveObjRow": false, "indexLabel": null, "rows": [], "summary": "" } }
+                "meta": {"channel": "general.mysqli"}
             },
             "2": {
                 "method": "time",

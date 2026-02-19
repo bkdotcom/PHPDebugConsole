@@ -12,11 +12,13 @@ namespace bdk\Debug\Plugin\Method;
 
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
+use bdk\Debug\Abstraction\Abstraction;
+use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
 use bdk\Debug\Plugin\CustomMethodTrait;
-use bdk\Debug\Utility\Table as TableProcessor;
-use bdk\Debug\Utility\TableRow;
 use bdk\PubSub\SubscriberInterface;
+use bdk\Table\Factory as TableFactory;
+use bdk\Table\Table as BdkTable;
 
 /**
  * Table method
@@ -28,11 +30,25 @@ class Table implements SubscriberInterface
     /** @var LogEntry */
     private $logEntry;
 
+    /** @var array<string,string> */
+    private $tableMeta = [
+        'caption' => 'setter',
+        'columnLabels' => 'option', // key => label
+        'columnMeta' => 'option', // key => meta array
+        'columns' => 'option', // list of keys
+        'inclIndex' => 'option',
+        'sortable' => 'meta',
+        'totalCols' => 'option',
+    ];
+
     /** @var string[] */
     protected $methods = [
         'table',
         'doTable',
     ];
+
+    /** @var TableFactory */
+    protected $tableFactory;
 
     /**
      * Constructor
@@ -46,7 +62,7 @@ class Table implements SubscriberInterface
     /**
      * Output an array or object as a table
      *
-     * Accepts array of arrays or array of objects
+     * Accepts array/object of array/objects/values
      *
      * Parameters:
      *   1st encountered array (or traversable) is the data
@@ -68,7 +84,10 @@ class Table implements SubscriberInterface
         $logEntry = new LogEntry(
             $this->debug,
             __FUNCTION__,
-            \func_get_args()
+            \func_get_args(),
+            array(
+                'sortable' => true,
+            )
         );
         $this->doTable($logEntry);
         $this->debug->log($logEntry);
@@ -107,41 +126,88 @@ class Table implements SubscriberInterface
     }
 
     /**
+     * "getValInfo" callback used by TableFactory
+     *
+     * @param mixed $value Value to get type of
+     * @param bool  $isRow Does value represent a row
+     *
+     * @return array<string,mixed>
+     */
+    public function getValInfo($value, $isRow = false)
+    {
+        $type = $this->debug->abstracter->type->getType($value)[0];
+        $nonIterable = [
+            'UnitEnum',
+            'Closure',
+            'DateTime',
+            'DateTimeImmutable',
+        ];
+        $isIterable = true;
+        foreach ($nonIterable as $nonIterableType) {
+            if ($value instanceof $nonIterableType) {
+                $isIterable = false;
+                break;
+            }
+        }
+        return array(
+            'className' => $type === Type::TYPE_OBJECT
+                ? ($value instanceof Abstraction
+                    ? $value['className']
+                    : \get_class($value))
+                : null,
+            'iterable' => $isIterable,
+            'type' => $type,
+        );
+    }
+
+    /**
      * Process table log entry
      *
-     * @param LogEntry $logEntry log entry instance
+     * @param LogEntry $logEntry Log entry instance
      *
      * @return void
      */
     private function doTableLogEntry(LogEntry $logEntry)
     {
         $this->initLogEntry($logEntry);
-        $table = new TableProcessor(
+
+        $table = $this->getTableFactory()->create(
             isset($logEntry['args'][0])
                 ? $logEntry['args'][0]
                 : null,
-            \array_replace_recursive(array(
-                'columnNames' => array(
-                    TableRow::SCALAR => $this->debug->i18n->trans('word.value'),
-                ),
-            ), $logEntry['meta']),
-            $this->debug
+            $this->optionsFromLogEntry($logEntry)
         );
 
-        if ($table->haveRows()) {
-            $logEntry['args'] = [$table->getRows()];
-            $logEntry['meta'] = $table->getMeta();
+        if ($table->getRows()) {
+            $this->valsFromLogEntry($table, $logEntry);
+            $this->removeTableMetaFromLogEntry($logEntry);
+            $logEntry['args'] = [$table];
             return;
         }
 
-        // no data...  create log method logEntry instead
+        // no table rows...  create log method logEntry instead
         $logEntry['method'] = 'log';
         if ($logEntry->getMeta('caption')) {
             \array_unshift($logEntry['args'], $logEntry->getMeta('caption'));
         } elseif (\count($logEntry['args']) === 0) {
             $logEntry['args'] = [$this->debug->i18n->trans('method.table.no-args')];
         }
-        $logEntry['meta'] = $table->getMeta();
+        $this->removeTableMetaFromLogEntry($logEntry);
+    }
+
+    /**
+     * Get or create TableFactory instance
+     *
+     * @return TableFactory
+     */
+    private function getTableFactory()
+    {
+        if ($this->tableFactory === null) {
+            $this->tableFactory = new TableFactory(array(
+                'getValInfo' => [$this, 'getValInfo'],
+            ));
+        }
+        return $this->tableFactory;
     }
 
     /**
@@ -166,6 +232,64 @@ class Table implements SubscriberInterface
         }
         if ($logEntry['args'] === [] && $other !== Abstracter::UNDEFINED) {
             $logEntry['args'] = [$other];
+        }
+    }
+
+    /**
+     * Remove table related meta info from logEntry
+     *
+     * @param LogEntry $logEntry Log entry instance
+     *
+     * @return void
+     */
+    private function removeTableMetaFromLogEntry(LogEntry $logEntry)
+    {
+        foreach (\array_keys($this->tableMeta) as $key) {
+            $logEntry->setMeta($key, null);
+        }
+        $logEntry['meta'] = \array_filter($logEntry['meta'], static function ($val) {
+            return $val !== null;
+        });
+    }
+
+    /**
+     * Get table options from logEntry meta
+     *
+     * @param LogEntry $logEntry Log entry instance
+     *
+     * @return array<string,mixed>
+     */
+    private function optionsFromLogEntry(LogEntry $logEntry)
+    {
+        $keys = \array_keys($this->tableMeta, 'option', true);
+        $meta = \array_intersect_key($logEntry['meta'], \array_flip($keys));
+        return \array_replace_recursive(array(
+            'columnLabels' => array(
+                TableFactory::KEY_SCALAR => $this->debug->i18n->trans('word.value'),
+            ),
+        ), $meta);
+    }
+
+    /**
+     * Update table with values from logEntry meta
+     *
+     * @param BdkTable $table    Table instance
+     * @param LogEntry $logEntry Log entry instance
+     *
+     * @return void
+     */
+    private function valsFromLogEntry(BdkTable $table, LogEntry $logEntry)
+    {
+        $keys = \array_keys($this->tableMeta, 'setter', true);
+        foreach ($keys as $key) {
+            $val = $logEntry->getMeta($key);
+            $setter = 'set' . \ucfirst($key);
+            $table->$setter($val);
+        }
+        $keys = \array_keys($this->tableMeta, 'meta', true);
+        foreach ($keys as $key) {
+            $val = $logEntry->getMeta($key);
+            $table->setMeta($key, $val);
         }
     }
 

@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Framework\WordPress;
 
 use bdk\Debug;
+use bdk\Debug\Abstraction\Abstracter;
 use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
@@ -73,39 +74,86 @@ class HooksTest extends DebugTestFramework
             'method' => 'table',
             'args' => [
                 array(
-                    'bar' => [false, 1],
-                    'baz' => [false, 1],
-                    'dang' => [true, 1],
-                    'ding' => [true, 1],
-                    'dong' => [true, 1],
-                    'foo' => [false, 3],
+                    'caption' => 'Hooks',
+                    'debug' => Abstracter::ABSTRACTION,
+                    'footer' => [
+                        array(
+                            'html' => '',
+                            'value' => null,
+                        ),
+                        array(
+                            'html' => '',
+                            'value' => null,
+                        ),
+                        8,
+                    ],
+                    'header' => [
+                        '',
+                        'isFilter',
+                        'count',
+                    ],
+                    'meta' => array(
+                        'class' => null,
+                        'columns' => [
+                            array(
+                                'attribs' => array(
+                                    'class' => ['t_key'],
+                                    'scope' => 'row',
+                                ),
+                                'key' => \bdk\Table\Factory::KEY_INDEX,
+                                'tagName' => 'th',
+                            ),
+                            array(
+                                'attribs' => array(
+                                    'class' => ['text-center'],
+                                ),
+                                'falseAs' => '',
+                                'key' => 'isFilter',
+                                'trueAs' => '<i class="fa fa-check"></i>',
+                            ),
+                            array('key' => 'count'),
+                        ],
+                        'haveObjectRow' => false,
+                        'sortable' => true,
+                    ),
+                    'rows' => [
+                        [
+                            'bar',
+                            false,
+                            1,
+                        ],
+                        [
+                            'baz',
+                            false,
+                            1,
+                        ],
+                        [
+                            'dang',
+                            true,
+                            1,
+                        ],
+                        [
+                            'ding',
+                            true,
+                            1,
+                        ],
+                        [
+                            'dong',
+                            true,
+                            1,
+                        ],
+                        [
+                            'foo',
+                            false,
+                            3,
+                        ],
+                    ],
+                    'type' => 'table',
+                    'value' => null,
                 ),
             ],
             'meta' => array(
-                'caption' => 'Hooks',
                 'channel' => 'hooks',
-                'sortable' => true,
-                'tableInfo' => array(
-                    'class' => null,
-                    'columns' => [
-                        array(
-                            'attribs' => array(
-                                'class' => ['text-center'],
-                            ),
-                            'falseAs' => '',
-                            'key' => 'isFilter',
-                            'trueAs' => '<i class="fa fa-check"></i>',
-                        ),
-                        array(
-                            'key' => 'count',
-                            'total' => 8,
-                        ),
-                    ],
-                    'haveObjRow' => false,
-                    'indexLabel' => null,
-                    'rows' => array(),
-                    'summary' => '',
-                ),
             ),
         ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }

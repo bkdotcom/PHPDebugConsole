@@ -182,33 +182,45 @@ EOD;
                 'method' => 'table',
                 'args' => array(
                     array(
-                        ':datetime' => [
-                            $datetime,
-                            array(
-                                'backedValue' => 2,
-                                'debug' => Abstracter::ABSTRACTION,
-                                'type' => Type::TYPE_IDENTIFIER,
-                                'typeMore' => Type::TYPE_IDENTIFIER_CONST,
-                                'value' => 'PDO::PARAM_STR',
+                        'caption' => 'parameters',
+                        'debug' => Abstracter::ABSTRACTION,
+                        'header' => array('', 'value', 'type'),
+                        'meta' => array(
+                            'class' => null,
+                            'columns' => array(
+                                array(
+                                    'attribs' => array(
+                                        'class' => ['t_key'],
+                                        'scope' => 'row',
+                                    ),
+                                    'key' => \bdk\Table\Factory::KEY_INDEX,
+                                    'tagName' => 'th',
+                                ),
+                                array('key' => 'value'),
+                                array('key' => 'type'),
                             ),
+                            'haveObjectRow' => false,
+                            'sortable' => true,
+                        ),
+                        'rows' => [
+                            [
+                                ':datetime',
+                                $datetime,
+                                array(
+                                    'backedValue' => 2,
+                                    'debug' => Abstracter::ABSTRACTION,
+                                    'type' => Type::TYPE_IDENTIFIER,
+                                    'typeMore' => Type::TYPE_IDENTIFIER_CONST,
+                                    'value' => 'PDO::PARAM_STR',
+                                ),
+                            ],
                         ],
+                        'type' => 'table',
+                        'value' => null,
                     ),
                 ),
                 'meta' => array(
-                    'caption' => 'parameters',
                     'channel' => 'general.pdo',
-                    'sortable' => true,
-                    'tableInfo' => array(
-                        'class' => null,
-                        'columns' => array(
-                            array('key' => 'value'),
-                            array('key' => 'type'),
-                        ),
-                        'haveObjRow' => false,
-                        'indexLabel' => null,
-                        'rows' => array(),
-                        'summary' => '',
-                    ),
                 ),
             ),
             array(

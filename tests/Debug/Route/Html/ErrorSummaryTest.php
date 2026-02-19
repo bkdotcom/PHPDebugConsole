@@ -110,16 +110,35 @@ class ErrorSummaryTest extends DebugTestFramework
             <table class="table-bordered trace-context">
             <caption>trace</caption>
             <thead>
-            <tr><th>&nbsp;</th><th scope="col">file</th><th scope="col">line</th><th scope="col">function</th></tr>
+            <tr>
+                <th class="t_string" scope="col"></th>
+                <th class="t_string" scope="col">file</th>
+                <th class="t_string" scope="col">line</th>
+                <th class="t_string" scope="col">function</th>
+            </tr>
             </thead>
             <tbody>
-            <tr class="expanded" data-toggle="next"><th class="t_int t_key" scope="row">0</th><td class="no-quotes t_string" data-type-more="filepath"><span class="file-path-common">' . \dirname(__FILE__) . '/' . '</span><span class="file-basename">' . \basename(__FILE__) . '</span></td><td class="t_int">' . $line1 . '</td><td class="t_identifier" data-type-more="method"><span class="classname">Dingus</span><span class="t_operator">::</span><span class="t_name">Dongus()</span></td></tr>
-            <tr class="context" style="display:table-row;"><td colspan="4"><pre class="highlight line-numbers" data-line="%d" data-line-offset="%d" data-start="%d"><code class="language-php">%a
-            </code></pre></td></tr>
+            <tr class="expanded" data-toggle="next">
+                <th class="t_int t_key" scope="row">0</th>
+                <td class="no-quotes t_string" data-type-more="filepath"><span class="file-path-common">' . \dirname(__FILE__) . '/' . '</span><span class="file-basename">' . \basename(__FILE__) . '</span></td>
+                <td class="t_int">' . $line1 . '</td>
+                <td class="t_identifier" data-type-more="method"><span class="classname">Dingus</span><span class="t_operator">::</span><span class="t_name">Dongus()</span></td>
+            </tr>
+            <tr class="context" style="display:table-row;">
+                <td colspan="4"><pre class="highlight line-numbers" data-line="%d" data-line-offset="%d" data-start="%d"><code class="language-php">%a
+                </code></pre></td>
+            </tr>
 
-            <tr data-toggle="next"><th class="t_int t_key" scope="row">1</th><td class="no-quotes t_string" data-type-more="filepath"><span class="file-path-common">' . \dirname(__FILE__) . '/' . '</span><span class="file-basename">' . \basename(__FILE__) . '</span></td><td class="t_int">' . $line2 . '</td><td class="t_identifier" data-type-more="method"><span class="classname">Meow</span><span class="t_operator">::</span><span class="t_name">mix()</span></td></tr>
-            <tr class="context"><td colspan="4"><pre class="highlight line-numbers" data-line="%d" data-line-offset="%d" data-start="%d"><code class="language-php">%a
-            </code></pre></td></tr>
+            <tr data-toggle="next">
+                <th class="t_int t_key" scope="row">1</th>
+                <td class="no-quotes t_string" data-type-more="filepath"><span class="file-path-common">' . \dirname(__FILE__) . '/' . '</span><span class="file-basename">' . \basename(__FILE__) . '</span></td>
+                <td class="t_int">' . $line2 . '</td>
+                <td class="t_identifier" data-type-more="method"><span class="classname">Meow</span><span class="t_operator">::</span><span class="t_name">mix()</span></td>
+            </tr>
+            <tr class="context">
+                <td colspan="4"><pre class="highlight line-numbers" data-line="%d" data-line-offset="%d" data-start="%d"><code class="language-php">%a
+                </code></pre></td>
+            </tr>
 
             </tbody>
             </table>

@@ -141,7 +141,7 @@ class Prettify implements SubscriberInterface
                 $string = $this->debug->stringUtil->prettySql($string, $prettified);
                 break;
             case 'xml':
-                $string = $this->debug->stringUtil->prettyXml($string);
+                $string = \rtrim($this->debug->stringUtil->prettyXml($string));
                 $prettified = true;
         }
         $event['highlightLang'] = $lang;

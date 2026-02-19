@@ -296,89 +296,107 @@ class LogRequestTest extends DebugTestFramework
                 'method' => 'table',
                 'args' => [
                     array(
-                        'Authorization' => [ 'Basic █████████ (base64\'d fred:█████)' ],
-                        'X-Test' => [
-                            array(
-                                'attribs' => array(
-                                    'class' => ['text-left'],
-                                ),
-                                'brief' => false,
-                                'debug' => Abstracter::ABSTRACTION,
-                                // 'strlen' => 3,
-                                // 'strlenValue' => 3,
-                                'type' => Type::TYPE_STRING,
-                                'typeMore' => Type::TYPE_STRING_NUMERIC,
-                                'value' => '123',
-                            ),
+                        'caption' => 'request headers',
+                        'debug' => Abstracter::ABSTRACTION,
+                        'header' => [
+                            '',
+                            'value',
                         ],
+                        'meta' => array(
+                            'class' => null,
+                            'columns' => [
+                                array(
+                                    'attribs' => array(
+                                        'class' => ['t_key'],
+                                        'scope' => 'row',
+                                    ),
+                                    'key' => \bdk\Table\Factory::KEY_INDEX,
+                                    'tagName' => 'th',
+                                ),
+                                array('key' => \bdk\Table\Factory::KEY_SCALAR),
+                            ],
+                            'haveObjectRow' => false,
+                            'sortable' => true,
+                        ),
+                        'rows' => [
+                            [
+                                'Authorization',
+                                'Basic █████████ (base64\'d fred:█████)',
+                            ],
+                            [
+                                'X-Test',
+                                array(
+                                    'attribs' => array(
+                                        'class' => ['text-left'],
+                                    ),
+                                    'brief' => false,
+                                    'debug' => Abstracter::ABSTRACTION,
+                                    // 'strlen' => 3,
+                                    // 'strlenValue' => 3,
+                                    'type' => Type::TYPE_STRING,
+                                    'typeMore' => Type::TYPE_STRING_NUMERIC,
+                                    'value' => '123',
+                                ),
+                            ],
+                        ],
+                        'type' => 'table',
+                        'value' => null,
                     ),
                 ],
                 'meta' => array(
-                    'caption' => 'request headers',
                     'channel' => 'request-response',
-                    'sortable' => true,
-                    'tableInfo' => array(
-                        'class' => null,
-                        'columns' => array(
-                            array(
-                                'key' => 'value',
-                            ),
-                        ),
-                        'haveObjRow' => false,
-                        'indexLabel' => null,
-                        'rows' => array(
-                            'Authorization' => array(
-                                'isScalar' => true,
-                            ),
-                            'X-Test' => array(
-                                'isScalar' => true,
-                            ),
-                        ),
-                        'summary' => '',
-                    ),
                 ),
             ),
             array(
                 'method' => 'table',
                 'args' => [
                     array(
-                        'SESSIONID' => [
-                            array(
-                                'attribs' => array(
-                                    'class' => ['text-left'],
-                                ),
-                                'brief' => false,
-                                'debug' => Abstracter::ABSTRACTION,
-                                // 'strlen' => 3,
-                                // 'strlenValue' => 3,
-                                'type' => Type::TYPE_STRING,
-                                'typeMore' => Type::TYPE_STRING_NUMERIC,
-                                'value' => '123',
-                            ),
+                        'caption' => '$_COOKIE',
+                        'debug' => Abstracter::ABSTRACTION,
+                        'header' => [
+                            '',
+                            'value',
                         ],
+                        'meta' => array(
+                            'class' => null,
+                            'columns' => [
+                                array(
+                                    'attribs' => array(
+                                        'class' => ['t_key'],
+                                        'scope' => 'row',
+                                    ),
+                                    'key' => \bdk\Table\Factory::KEY_INDEX,
+                                    'tagName' => 'th',
+                                ),
+                                array('key' => \bdk\Table\Factory::KEY_SCALAR),
+                            ],
+                            'haveObjectRow' => false,
+                            'sortable' => true,
+                        ),
+                        'rows' => [
+                            [
+                                'SESSIONID',
+                                array(
+                                    'attribs' => array(
+                                        'class' => ['text-left'],
+                                    ),
+                                    'brief' => false,
+                                    'debug' => Abstracter::ABSTRACTION,
+                                    // 'strlen' => 3,
+                                    // 'strlenValue' => 3,
+                                    'type' => Type::TYPE_STRING,
+                                    'typeMore' => Type::TYPE_STRING_NUMERIC,
+                                    'value' => '123',
+                                ),
+                            ],
+                        ],
+                        'type' => 'table',
+                        'value' => null,
                     ),
                 ],
                 'meta' => array(
-                    'caption' => '$_COOKIE',
                     'channel' => 'request-response',
                     'redact' => true,
-                    'sortable' => true,
-                    'tableInfo' => array(
-                        'class' => null,
-                        'columns' => array(
-                            array(
-                                'key' => 'value',
-                            ),
-                        ),
-                        'haveObjRow' => false,
-                        'indexLabel' => null,
-                        'rows' => array(
-                            'SESSIONID' => array(
-                                'isScalar' => true,
-                            ),
-                        ),
-                        'summary' => '',
-                    ),
                 ),
             ),
             array(
@@ -402,6 +420,7 @@ class LogRequestTest extends DebugTestFramework
                 )],
                 'meta' => array(
                     'channel' => 'request-response',
+                    'detectFiles' => true,
                 ),
             ),
         );
@@ -502,8 +521,8 @@ class LogRequestTest extends DebugTestFramework
 
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
         self::assertCount(3, $logEntries);
-        self::assertSame('request headers', $logEntries[1]['meta']['caption']);
-        self::assertSame('$_COOKIE', $logEntries[2]['meta']['caption']);
+        self::assertSame('request headers', $logEntries[1]['args'][0]['caption']);
+        self::assertSame('$_COOKIE', $logEntries[2]['args'][0]['caption']);
     }
 
     public function testGetWithBody()
@@ -569,7 +588,8 @@ class LogRequestTest extends DebugTestFramework
         $logReqRes->logRequest();
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('log'));
         self::assertCount(2, $logEntries);
-        self::assertSame(array('SESSIONID'), \array_keys($logEntries[1]['args'][0]));
-        self::assertSame('$_COOKIE', $logEntries[1]['meta']['caption']);
+
+        self::assertSame('SESSIONID', $logEntries[1]['args'][0]['rows'][0][0]);
+        self::assertSame('$_COOKIE', $logEntries[1]['args'][0]['caption']);
     }
 }

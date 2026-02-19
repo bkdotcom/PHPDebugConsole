@@ -103,23 +103,24 @@ class General implements SubscriberInterface
     }
 
     /**
-     * Get dumper
+     * Get dumper from container
      *
-     * @param string $name      classname
-     * @param bool   $checkOnly (false) only check if initialized
+     * @param string      $name      classname
+     * @param string|null $route     (null) additional identifier to distinguish dumpers
+     * @param bool        $checkOnly (false) only check if initialized
      *
      * @return \bdk\Debug\Dump\Base|bool
      *
      * @psalm-return ($checkOnly is true ? bool : \bdk\Debug\Dump\Base)
      */
-    public function getDump($name, $checkOnly = false)
+    public function getDump($name, $route = null, $checkOnly = false)
     {
         /** @var \bdk\Debug\Dump\Base|bool */
-        return $this->getDumpRoute('dump', $name, $checkOnly);
+        return $this->getDumpRoute('dump', $name, $route, $checkOnly);
     }
 
     /**
-     * Get route
+     * Get route from container
      *
      * @param string $name      classname
      * @param bool   $checkOnly (false) only check if initialized
@@ -131,7 +132,7 @@ class General implements SubscriberInterface
     public function getRoute($name, $checkOnly = false)
     {
         /** @var \bdk\Debug\Route\RouteInterface|bool */
-        return $this->getDumpRoute('route', $name, $checkOnly);
+        return $this->getDumpRoute('route', $name, null, $checkOnly);
     }
 
     /**
@@ -207,19 +208,20 @@ class General implements SubscriberInterface
     }
 
     /**
-     * Get Dump or Route instance
+     * Get Dump or Route instance from container
      *
      * @param 'dump'|'route' $cat       "Category" (dump or route)
-     * @param string         $name      html, text, etc)
+     * @param string         $name      base, html, text, etc
+     * @param string|null    $nameMore  additional identifier to distinguish dumpers
      * @param bool           $checkOnly Only check if initialized?
      *
      * @return \bdk\Debug\Dump\Base|RouteInterface|bool
      *
      * @psalm-return ($checkOnly is true ? bool : \bdk\Debug\Dump\Base|RouteInterface)
      */
-    private function getDumpRoute($cat, $name, $checkOnly)
+    private function getDumpRoute($cat, $name, $nameMore = null, $checkOnly = false)
     {
-        $property = $cat . \ucfirst($name);
+        $property = $cat . \ucfirst($name) . ($nameMore ? \ucfirst($nameMore) : '');
         $isDefined = isset($this->debug->{$property});
         if ($checkOnly) {
             return $isDefined;
@@ -252,8 +254,8 @@ class General implements SubscriberInterface
     private function getDumpRouteInit($property, $classname)
     {
         /** @var \bdk\Debug\Dump\Base|RouteInterface */
-        $val = $this->debug->container->getObject($classname);
-        $this->debug->container->addAlias($property, $classname);
+        $val = $this->debug->container->getObject($classname, false);
+        $this->debug->container[$property] = $val;
         if ($val instanceof ConfigurableInterface) {
             $cfg = $this->debug->getCfg($property, Debug::CONFIG_INIT);
             $val->setCfg($cfg);

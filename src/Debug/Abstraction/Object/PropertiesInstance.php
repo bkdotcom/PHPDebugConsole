@@ -32,9 +32,6 @@ class PropertiesInstance extends Properties
      */
     public function add(Abstraction $abs)
     {
-        if ($abs['isTraverseOnly']) {
-            return;
-        }
         $abs['isLazy']
             ? $this->addValuesLazy($abs)
             : $this->addValues($abs);

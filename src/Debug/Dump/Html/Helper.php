@@ -13,7 +13,6 @@ namespace bdk\Debug\Dump\Html;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\Dump\Html as Dumper;
-use bdk\Debug\LogEntry;
 
 /**
  * Html dump helper methods
@@ -38,35 +37,7 @@ class Helper
     {
         $this->debug = $dumper->debug;
         $this->dumper = $dumper;
-        $this->html = $dumper->debug->html;
-    }
-
-    /**
-     * Move context info from meta to table rows
-     *
-     * @param LogEntry $logEntry LogEntry instance
-     *
-     * @return void
-     */
-    public function addContextRows(LogEntry $logEntry)
-    {
-        $rowsInfo = $logEntry['meta']['tableInfo']['rows'];
-        $rowsNew = [];
-        $rowsInfoNew = [];
-        foreach ($logEntry['args'][0] as $i => $row) {
-            $rowsNew[$i] = $row;
-            $rowsInfoNew[$i] = $rowsInfo[$i];
-            if (isset($rowsInfo[$i]['context']) === false) {
-                continue;
-            }
-
-            $displayContext = $i === 0;
-            $rowsNew[$i . '_context'] = [$this->buildContextCell($rowsInfoNew[$i], $row[1])];
-
-            list($rowsInfoNew[$i], $rowsInfoNew[$i . '_context']) = $this->contextRowInfo($rowsInfoNew[$i], $displayContext);
-        }
-        $logEntry['args'] = [$rowsNew];
-        $logEntry['meta']['tableInfo']['rows'] = $rowsInfoNew;
+        $this->html = $this->debug->html;
     }
 
     /**
@@ -118,25 +89,6 @@ class Helper
                 . \htmlspecialchars(\implode($lines))
                 . '</code>'
         );
-    }
-
-    /**
-     * Build context + arguments cell data
-     *
-     * @param array $rowInfo    row meta information
-     * @param int   $lineNumber line number to highlight
-     *
-     * @return Abstraction
-     */
-    public function buildContextCell(array $rowInfo, $lineNumber)
-    {
-        $innerHtml = $this->buildContext($rowInfo['context'], $lineNumber)
-            . $this->buildContextArguments($rowInfo['args']);
-        return $this->debug->abstracter->crateWithVals($innerHtml, array(
-            'dumpType' => false, // don't add t_string css class
-            'sanitize' => false,
-            'visualWhiteSpace' => false,
-        ));
     }
 
     /**
@@ -220,65 +172,6 @@ class Helper
                 'visualWhiteSpace' => $i !== 0 || $type !== Type::TYPE_STRING,
             ));
         }, $args, \array_keys($args));
-    }
-
-    /**
-     * Dump context arguments
-     *
-     * @param string|array $args Arguments from backtrace
-     *
-     * @return string
-     */
-    private function buildContextArguments($args)
-    {
-        if (\is_array($args) === false || \count($args) === 0) {
-            return '';
-        }
-        $crateRawWas = $this->dumper->crateRaw;
-        $this->dumper->crateRaw = true;
-        // set maxDepth for args
-        $maxDepthBak = $this->debug->getCfg('maxDepth');
-        if ($maxDepthBak > 0) {
-            $this->debug->setCfg('maxDepth', $maxDepthBak + 1, Debug::CONFIG_NO_PUBLISH);
-        }
-        $args = '<hr />Arguments = ' . $this->dumper->valDumper->dump($args);
-        $this->debug->setCfg('maxDepth', $maxDepthBak, Debug::CONFIG_NO_PUBLISH | Debug::CONFIG_NO_RETURN);
-        $this->dumper->crateRaw = $crateRawWas;
-        return $args;
-    }
-
-    /**
-     * Build context row's info
-     *
-     * @param array $rowInfo        row info
-     * @param bool  $displayContext whether context should be initially expanded
-     *
-     * @return array rowInfo and contextRowInfo
-     */
-    private function contextRowInfo(array $rowInfo, $displayContext = true)
-    {
-        unset($rowInfo['context']);
-        unset($rowInfo['args']);
-        $rowInfo['attribs']['class']['expanded'] = $displayContext;
-        $rowInfo['attribs']['data-toggle'] = 'next';
-        $rowInfo['columns'][0]['attribs']['class'][] = 'no-quotes'; // no quotes on filepath
-
-        $rowInfoContext = array(
-            'attribs' => array(
-                'class' => ['context'],
-                'style' => $displayContext ? 'display:table-row;' : null,
-            ),
-            'columns' => [
-                array(
-                    'attribs' => array(
-                        'colspan' => 4,
-                    ),
-                ),
-            ],
-            'keyOutput' => false,
-        );
-
-        return [$rowInfo, $rowInfoContext];
     }
 
     /**

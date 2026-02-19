@@ -284,7 +284,7 @@ class Group implements SubscriberInterface
      *
      * @return array
      */
-    private function autoArgs($caller = array())
+    private function autoArgs(array $caller = array())
     {
         $args = array();
         if (isset($caller['function']) === false) {

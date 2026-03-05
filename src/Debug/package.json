@@ -31,7 +31,7 @@
     "@babel/preset-env": "^7.27.2",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-replace": "^6.0.1",
-    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-terser": "^1.0.0",
     "babel-jest": "^29.7.0",
     "eslint": "^9.27.0",
     "eslint-plugin-import": "^2.22.0",

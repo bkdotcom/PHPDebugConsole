@@ -153,7 +153,7 @@ class Methods extends AbstractSection
         return $this->html->buildTag(
             'span',
             $attribs,
-            (!empty($info['type'])
+            (isset($info['type']['php']) || isset($info['type']['phpDoc'])
                 ? $this->helper->markupType($info['type']) . ' '
                 : '')
                 . $this->dumpParamName($info)
@@ -220,7 +220,7 @@ class Methods extends AbstractSection
      */
     protected function dumpReturnType(array $info)
     {
-        if ($info['return']['type'] === null) {
+        if (!isset($info['return']['type']['php']) && !isset($info['return']['type']['phpDoc'])) {
             return '';
         }
         return '<span class="t_punct t_colon">:</span> '

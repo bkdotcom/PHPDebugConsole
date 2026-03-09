@@ -124,23 +124,30 @@ class Helper
     /**
      * Markup type-hint / type declaration
      *
-     * @param string $type    type declaration
-     * @param array  $attribs (optional) additional html attributes
+     * @param array $typeInfo Type info
+     * @param array $attribs  (optional) additional html attributes
      *
      * @return string
      */
-    public function markupType($type, array $attribs = array())
+    public function markupType($typeInfo, array $attribs = array())
     {
+        if (\is_array($typeInfo) === false) {
+            $typeInfo = array(
+                'allowsNull' => null,
+                'php' => $typeInfo,
+                'phpDoc' => null,
+            );
+        }
         $regex = '/(?:
             (\$this|[-\w\[\]\'"\\\\]+:?)
             |
-            ([\(\)<>\{\},\|&])
+            ([\(\)<>\{\},\|&?])
             )/x';
         $type = \preg_replace_callback($regex, function ($matches) {
             return $matches[1] !== ''
                 ? $this->markupTypePart($matches[1])
                 : $this->html->buildTag('span', array('class' => 't_punct'), \htmlspecialchars($matches[2]));
-        }, $type);
+        }, $typeInfo['phpDoc'] ?: $typeInfo['php']);
         $attribs = \array_filter($attribs);
         if ($attribs) {
             $type = $this->html->buildTag('span', $attribs, $type);

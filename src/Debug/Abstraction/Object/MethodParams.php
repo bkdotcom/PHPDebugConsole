@@ -43,7 +43,11 @@ class MethodParams
         'isPromoted' => false,
         'isVariadic' => false,
         'name' => '',
-        'type' => null,
+        'type' => array(
+            'allowsNull' => null,
+            'php' => null,
+            'phpDoc' => null,
+        ),
     );
 
     /** @var array<string,array> */
@@ -109,7 +113,7 @@ class MethodParams
                 'isOptional' => true,
                 'isVariadic' => $phpDocParam['isVariadic'],
                 'name' => $phpDocParam['name'],
-                'type' => $phpDocParam['type'],
+                'type' => $this->helper->getType(null, $phpDocParam['type']),
             ));
         }
         $this->abs = null;
@@ -132,7 +136,7 @@ class MethodParams
             return $this->buildValues(array(
                 'defaultValue' => $this->phpDocParamValue($phpDocParam, $className),
                 'name' => $phpDocParam['name'],
-                'type' => $phpDocParam['type'],
+                'type' => $this->helper->getType(null, $phpDocParam['type']),
             ));
         }, $parsedMethodTag['param']);
     }
@@ -161,7 +165,7 @@ class MethodParams
                 ? $refParam->isVariadic() || $phpDocParam['isVariadic']
                 : $phpDocParam['isVariadic'],
             'name' => $name,
-            'type' => $this->helper->getType($phpDocParam['type'], $refParam),
+            'type' => $this->helper->getType($refParam, $phpDocParam['type']),
         ));
     }
 

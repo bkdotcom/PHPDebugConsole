@@ -50,7 +50,11 @@ class Methods extends AbstractInheritable
         ),
         'return' => array(
             'desc' => '',
-            'type' => null,
+            'type' => array(
+                'allowsNull' => null,
+                'php' => null,
+                'phpDoc' => null,
+            ),
         ),
         'staticVars' => array(),
         'visibility' => 'public',  // public | private | protected | magic
@@ -252,7 +256,7 @@ class Methods extends AbstractInheritable
             ),
             'return' => array(
                 'desc' => '',
-                'type' => $phpDoc['type'],
+                'type' => $this->helper->getType(null, $phpDoc['type']),
             ),
             'visibility' => 'magic',
         ));
@@ -372,7 +376,7 @@ class Methods extends AbstractInheritable
             'phpDoc' => \array_diff_key($phpDoc, \array_flip(['param', 'return'])),
             'return' => array(
                 'desc' => $returnTag['desc'],
-                'type' => $this->helper->getType($returnTag['type'], $refMethod),
+                'type' => $this->helper->getType($refMethod, $returnTag['type']),
             ),
             'visibility' => $this->getVisibility($refMethod),
         ));

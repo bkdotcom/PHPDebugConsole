@@ -768,7 +768,11 @@ EOD;
                                     ? 'Interface summary'
                                     : '',
                             ),
-                            'type' => null,
+                            'type' => array(
+                                'allowsNull' => false,
+                                'php' => null,
+                                'phpDoc' => null,
+                            ),
                             'value' => 'never change',
                             'visibility' => 'public',
                         ), $abs['constants']['SOME_CONSTANT']);
@@ -838,8 +842,33 @@ EOD;
                 ),
             ),
 
+            // php 7.1
+            'php7.1_nullableTypes' => array(
+                'log',
+                array(
+                    PHP_VERSION_ID >= 70100
+                        ? new \bdk\Test\Debug\Fixture\Php71()
+                        : null,
+                ),
+                array(
+                    'entry' => static function (LogEntry $logEntry) {
+                        $expect = require __DIR__ . '/../data/Php71.php';
+                        $actual = Helper::deObjectifyData($logEntry['args'][0]->getValues(), true, false, true);
+                        // \bdk\Debug::varDump('expect', $expect);
+                        // \bdk\Debug::varDump('actual', $actual);
+                        self::assertSame($expect, $actual);
+                    },
+                    'html' => static function ($html) {
+                        $expect = \file_get_contents(__DIR__ . '/../data/Php71.html');
+                        // echo 'expect: ' . $expect . "\n\n";
+                        // echo 'actual: ' . $html . "\n\n";
+                        self::assertStringMatchesFormatNormalized($expect, $html);
+                    },
+                ),
+            ),
+
             // php 8.4+
-            'propertyAsymVisibility' => array(
+            'php8.4_propertyAsymVisibility' => array(
                 'log',
                 array(
                     PHP_VERSION_ID >= 80400
@@ -864,7 +893,7 @@ EOD;
             ),
 
             // php 8.4+
-            'propertyHooks' => array(
+            'php8.4_propertyHooks' => array(
                 'log',
                 array(
                     PHP_VERSION_ID >= 80400
@@ -1061,8 +1090,11 @@ EOD;
             ),
         );
 
+        if (PHP_VERSION_ID < 70100) {
+            unset($tests['php7.1_nullableTypes']);
+        }
         if (PHP_VERSION_ID < 80400) {
-            unset($tests['propertyAsymVisibility'], $tests['propertyHooks']);
+            unset($tests['php8.4_propertyAsymVisibility'], $tests['php8.4_propertyHooks']);
         }
 
         // $tests = \array_intersect_key($tests, \array_flip(array('propertyHooks')));
@@ -1134,7 +1166,11 @@ EOD;
                         ? 'Inherited description'
                         : '',
                 ),
-                'type' => null,
+                'type' => array(
+                    'allowsNull' => false,
+                    'php' => null,
+                    'phpDoc' => null,
+                ),
                 'value' => 'defined in TestBase',
                 'visibility' => 'public',
             ),
@@ -1155,7 +1191,11 @@ EOD;
                         ? 'constant documentation'
                         : '',
                 ),
-                'type' => null,
+                'type' => array(
+                    'allowsNull' => false,
+                    'php' => null,
+                    'phpDoc' => null,
+                ),
                 'value' => 'redefined in Test',
                 'visibility' => 'public',
             ),
@@ -1290,7 +1330,11 @@ EOD;
                         'isPromoted' => false,
                         'isVariadic' => false,
                         'name' => 'param1',
-                        'type' => 'stdClass',
+                        'type' => array(
+                            'allowsNull' => false,
+                            'php' => 'stdClass',
+                            'phpDoc' => 'stdClass',
+                        ),
                     ),
                     array(
                         'attributes' => array(),
@@ -1301,7 +1345,11 @@ EOD;
                         'isPromoted' => false,
                         'isVariadic' => false,
                         'name' => 'param2',
-                        'type' => 'array',
+                        'type' => array(
+                            'allowsNull' => false,
+                            'php' => 'array',
+                            'phpDoc' => 'array',
+                        ),
                     ),
                 ),
                 'phpDoc' => array(
@@ -1316,7 +1364,11 @@ EOD;
                 ),
                 'return' => array(
                     'desc' => '',
-                    'type' => 'void',
+                    'type' => array(
+                        'allowsNull' => false,
+                        'php' => null,
+                        'phpDoc' => 'void',
+                    ),
                 ),
                 // 'staticVars' => array()
                 'visibility' => 'public',
@@ -2033,7 +2085,11 @@ EOD;
             'isPromoted' => false,
             'isVariadic' => true,
             'name' => 'moreParams',
-            'type' => 'mixed',
+            'type' => array(
+                'allowsNull' => true,
+                'php' => null,
+                'phpDoc' => 'mixed',
+            ),
         ), $abs['methods']['methodVariadic']['params'][1]);
     }
 
@@ -2056,7 +2112,11 @@ EOD;
             'isPromoted' => false,
             'isVariadic' => true,
             'name' => 'moreParams',
-            'type' => 'mixed',
+            'type' => array(
+                'allowsNull' => true,
+                'php' => null,
+                'phpDoc' => 'mixed',
+            ),
         ), $abs['methods']['methodVariadicByReference']['params'][1]);
     }
 

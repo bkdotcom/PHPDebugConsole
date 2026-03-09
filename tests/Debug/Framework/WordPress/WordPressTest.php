@@ -183,7 +183,7 @@ class WordPressTest extends DebugTestFramework
                         'debug' => Abstracter::ABSTRACTION,
                         'prettified' => true,
                         'prettifiedTag' => false,
-                        'type' => 'string',
+                        'type' => Type::TYPE_STRING,
                         'typeMore' => null,
                         'value' => 'SELECT ' . "\n"
                             . '  * ' . "\n"
@@ -229,7 +229,11 @@ class WordPressTest extends DebugTestFramework
                                     'desc' => '',
                                     'summary' => '',
                                 ),
-                                'type' => null,
+                                'type' => array(
+                                    'allowsNull' => true,
+                                    'php' => null,
+                                    'phpDoc' => null,
+                                ),
                                 'value' => 'post',
                                 'valueFrom' => 'value',
                                 'visibility' => ['public'],

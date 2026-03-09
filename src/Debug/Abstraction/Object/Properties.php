@@ -48,7 +48,11 @@ class Properties extends AbstractInheritable
             'desc' => '',
             'summary' => '',
         ),
-        'type' => null,
+        'type' => array(
+            'allowsNull' => null,
+            'php' => null,
+            'phpDoc' => null,
+        ),
         'value' => Abstracter::UNDEFINED,
         'valueFrom' => 'value',         // 'value' | 'debugInfo' | 'debug'
         'visibility' => ['public'],     // array
@@ -112,7 +116,11 @@ class Properties extends AbstractInheritable
     {
         $properties = $abs['properties'];
         $properties['debug.file'] = $this->buildValues(array(
-            'type' => Type::TYPE_STRING,
+            'type' => array(
+                'allowsNull' => false,
+                'php' => Type::TYPE_STRING,
+                'phpDoc' => null,
+            ),
             'value' => $this->abstracter->crateWithVals($abs['definition']['fileName'], array(
                 'type' => Type::TYPE_STRING,
                 'typeMore' => Type::TYPE_STRING_FILEPATH,
@@ -121,7 +129,11 @@ class Properties extends AbstractInheritable
             'visibility' => ['debug'],
         ));
         $properties['debug.line'] = $this->buildValues(array(
-            'type' => Type::TYPE_INT,
+            'type' => array(
+                'allowsNull' => false,
+                'php' => Type::TYPE_INT,
+                'phpDoc' => null,
+            ),
             'value' => (int) $abs['definition']['startLine'],
             'valueFrom' => 'debug',
             'visibility' => ['debug'],
@@ -197,7 +209,7 @@ class Properties extends AbstractInheritable
             'isStatic' => $refProperty->isStatic(),
             'isVirtual' => PHP_VERSION_ID >= 80400 && $refProperty->isVirtual(), // at least one hook and none of the hooks reference the property
             'phpDoc' => $phpDoc,
-            'type' => $this->helper->getType($phpDoc['type'], $refProperty),
+            'type' => $this->helper->getType($refProperty, $phpDoc['type']),
             'visibility' => $this->getVisibility($refProperty),
         ));
     }

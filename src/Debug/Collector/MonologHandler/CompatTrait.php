@@ -21,7 +21,7 @@ $refMethod = $refClass->getMethod('handle');
 
 if (\method_exists($refMethod, 'hasReturnType') && $refMethod->hasReturnType()) {
     $refParam = $refMethod->getParameters()[0];
-    $type = ObjectHelper::getType(null, $refParam);
+    $type = ObjectHelper::getType($refParam, null)['php'];
     require $type === 'array'
         ? __DIR__ . '/CompatTrait_2.0.php'
         : __DIR__ . '/CompatTrait_3.0.php';

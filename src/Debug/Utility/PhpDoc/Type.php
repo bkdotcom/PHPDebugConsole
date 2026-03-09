@@ -32,7 +32,7 @@ class Type
     }
 
     /**
-     * Convert "self[]|null" to array
+     * Normalize type-hint
      *
      * @param string $type             type hint
      * @param string $className        Classname where element is defined

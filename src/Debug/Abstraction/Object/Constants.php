@@ -46,7 +46,11 @@ class Constants extends AbstractInheritable
             'desc' => '',
             'summary' => '',
         ),
-        'type' => null,
+        'type' => array(
+            'allowsNull' => null,
+            'php' => null,
+            'phpDoc' => null,
+        ),
         'value' => null,
         'visibility' => 'public',
     );
@@ -193,7 +197,7 @@ class Constants extends AbstractInheritable
             $value = $this->abstracter->crate($value, $this->abs['debugMethod']);
         }
         $phpDoc = $this->helper->getPhpDocVar($refConstant, $this->abs['fullyQualifyPhpDocType']);
-        $type = $this->helper->getType($phpDoc['type'], $refConstant);
+        $type = $this->helper->getType($refConstant, $phpDoc['type']);
         unset($phpDoc['type']);
         return static::buildValues(array(
             'attributes' => $this->attributeCollect

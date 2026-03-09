@@ -47,7 +47,11 @@ return array(
                     : '',
             ),
             'type' => PHP_VERSION_ID >= 70100
-                ? Type::TYPE_STRING
+                ? array(
+                    'allowsNull' => false,
+                    'php' => null,
+                    'phpDoc' => Type::TYPE_STRING,
+                )
                 : null,
             'value' => 'fσo',
             'visibility' => 'public',
@@ -103,7 +107,11 @@ return array(
                     'isPromoted' => false,
                     'isVariadic' => false,
                     'name' => 'method',
-                    'type' => 'string',
+                    'type' => array(
+                        'allowsNull' => false,
+                        'php' => null,
+                        'phpDoc' => 'string',
+                    ),
                 ),
                 array(
                     'attributes' => array(),
@@ -114,7 +122,11 @@ return array(
                     'isPromoted' => false,
                     'isVariadic' => false,
                     'name' => 'args',
-                    'type' => 'array',
+                    'type' => array(
+                        'allowsNull' => false,
+                        'php' => 'array',
+                        'phpDoc' => 'array',
+                    ),
                 ),
             ),
             'phpDoc' => array(
@@ -129,7 +141,11 @@ return array(
             ),
             'return' => array(
                 'desc' => '',
-                'type' => 'mixed',
+                'type' => array(
+                    'allowsNull' => true,
+                    'php' => null,
+                    'phpDoc' => 'mixed',
+                ),
             ),
             'staticVars' => array(),
             'visibility' => 'public',
@@ -154,7 +170,11 @@ return array(
                     'isPromoted' => false,
                     'isVariadic' => false,
                     'name' => 'property',
-                    'type' => null,
+                    'type' => array(
+                        'allowsNull' => true,
+                        'php' => null,
+                        'phpDoc' => null,
+                    ),
                 ),
                 array(
                     'attributes' => array(),
@@ -165,7 +185,11 @@ return array(
                     'isPromoted' => false,
                     'isVariadic' => false,
                     'name' => 'value',
-                    'type' => null,
+                    'type' => array(
+                        'allowsNull' => true,
+                        'php' => null,
+                        'phpDoc' => null,
+                    ),
                 ),
             ),
             'phpDoc' => array(
@@ -174,7 +198,11 @@ return array(
             ),
             'return' => array(
                 'desc' => '',
-                'type' => null,
+                'type' => array(
+                    'allowsNull' => true,
+                    'php' => null,
+                    'phpDoc' => null,
+                ),
             ),
             'staticVars' => array(),
             'visibility' => 'public',
@@ -199,7 +227,11 @@ return array(
             ),
             'return' => array(
                 'desc' => '<b>happy</b> [һ]appy',
-                'type' => Type::TYPE_STRING,
+                'type' => array(
+                    'allowsNull' => false,
+                    'php' => Type::TYPE_STRING,
+                    'phpDoc' => Type::TYPE_STRING,
+                ),
             ),
             'returnValue' => 'Thiꮪ <b>is</b> a string',
             'staticVars' => array(),
@@ -222,7 +254,11 @@ return array(
             ),
             'return' => array(
                 'desc' => '',
-                'type' => null,
+                'type' => array(
+                    'allowsNull' => true,
+                    'php' => null,
+                    'phpDoc' => null,
+                ),
             ),
             'staticVars' => array(),
             'visibility' => 'public',
@@ -244,7 +280,11 @@ return array(
             ),
             'return' => array(
                 'desc' => '',
-                'type' => null,
+                'type' => array(
+                    'allowsNull' => true,
+                    'php' => null,
+                    'phpDoc' => null,
+                ),
             ),
             'staticVars' => array(),
             'visibility' => 'public',
@@ -269,7 +309,11 @@ return array(
                     'isPromoted' => false,
                     'isVariadic' => false,
                     'name' => '𝕡аram',
-                    'type' => Type::TYPE_STRING,
+                    'type' => array(
+                        'allowsNull' => false,
+                        'php' => null,
+                        'phpDoc' => Type::TYPE_STRING,
+                    ),
                 ),
                 array(
                     'attributes' => array(),
@@ -280,7 +324,11 @@ return array(
                     'isPromoted' => false,
                     'isVariadic' => false,
                     'name' => 'int',
-                    'type' => Type::TYPE_INT,
+                    'type' => array(
+                        'allowsNull' => false,
+                        'php' => null,
+                        'phpDoc' => Type::TYPE_INT,
+                    ),
                 ),
                 array(
                     'attributes' => array(),
@@ -291,7 +339,11 @@ return array(
                     'isPromoted' => false,
                     'isVariadic' => false,
                     'name' => 'bool',
-                    'type' => null,
+                    'type' => array(
+                        'allowsNull' => null,
+                        'php' => null,
+                        'phpDoc' => null,
+                    ),
                 ),
                 array(
                     'attributes' => array(),
@@ -302,7 +354,11 @@ return array(
                     'isPromoted' => false,
                     'isVariadic' => false,
                     'name' => 'null',
-                    'type' => null,
+                    'type' => array(
+                        'allowsNull' => null,
+                        'php' => null,
+                        'phpDoc' => null,
+                    ),
                 ),
                 array(
                     'attributes' => array(),
@@ -313,7 +369,11 @@ return array(
                     'isPromoted' => false,
                     'isVariadic' => false,
                     'name' => 'arr',
-                    'type' => null,
+                    'type' => array(
+                        'allowsNull' => null,
+                        'php' => null,
+                        'phpDoc' => null,
+                    ),
                 ),
                 array(
                     'attributes' => array(),
@@ -330,7 +390,11 @@ return array(
                     'isPromoted' => false,
                     'isVariadic' => false,
                     'name' => 'const',
-                    'type' => null,
+                    'type' => array(
+                        'allowsNull' => null,
+                        'php' => null,
+                        'phpDoc' => null,
+                    ),
                 ),
             ),
             'phpDoc' => array(
@@ -339,7 +403,11 @@ return array(
             ),
             'return' => array(
                 'desc' => '',
-                'type' => Type::TYPE_BOOL,
+                'type' => array(
+                    'allowsNull' => false,
+                    'php' => null,
+                    'phpDoc' => Type::TYPE_BOOL,
+                ),
             ),
             'staticVars' => array(),
             'visibility' => 'magic',
@@ -382,7 +450,11 @@ return array(
                     'isPromoted' => false,
                     'isVariadic' => false,
                     'name' => '𝕡aram',
-                    'type' => null,
+                    'type' => array(
+                        'allowsNull' => true,
+                        'php' => null,
+                        'phpDoc' => null,
+                    ),
                 ),
             ),
             'phpDoc' => array(
@@ -408,7 +480,11 @@ return array(
             ),
             'return' => array(
                 'desc' => '',
-                'type' => Type::TYPE_BOOL,
+                'type' => array(
+                    'allowsNull' => false,
+                    'php' => null,
+                    'phpDoc' => Type::TYPE_BOOL,
+                ),
             ),
             'staticVars' => array(),
             'visibility' => 'public',
@@ -463,7 +539,11 @@ return array(
                 'desc' => '',
                 'summary' => 'key =&gt; value array',
             ),
-            'type' => 'array<string,mixed>',
+            'type' => array(
+                'allowsNull' => false,
+                'php' => null,
+                'phpDoc' => 'array<string,mixed>',
+            ),
             'value' => array(
                 'debug' =>  Abstracter::ABSTRACTION,
                 'keys' => array(
@@ -523,7 +603,11 @@ return array(
                 'desc' => '',
                 'summary' => '[Ⲣ]roperty <b>desc</b>',
             ),
-            'type' => Type::TYPE_STRING,
+            'type' => array(
+                'allowsNull' => false,
+                'php' => null,
+                'phpDoc' => Type::TYPE_STRING,
+            ),
             'value' => 'moun𝐭ain',
             'valueFrom' => 'value',
             'visibility' => ['public'],

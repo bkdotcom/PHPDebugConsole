@@ -140,7 +140,7 @@ class PropertiesPhpDoc
                         ? $phpDocProp['desc']
                         : '',
                 ),
-                'type' => $phpDocProp['type'],
+                'type' => $this->helper->getType(null, $phpDocProp['type']),
                 'visibility' => $existing
                     ? \array_merge((array) $vis, (array) $existing['visibility']) // we want "magic" visibility first
                     : (array) $vis,

@@ -136,7 +136,7 @@ abstract class AbstractSection
             : '=';
         $parts = \array_filter(array(
             '1_modifiers' => $this->dumpModifiers($info, $cfg),
-            '2_type' => isset($info['type'])
+            '2_type' => isset($info['type']['php']) || isset($info['type']['phpDoc'])
                 ? $this->helper->markupType($info['type'])
                 : '',
             '3_name' => $this->dumpName($name, $info, $cfg),

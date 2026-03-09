@@ -182,7 +182,11 @@ class GroupTest extends DebugTestFramework
             ),
             'return' => array(
                 'desc' => '',
-                'type' => 'string',
+                'type' => array(
+                    'allowsNull' => false,
+                    'php' => 'string',
+                    'phpDoc' => 'string',
+                ),
             ),
             'returnValue' => 'toStringVal',
             'staticVars' => array(),

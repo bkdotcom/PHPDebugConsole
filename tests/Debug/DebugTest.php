@@ -128,7 +128,7 @@ class DebugTest extends DebugTestFramework
                 'method' => 'warn',
                 'args' => $args,
                 'meta' => array(
-                    'channel' => 'general.phpError',
+                    'channel' => 'general.phperror',
                     // 'context' => null,
                     'errorCat' => $errCat,
                     'errorHash' => $lastError['hash'],
@@ -142,7 +142,7 @@ class DebugTest extends DebugTestFramework
                     'uncollapse' => true,
                 ),
             ),
-            'html' => '<li class="error-' . $errCat . ' m_warn" data-channel="general.phpError">'
+            'html' => '<li class="error-' . $errCat . ' m_warn" data-channel="general.phperror">'
                 . '<span class="no-quotes t_string">' . $args[0] . ' </span>'
                 . '<span class="t_string">' . $errMsg . '</span>, '
                 . '<span class="no-quotes t_string" data-type-more="filepath"><span class="t_string"><span class="file-path-rel">' . \dirname(__FILE__) . '/' . '</span><span class="file-basename">' . \basename(__FILE__) . '</span></span> (line <span class="t_int">' . $lastError['line'] . '</span>)</span>'

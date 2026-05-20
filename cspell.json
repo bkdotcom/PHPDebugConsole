@@ -30,12 +30,14 @@
   ],
   "ignoreWords": [
     "chromelogger",
+    "curlopt",
     "firephp",
     "jdorn",
     "mrkdwn",
     "mysqli",
     "phpcs",
     "phpmd",
+    "rowspan",
     "slevomat",
     "symfony",
     "wamp"

@@ -1365,7 +1365,7 @@ EOD;
                 'return' => array(
                     'desc' => '',
                     'type' => array(
-                        'allowsNull' => false,
+                        'allowsNull' => false,  // phpDoc is 'void'
                         'php' => null,
                         'phpDoc' => 'void',
                     ),
@@ -1373,7 +1373,7 @@ EOD;
                 // 'staticVars' => array()
                 'visibility' => 'public',
             ),
-            \array_diff_key($abs['methods']['methodPublic'], \array_flip(array('staticVars')))
+            \array_diff_key($abs['methods']['methodPublic'], \array_flip(['staticVars']))
         );
         self::assertSame(42, $abs['methods']['methodPublic']['staticVars']['foo']);
         self::assertSame('test', $abs['methods']['methodPublic']['staticVars']['bar']);
@@ -2214,7 +2214,7 @@ EOD;
                             'tooDeep' => \array_diff_key($this->debug->abstracter->crateWithVals(
                                 (object) array('beans'),
                                 array(
-                                    'debugMethod' => 'log',
+                                    // 'debugMethod' => 'log',
                                     'isMaxDepth' => true,
                                 )
                             )->jsonSerialize(), \array_flip(array('properties'))),

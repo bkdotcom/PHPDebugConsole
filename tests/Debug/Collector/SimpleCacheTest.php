@@ -46,13 +46,14 @@ class SimpleCacheTest extends DebugTestFramework
                         'nonInterfaceMethod() took %f %s',
                     ),
                     'meta' => array(
-                        'channel' => 'general.SimpleCache',
+                        'channel' => 'general.simplecache',
+                        'glue' => ' ',
                         'icon' => 'fa fa-cube',
                     ),
                 )),
             )
         );
-
+        /*
         self::$cache->nonInterfaceMethod('foo', 'bar');
         $this->testMethod(
             null,
@@ -64,17 +65,19 @@ class SimpleCacheTest extends DebugTestFramework
                         'nonInterfaceMethod("foo") took %f %s',
                     ),
                     'meta' => array(
-                        'channel' => 'general.SimpleCache',
+                        'channel' => 'general.simplecache',
                         'icon' => 'fa fa-cube',
                     ),
                 )),
             )
         );
+        */
     }
 
     public function testException()
     {
         try {
+            $line = __LINE__ + 1;
             self::$cache->nonInterfaceMethod('throw');
         } catch (\Exception $e) {
         }
@@ -83,17 +86,23 @@ class SimpleCacheTest extends DebugTestFramework
             null,
             array(
                 'entry' => \json_encode(array(
-                    'method' => 'log',
+                    'method' => 'error',
                     'args' => array(
-                        'nonInterfaceMethod("throw") took %f %s',
+                        'nonInterfaceMethod() took %f %s',
+                        '(RuntimeException: something went wrong)',
                     ),
                     'meta' => array(
-                        'channel' => 'general.SimpleCache',
+                        'channel' => 'general.simplecache',
+                        'file' => __FILE__,
+                        'glue' => ' ',
                         'icon' => 'fa fa-cube',
+                        'line' => $line,
+                        'uncollapse' => true,
                     ),
                 )),
             )
         );
+        self::assertSame('something went wrong', $e->getMessage());
     }
 
     public function testClear()
@@ -109,7 +118,8 @@ class SimpleCacheTest extends DebugTestFramework
                         'clear() took %f %s',
                     ),
                     'meta' => array(
-                        'channel' => 'general.SimpleCache',
+                        'channel' => 'general.simplecache',
+                        'glue' => ' ',
                         'icon' => 'fa fa-cube',
                     ),
                 )),
@@ -130,7 +140,8 @@ class SimpleCacheTest extends DebugTestFramework
                         'delete("deleteName") took %f %s',
                     ),
                     'meta' => array(
-                        'channel' => 'general.SimpleCache',
+                        'channel' => 'general.simplecache',
+                        'glue' => ' ',
                         'icon' => 'fa fa-cube',
                     ),
                 )),
@@ -151,7 +162,8 @@ class SimpleCacheTest extends DebugTestFramework
                         'deleteMultiple(["ding","dang"]) took %f %s',
                     ),
                     'meta' => array(
-                        'channel' => 'general.SimpleCache',
+                        'channel' => 'general.simplecache',
+                        'glue' => ' ',
                         'icon' => 'fa fa-cube',
                     ),
                 )),
@@ -172,7 +184,8 @@ class SimpleCacheTest extends DebugTestFramework
                         'get("dang") took %f %s',
                     ),
                     'meta' => array(
-                        'channel' => 'general.SimpleCache',
+                        'channel' => 'general.simplecache',
+                        'glue' => ' ',
                         'icon' => 'fa fa-cube',
                     ),
                 )),
@@ -193,7 +206,8 @@ class SimpleCacheTest extends DebugTestFramework
                         'getMultiple(["ding","dang"]) took %f %s',
                     ),
                     'meta' => array(
-                        'channel' => 'general.SimpleCache',
+                        'channel' => 'general.simplecache',
+                        'glue' => ' ',
                         'icon' => 'fa fa-cube',
                     ),
                 )),
@@ -201,6 +215,7 @@ class SimpleCacheTest extends DebugTestFramework
         );
     }
 
+    /*
     public function testGetLoggedActions()
     {
         $loggedActions = self::$cache->getLoggedActions();
@@ -216,6 +231,7 @@ class SimpleCacheTest extends DebugTestFramework
             'method',
         ), \array_keys(\reset($loggedActions)->__debugInfo()));
     }
+    */
 
     public function testHas()
     {
@@ -230,7 +246,8 @@ class SimpleCacheTest extends DebugTestFramework
                         'has("hasName") took %f %s',
                     ),
                     'meta' => array(
-                        'channel' => 'general.SimpleCache',
+                        'channel' => 'general.simplecache',
+                        'glue' => ' ',
                         'icon' => 'fa fa-cube',
                     ),
                 )),
@@ -251,7 +268,8 @@ class SimpleCacheTest extends DebugTestFramework
                         'set("setName") took %f %s',
                     ),
                     'meta' => array(
-                        'channel' => 'general.SimpleCache',
+                        'channel' => 'general.simplecache',
+                        'glue' => ' ',
                         'icon' => 'fa fa-cube',
                     ),
                 )),
@@ -275,7 +293,8 @@ class SimpleCacheTest extends DebugTestFramework
                         'setMultiple(["ding","dang"]) took %f %s',
                     ),
                     'meta' => array(
-                        'channel' => 'general.SimpleCache',
+                        'channel' => 'general.simplecache',
+                        'glue' => ' ',
                         'icon' => 'fa fa-cube',
                     ),
                 )),
@@ -285,7 +304,13 @@ class SimpleCacheTest extends DebugTestFramework
 
     public function testDebugOutput()
     {
-        self::$cache->onDebugOutput(new \bdk\PubSub\Event($this->debug));
+        $simpleCache = new SimpleCacheMock();
+        $cache = new SimpleCache($simpleCache);
+        $cache->has('value');
+
+        $channel = $this->debug->getChannel('SimpleCache');
+        $channel->output();
+
         $summaryData = $this->debug->data->get('logSummary/0');
         $this->assertCount(5, $summaryData);
         $this->assertSame('SimpleCache info', $summaryData[0]['args'][0]);

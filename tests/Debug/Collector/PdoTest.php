@@ -9,7 +9,6 @@ use bdk\Debug\Collector\Pdo;
 use bdk\Debug\Utility\Reflection;
 use bdk\HttpMessage\Utility\ContentType;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
-use bdk\PubSub\Event;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
@@ -67,14 +66,22 @@ EOD;
             ->eventManager->unsubscribe(Debug::EVENT_OUTPUT, array(self::$client, 'onDebugOutput'));
     }
 
-    public function testConstruct()
+    public function testConstructPdoSignature()
     {
-        $pdoBase = new \PDO('sqlite::memory:');
-        $pdoClient = new Pdo($pdoBase);
-        $attrVal = $pdoClient->getAttribute(\PDO::ATTR_STATEMENT_CLASS);
+        $pdoClient = new Pdo('sqlite::memory:', null, null, array(), $this->debug);
+        $this->assertInstanceOf('bdk\Debug\Collector\PdoProxyListener', $pdoClient->getListener());
         $this->debug->getChannel('PDO')
             ->eventManager->unsubscribe(Debug::EVENT_OUTPUT, array($pdoClient, 'onDebugOutput'));
-        $this->assertSame('bdk\Debug\Collector\Pdo\Statement', $attrVal[0]);
+    }
+
+    public function testConstructProxySignature()
+    {
+        $pdoBase = new \PDO('sqlite::memory:');
+        $pdoClient = new Pdo($pdoBase, $this->debug);
+        $this->assertInstanceOf('bdk\Debug\Collector\PdoProxyListener', $pdoClient->getListener());
+        $this->debug->getChannel('PDO')
+            ->eventManager->unsubscribe(Debug::EVENT_OUTPUT, array($pdoClient, 'onDebugOutput'));
+        $this->assertSame('bdk\Debug\Collector\Pdo\Statement', $pdoClient->getAttribute(\PDO::ATTR_STATEMENT_CLASS)[0]);
     }
 
     public function testBindColumn()
@@ -350,6 +357,17 @@ EOD;
         $this->assertSame($logEntriesExpect, $logEntries);
     }
 
+    public function testQuery()
+    {
+        $result = self::$client->query('SELECT * FROM `bob` limit 1');
+        // \bdk\Debug::varDump('result', $result);
+        self::assertInstanceOf('bdk\Debug\Collector\Pdo\Statement', $result);
+        $logEntries = $this->getLogEntries();
+        // \bdk\Debug::varDump('logEntries', $this->helper->deObjectifyData($logEntries));
+        self::assertSame('groupCollapsed', \reset($logEntries)['method']);
+        self::assertSame('groupEnd', \end($logEntries)['method']);
+    }
+
     public function testTransaction()
     {
         self::$client->beginTransaction();
@@ -398,7 +416,13 @@ EOD;
 
     public function testDebugOutput()
     {
-        self::$client->onDebugOutput(new Event($this->debug));
+        $pdoBase = new \PDO('sqlite::memory:');
+        $client = new Pdo($pdoBase);
+
+        $pdoChannel = $this->debug->getChannel('PDO');
+        $pdoChannel->output();
+
+        // self::$client->onDebugOutput(new Event($this->debug));
         $logEntriesExpectJson = <<<'EOD'
         [
             {
@@ -408,17 +432,12 @@ EOD;
             },
             {
                 "method": "log",
-                "args": ["Logged operations: ", 8],
+                "args": ["Logged operations: ", 0],
                 "meta": {"channel": "general.pdo"}
             },
             {
                 "method": "time",
                 "args": ["Total time: 2.28 ms"],
-                "meta": {"channel": "general.pdo"}
-            },
-            {
-                "method": "log",
-                "args": ["Peak memory usage", "280.73 kB"],
                 "meta": {"channel": "general.pdo"}
             },
             {
@@ -436,15 +455,25 @@ EOD;
             }
         ]
 EOD;
+        /*
+        // memory not logged when 0
+            {
+                "method": "log",
+                "args": ["Peak memory usage", "280.73 kB"],
+                "meta": {"channel": "general.pdo"}
+            },
+        */
         $logEntriesExpect = \json_decode($logEntriesExpectJson, true);
 
         $logEntries = $this->getLogEntries(null, 'logSummary/0');
+        // \bdk\Debug::varDump('logEntries', $this->helper->deObjectifyData($logEntries));
+
         // duration
         $logEntriesExpect[2]['args'][0] = $logEntries[2]['args'][0];
         // memory
-        $logEntriesExpect[3]['args'][1] = $logEntries[3]['args'][1];
+        // $logEntriesExpect[3]['args'][1] = $logEntries[3]['args'][1];
         // server info
-        $logEntriesExpect[4]['args'][1] = $logEntries[4]['args'][1];
+        $logEntriesExpect[3]['args'][1] = $logEntries[3]['args'][1];
         $this->assertSame($logEntriesExpect, $logEntries);
     }
 

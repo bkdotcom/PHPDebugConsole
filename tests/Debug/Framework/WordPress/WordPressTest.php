@@ -55,7 +55,7 @@ class WordPressTest extends DebugTestFramework
                     'Request / Rewrite',
                 ),
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                     'level' => 'info',
                 ),
             ),
@@ -66,7 +66,7 @@ class WordPressTest extends DebugTestFramework
                     '/ding/dong/',
                 ),
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                 ),
             ),
             array(
@@ -76,7 +76,7 @@ class WordPressTest extends DebugTestFramework
                     'foo=bar&baz=qux',
                 ),
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                 ),
             ),
             array(
@@ -86,7 +86,7 @@ class WordPressTest extends DebugTestFramework
                     'some_rule',
                 ),
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                 ),
             ),
             array(
@@ -96,14 +96,14 @@ class WordPressTest extends DebugTestFramework
                     'some_query',
                 ),
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                 ),
             ),
             array(
                 'method' => 'groupEnd',
                 'args' => array(),
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                 ),
             ),
         ], $this->helper->deObjectifyData($this->debug->data->get('log')));
@@ -123,42 +123,42 @@ class WordPressTest extends DebugTestFramework
                 'method' => 'log',
                 'args' => ['Query Type', 'Page'],
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                 ),
             ),
             array(
                 'method' => 'log',
                 'args' => ['Query Template', 'template.php'],
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                 ),
             ),
             array(
                 'method' => 'log',
                 'args' => ['Show on Front', 'page'],
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                 ),
             ),
             array(
                 'method' => 'log',
                 'args' => ['Page For Posts', 42],
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                 ),
             ),
             array(
                 'method' => 'log',
                 'args' => ['Page on Front', 69],
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                 ),
             ),
             array(
                 'method' => 'log',
                 'args' => ['Post Type', 'bean'],
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                 ),
             ),
             array(
@@ -167,7 +167,7 @@ class WordPressTest extends DebugTestFramework
                     'foo' => 'bar',
                 )],
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                 ),
             ),
             array(
@@ -194,7 +194,7 @@ class WordPressTest extends DebugTestFramework
                     ),
                 ],
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                 ),
             ),
             array(
@@ -204,7 +204,7 @@ class WordPressTest extends DebugTestFramework
                     array(
                         'cfgFlags' => 29360127 & ~(AbstractObject::METHOD_OUTPUT) & ~(AbstractObject::OBJ_ATTRIBUTE_OUTPUT),
                         'debug' => Abstracter::ABSTRACTION,
-                        'debugMethod' => 'log',
+                        // 'debugMethod' => 'log',
                         'inheritsFrom' => 'stdClass',
                         // 'interfacesCollapse' => array(),
                         // 'isLazy' => false,
@@ -244,14 +244,14 @@ class WordPressTest extends DebugTestFramework
                     ),
                 ],
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                 ),
             ),
             array(
                 'method' => 'log',
                 'args' => ['Queried Object Id', 42],
                 'meta' => array(
-                    'channel' => 'WordPress',
+                    'channel' => 'wordpress',
                 ),
             ),
         ], $this->helper->deObjectifyData($this->debug->data->get('log')));

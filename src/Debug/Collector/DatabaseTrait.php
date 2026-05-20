@@ -174,7 +174,7 @@ trait DatabaseTrait
      */
     protected function traitInit($debug, $channelName = 'SQL')
     {
-        $channelKey = \strtolower($channelName);
+        $channelKey = $channelName; // getChannel converts to lowercase
         $channelOptions = array(
             'channelIcon' => $this->icon,
             'channelName' => $channelName,

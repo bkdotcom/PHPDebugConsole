@@ -228,6 +228,7 @@ class Channel implements SubscriberInterface
      */
     private function createChannel($key, array $config)
     {
+        $keyLower = \strtolower($key);
         $cfg = $this->debug->getCfg(null, Debug::CONFIG_INIT);
         $channelKeyCur = $cfg['debug']['channelKey'];
         $cfg = $this->getPropagateValues($cfg);
@@ -238,14 +239,14 @@ class Channel implements SubscriberInterface
                 'channelName' => $key,
                 'nested' => true, // true = regular child channel, false = tab
             ),
-            isset($cfg['debug']['channels'][$key])
-                ? $cfg['debug']['channels'][$key]
+            isset($cfg['debug']['channels'][$keyLower])
+                ? $cfg['debug']['channels'][$keyLower]
                 : array(),
             $config
         );
         $cfg['debug']['channelKey'] = $cfg['debug']['nested'] || $this->debug->parentInstance
-            ? $channelKeyCur . '.' . $key
-            : $key;
+            ? $channelKeyCur . '.' . $keyLower
+            : $keyLower;
         $cfg['debug']['parent'] = $this->debug;
         unset($cfg['debug']['nested']);
         return new Debug($cfg);
@@ -277,11 +278,12 @@ class Channel implements SubscriberInterface
     private function upsertChannel($key, $path, array $config)
     {
         $curChannelKey = $this->debug->getCfg('channelKey', Debug::CONFIG_DEBUG);
-        if (!isset($this->channels[$curChannelKey][$key])) {
-            $this->channels[$curChannelKey][$key] = $this->createChannel($key, $path
+        $keyLower = \strtolower($key);
+        if (!isset($this->channels[$curChannelKey][$keyLower])) {
+            $this->channels[$curChannelKey][$keyLower] = $this->createChannel($key, $path
                 ? array()
                 : $config);
         }
-        return $this->channels[$curChannelKey][$key];
+        return $this->channels[$curChannelKey][$keyLower];
     }
 }

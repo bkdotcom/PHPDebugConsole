@@ -124,7 +124,7 @@ class MonologHandlerTest extends DebugTestFramework
                 array('foo' => 'bar'),
             ),
             'meta' => array(
-                'channel' => 'general.PHPDebugConsole',
+                'channel' => 'general.phpdebugconsole',
                 'glue' => ', ',
                 'psr3level' => 'debug',
             ),
@@ -188,7 +188,7 @@ class MonologHandlerTest extends DebugTestFramework
                 $tableDataLogged,
             ),
             'meta' => array(
-                'channel' => 'general.PHPDebugConsole',
+                'channel' => 'general.phpdebugconsole',
                 'psr3level' => 'debug',
             ),
         ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));

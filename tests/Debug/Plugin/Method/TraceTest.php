@@ -380,6 +380,7 @@ class TraceTest extends DebugTestFramework
 
     public function testTraceWithContext()
     {
+        $objectsExclude = \bdk\Debug\Utility\Reflection::propGet($this->debug->abstracter, 'cfg')['objectsExclude'];
         $this->testMethod(
             'trace',
             array(
@@ -426,6 +427,7 @@ EOD;
                 },
             )
         );
+        $this->debug->setCfg('objectsExclude', $objectsExclude);
     }
 
     public function testCollectFalse()

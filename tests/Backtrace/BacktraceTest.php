@@ -240,6 +240,128 @@ class BacktraceTest extends TestCase
         self::assertSame('bdk\Test\Backtrace\Fixture\Magic->__call(\'test\')', $trace[1]['function']);
     }
 
+    public function testAddProcessor()
+    {
+        $called = false;
+        $processor = static function ($trace) use (&$called) {
+            $called = true;
+            foreach ($trace as &$frame) {
+                $frame['custom_field'] = 'test_value';
+            }
+            return $trace;
+        };
+
+        Backtrace::addProcessor($processor);
+        $backtrace = Backtrace::get();
+
+        self::assertTrue($called, 'Processor should have been called');
+
+        self::assertNotEmpty($backtrace);
+        foreach ($backtrace as $frame) {
+            self::assertArrayHasKey('custom_field', $frame);
+            self::assertSame('test_value', $frame['custom_field']);
+        }
+
+        // Clean up
+        Backtrace::removeProcessor($processor);
+    }
+
+    public function testAddMultipleProcessors()
+    {
+        $order = array();
+        $processor1 = static function ($trace) use (&$order) {
+            $order[] = 1;
+            return $trace;
+        };
+        $processor2 = static function ($trace) use (&$order) {
+            $order[] = 2;
+            return $trace;
+        };
+        $processor3 = static function ($trace) use (&$order) {
+            $order[] = 3;
+            return $trace;
+        };
+
+        Backtrace::addProcessor($processor1);
+        Backtrace::addProcessor($processor2);
+        Backtrace::addProcessor($processor3);
+
+        $backtrace = Backtrace::get();
+
+        self::assertSame(array(1, 2, 3), $order, 'Processors should be called in order');
+
+        // Clean up
+        Backtrace::removeProcessor($processor1);
+        Backtrace::removeProcessor($processor2);
+        Backtrace::removeProcessor($processor3);
+    }
+
+    public function testRemoveProcessor()
+    {
+        $called = false;
+        $processor = static function ($trace) use (&$called) {
+            $called = true;
+            return $trace;
+        };
+
+        Backtrace::addProcessor($processor);
+        Backtrace::removeProcessor($processor);
+        $backtrace = Backtrace::get();
+
+        self::assertFalse($called, 'Processor should not have been called after removal');
+    }
+
+    public function testRemoveProcessorMiddle()
+    {
+        $order = array();
+        $processor1 = static function ($trace) use (&$order) {
+            $order[] = 1;
+            return $trace;
+        };
+        $processor2 = static function ($trace) use (&$order) {
+            $order[] = 2;
+            return $trace;
+        };
+        $processor3 = static function ($trace) use (&$order) {
+            $order[] = 3;
+            return $trace;
+        };
+
+        Backtrace::addProcessor($processor1);
+        Backtrace::addProcessor($processor2);
+        Backtrace::addProcessor($processor3);
+        Backtrace::removeProcessor($processor2);
+
+        $backtrace = Backtrace::get();
+
+        self::assertSame(array(1, 3), $order, 'Only processor 1 and 3 should be called');
+
+        // Clean up
+        Backtrace::removeProcessor($processor1);
+        Backtrace::removeProcessor($processor3);
+    }
+
+    public function testAddProcessorInvalidCallable()
+    {
+        $this->expectException('InvalidArgumentException');
+        $this->expectExceptionMessage('addProcessor expects a callable');
+
+        Backtrace::addProcessor('not_a_callable_function_that_exists');
+    }
+
+    public function testProcessorWithInvokableObject()
+    {
+        $processor = new Fixture\InvokableProcessor();
+
+        Backtrace::addProcessor($processor);
+        $backtrace = Backtrace::get();
+
+        self::assertTrue($processor->called, 'Invokable object processor should have been called');
+
+        // Clean up
+        Backtrace::removeProcessor($processor);
+    }
+
     private function getCallerInfoEval()
     {
         $php = 'return \bdk\Test\Backtrace\BacktraceTest::getCallerInfoHelper();';

@@ -144,7 +144,7 @@ class ShortcodesTest extends DebugTestFramework
                 ),
             ),
             'meta' => array(
-                'channel' => 'WordPress',
+                'channel' => 'wordpress',
             ),
         ), $this->helper->logEntryToArray($this->debug->data->get('log/__end__')));
     }

@@ -65,8 +65,8 @@ function addChannelToggles () {
 function addErrorIcons () {
   var channelKeyRoot = $root.data('channelKeyRoot')
   var counts = {
-    error: $root.find('.m_error[data-channel="' + channelKeyRoot + '.phpError"]').length,
-    warn: $root.find('.m_warn[data-channel="' + channelKeyRoot + '.phpError"]').length
+    error: $root.find('.m_error[data-channel="' + channelKeyRoot + '.phperror"]').length,
+    warn: $root.find('.m_warn[data-channel="' + channelKeyRoot + '.phperror"]').length
   }
   var $icon
   var $icons = $('<span>', { class: 'debug-error-counts' })
@@ -164,7 +164,7 @@ function buildChannelLis (channels, keyRoot, checkedChannels, prepend) {
     return a.localeCompare(b)
   })
   $.each(channelKeys, function (channelKey) {
-    if (channelKey === 'phpError') {
+    if (channelKey === 'phperror') {
       // phpError is a special channel
       return
     }

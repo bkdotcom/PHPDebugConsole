@@ -85,6 +85,10 @@ class ServiceProvider implements ServiceProviderInterface
             $debug = $container['debug'];
             return new \bdk\Debug\Abstraction\Abstracter($debug, $debug->getCfg('abstracter', Debug::CONFIG_INIT));
         };
+        $container['assetManager'] = static function (Container $container) {
+            $debug = $container['debug'];
+            return new \bdk\Debug\Route\Html\AssetManager($debug);
+        };
         $container['backtrace'] = static function (Container $container) {
             $debug = $container['debug'];
             $backtrace = $debug->errorHandler->backtrace;
@@ -141,10 +145,6 @@ class ServiceProvider implements ServiceProviderInterface
                 $container['serverRequest'],
                 $container['debug']->getCfg('i18n', Debug::CONFIG_DEBUG)
             );
-        };
-        $container['assetManager'] = static function (Container $container) {
-            $debug = $container['debug'];
-            return new \bdk\Debug\Route\Html\AssetManager($debug);
         };
         $container['pluginManager'] = static function () {
             return new \bdk\Debug\Plugin\Manager();

@@ -86,6 +86,7 @@ class Sql
     public static function parse($sql)
     {
         $regex = '/^(?P<methodPlus>
+                CALL\s+|
                 (?:DROP|SHOW).+|
                 CREATE(?:\sTEMPORARY)?\s+(TABLE|DATABASE)(?:\sIF\sNOT\sEXISTS)?\s+\S+|
                 DELETE.*?FROM\s+\S+|

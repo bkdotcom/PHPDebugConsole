@@ -65,13 +65,13 @@ class DoctrineMiddlewareTest extends DebugTestFramework
 
         $runtimeOutput = <<<'EOD'
 %A
-<li class="level-info m_group" data-channel="general.Doctrine" data-icon="fa fa-database">
+<li class="level-info m_group" data-channel="general.doctrine" data-icon="fa fa-database">
 <div class="group-header"><span class="font-weight-bold group-label">Doctrine</span>: <span class="t_string">pdo-sqlite:///:memory:</span></div>
 <ul class="group-body">
-<li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">Logged operations: </span><span class="t_int">3</span></li>
-<li class="m_time" data-channel="general.Doctrine"><span class="no-quotes t_string">Total time: %f %s</span></li>
-<li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">Peak memory usage</span> = <span class="t_string">%f %s</span></li>
-<li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">Server info</span> = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
+<li class="m_log" data-channel="general.doctrine"><span class="no-quotes t_string">Logged operations: </span><span class="t_int">3</span></li>
+<li class="m_time" data-channel="general.doctrine"><span class="no-quotes t_string">Total time: %f %s</span></li>
+<li class="m_log" data-channel="general.doctrine"><span class="no-quotes t_string">Peak memory usage</span> = <span class="t_string">%f %s</span></li>
+<li class="m_log" data-channel="general.doctrine"><span class="no-quotes t_string">Server info</span> = <span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>
 <ul class="array-inner list-unstyled">
     <li><span class="t_key">Version</span><span class="t_operator">=&gt;</span><span class="t_string">%s</span></li>
 </ul><span class="t_punct">)</span></span></li>
@@ -96,16 +96,16 @@ Statement parameter type."><span class="classname"><span class="namespace">Doctr
 
         $select1expect = <<<EOD
 %A
-<li class="m_group" data-channel="general.Doctrine" data-icon="fa fa-database" id="statementInfo2">
+<li class="m_group" data-channel="general.doctrine" data-icon="fa fa-database" id="statementInfo2">
 <div class="group-header"><span class="group-label">SELECT * FROM `bob` WHERE e &lt; &#039;$datetime&#039;</span></div>
 <ul class="group-body">
-<li class="m_log no-indent" data-channel="general.Doctrine"><span class="highlight language-sql no-quotes t_string">SELECT
+<li class="m_log no-indent" data-channel="general.doctrine"><span class="highlight language-sql no-quotes t_string">SELECT
   *
 FROM
   `bob`
 WHERE
   e &lt; :datetime</span></li>
-<li class="m_table" data-channel="general.Doctrine">
+<li class="m_table" data-channel="general.doctrine">
 <table class="sortable table-bordered">
 <caption>parameters</caption>
 <thead>
@@ -124,10 +124,10 @@ WHERE
 </tbody>
 </table>
 </li>
-<li class="m_time" data-channel="general.Doctrine"><span class="no-quotes t_string">duration: %f %s</span></li>
-<li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">Memory usage</span> = <span class="t_string">%f %s</span></li>
-<li class="m_warn" data-channel="general.Doctrine" data-file="%s" data-line="%d" data-uncollapse="false"><span class="no-quotes t_string">Use <span style="font-family:monospace">SELECT *</span><span> only if you need all columns from table</span></span></li>
-<li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">rowCount</span> = <span class="t_int">0</span></li>
+<li class="m_time" data-channel="general.doctrine"><span class="no-quotes t_string">duration: %f %s</span></li>
+<li class="m_log" data-channel="general.doctrine"><span class="no-quotes t_string">Memory usage</span> = <span class="t_string">%f %s</span></li>
+<li class="m_warn" data-channel="general.doctrine" data-file="%s" data-line="%d" data-uncollapse="false"><span class="no-quotes t_string">Use <span style="font-family:monospace">SELECT *</span><span> only if you need all columns from table</span></span></li>
+<li class="m_log" data-channel="general.doctrine"><span class="no-quotes t_string">rowCount</span> = <span class="t_int">0</span></li>
 </ul>
 </li>
 %A
@@ -175,17 +175,17 @@ EOD;
             : '';
         $select2expect = <<<EOD
 %A
-<li class="m_group" data-channel="general.Doctrine" data-icon="fa fa-database" id="statementInfo3">
+<li class="m_group" data-channel="general.doctrine" data-icon="fa fa-database" id="statementInfo3">
 <div class="group-header"><span class="group-label">select * from bob WHERE k in (?, ?) and v = ?</span></div>
 <ul class="group-body">
-<li class="m_log no-indent" data-channel="general.Doctrine"><span class="highlight language-sql no-quotes t_string">select
+<li class="m_log no-indent" data-channel="general.doctrine"><span class="highlight language-sql no-quotes t_string">select
   *
 from
   bob
 where
   k in (?, ?)
   and v = ?</span></li>
-<li class="m_table" data-channel="general.Doctrine">
+<li class="m_table" data-channel="general.doctrine">
 <table class="sortable table-bordered">
 <caption>parameters</caption>
 <thead>
@@ -200,10 +200,10 @@ where
 </tbody>
 </table>
 </li>
-<li class="m_time" data-channel="general.Doctrine"><span class="no-quotes t_string">duration: %f %s</span></li>
-<li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">Memory usage</span> = <span class="t_string">%f %s</span></li>
-<li class="m_warn" data-channel="general.Doctrine" data-file="%s" data-line="%d" data-uncollapse="false"><span class="no-quotes t_string">Use <span style="font-family:monospace">SELECT *</span><span> only if you need all columns from table</span></span></li>
-<li class="m_log" data-channel="general.Doctrine"><span class="no-quotes t_string">rowCount</span> = <span class="t_int">0</span></li>
+<li class="m_time" data-channel="general.doctrine"><span class="no-quotes t_string">duration: %f %s</span></li>
+<li class="m_log" data-channel="general.doctrine"><span class="no-quotes t_string">Memory usage</span> = <span class="t_string">%f %s</span></li>
+<li class="m_warn" data-channel="general.doctrine" data-file="%s" data-line="%d" data-uncollapse="false"><span class="no-quotes t_string">Use <span style="font-family:monospace">SELECT *</span><span> only if you need all columns from table</span></span></li>
+<li class="m_log" data-channel="general.doctrine"><span class="no-quotes t_string">rowCount</span> = <span class="t_int">0</span></li>
 </ul>
 </li>
 %A

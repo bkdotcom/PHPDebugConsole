@@ -143,6 +143,10 @@ class UseStatements
      */
     private static function getPrecedingLines($file, $startLine)
     {
+        if (\file_exists($file) === false) {
+            // class could be defined via eval()
+            return '';
+        }
         $file = \fopen($file, 'r');
         $line = 0;
         $source = '';

@@ -17,6 +17,7 @@ namespace {
         'name' => false,
         'status' => PHP_SESSION_NONE,
     );
+    $GLOBALS['timeOffset'] = 0;
 }
 
 namespace bdk\Debug {

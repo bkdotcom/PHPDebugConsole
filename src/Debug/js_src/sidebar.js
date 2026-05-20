@@ -176,7 +176,7 @@ function addMethodToggles ($node) {
   for (val in methodLabels) {
     haveEntry = val === 'other'
       ? $entries.not('.m_alert, .m_error, .m_warn, .m_info').length > 0
-      : $entries.filter('.m_' + val).not('[data-channel="' + channelKeyRoot + '.phpError"]').length > 0
+      : $entries.filter('.m_' + val).not('[data-channel="' + channelKeyRoot + '.phperror"]').length > 0
     $filters.append(
       $('<li />').append(
         $('<label class="toggle active" />').toggleClass('disabled', !haveEntry).append(

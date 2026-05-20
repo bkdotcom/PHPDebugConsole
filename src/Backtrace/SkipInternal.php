@@ -153,7 +153,7 @@ class SkipInternal
         $count = \count($backtrace);
         $index = \max(\min($index, $count - 1), 0); // make sure between 0 and $count - 1 (inclusive)
         if ($index === $count - 1 && $backtrace[$index]['function'] !== '{main}') {
-            // everything skipped * didn't enter via {main} -> dont rewind
+            // everything skipped * didn't enter via {main} -> don't rewind
             return $index;
         }
         for ($i = $index; $i > 0; $i--) {

@@ -24,7 +24,7 @@ class TwigExtensionTest extends DebugTestFramework
         $expect = <<<'EOD'
 %A
 <ul class="debug-log group-body">
-<li class="m_time" data-channel="general.Twig"><span class="no-quotes t_string">Twig: template: test.twig: %f %s</span></li>
+<li class="m_time" data-channel="general.twig"><span class="no-quotes t_string">Twig: template: test.twig: %f %s</span></li>
 </ul>
 %A
 EOD;

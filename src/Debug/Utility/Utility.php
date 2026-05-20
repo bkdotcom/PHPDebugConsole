@@ -362,17 +362,18 @@ class Utility
         if ($format !== 'auto') {
             return $format;
         }
-        if ($duration < 1 / 1000) {
-            return 'us';
-        }
-        if ($duration < 1) {
-            return 'ms';
-        }
-        if ($duration < 60) {
-            return 's';
-        }
-        if ($duration < 3600) {
-            return '%im %Ss'; // M:SS
+        switch (true) {
+            case $duration === 0:
+                return 's';
+            case $duration < 1 / 1000:
+                return 'us';
+            case $duration < 1:
+                return 'ms';
+            case $duration < 60:
+                return 's';
+            case $duration < 3600:
+                return '%im %Ss'; // M:SS
+            default:
         }
         return '%hh %Im %Ss'; // H:MM:SS
     }

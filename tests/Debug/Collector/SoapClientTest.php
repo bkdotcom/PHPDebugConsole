@@ -37,7 +37,7 @@ class SoapClientTest extends DebugTestFramework
                     $this->wsdl,
                 ),
                 'meta' => array(
-                    'channel' => 'general.Soap',
+                    'channel' => 'general.soap',
                     'icon' => 'fa fa-exchange',
                 ),
             ),
@@ -58,7 +58,7 @@ class SoapClientTest extends DebugTestFramework
                         ),
                     ),
                 ),
-                'meta' => array('channel' => 'general.Soap'),
+                'meta' => array('channel' => 'general.soap'),
             ),
             array(
                 'method' => 'log',
@@ -73,12 +73,12 @@ class SoapClientTest extends DebugTestFramework
                             . '}',
                     ),
                 ),
-                'meta' => array('channel' => 'general.Soap'),
+                'meta' => array('channel' => 'general.soap'),
             ),
             array(
                 'method' => 'groupEnd',
                 'args' => array(),
-                'meta' => array('channel' => 'general.Soap'),
+                'meta' => array('channel' => 'general.soap'),
             ),
         ), $this->getLogEntries());
     }
@@ -105,7 +105,7 @@ class SoapClientTest extends DebugTestFramework
                 'SOAP-ERROR: Parsing WSDL: Couldn\'t load from \'' . $this->wsdl . '404\' : failed to load external entity "' . $this->wsdl . '404"',
             ),
             'meta' => array(
-                'channel' => 'general.Soap',
+                'channel' => 'general.soap',
                 // 'evalLine' => null,
                 'file' => __FILE__,
                 'line' => $line,
@@ -139,8 +139,17 @@ class SoapClientTest extends DebugTestFramework
                     'processSRL',
                 ),
                 'meta' => array(
-                    'channel' => 'general.Soap',
+                    'channel' => 'general.soap',
                     'icon' => 'fa fa-exchange',
+                ),
+            ),
+            array(
+                'method' => 'time',
+                'args' => array(
+                    'time: 29.0709 ms',
+                ),
+                'meta' => array(
+                    'channel' => 'general.soap',
                 ),
             ),
             array(
@@ -158,7 +167,7 @@ class SoapClientTest extends DebugTestFramework
                     )),
                 ),
                 'meta' => array(
-                    'channel' => 'general.Soap',
+                    'channel' => 'general.soap',
                 ),
             ),
             array(
@@ -190,7 +199,7 @@ class SoapClientTest extends DebugTestFramework
                     'attribs' => array(
                         'class' => ['no-indent'],
                     ),
-                    'channel' => 'general.Soap',
+                    'channel' => 'general.soap',
                     'redact' => true,
                 ),
             ),
@@ -211,7 +220,7 @@ class SoapClientTest extends DebugTestFramework
                     )),
                 ),
                 'meta' => array(
-                    'channel' => 'general.Soap',
+                    'channel' => 'general.soap',
                     'redact' => true,
                 ),
             ),
@@ -242,7 +251,7 @@ class SoapClientTest extends DebugTestFramework
                     'attribs' => array(
                         'class' => ['no-indent'],
                     ),
-                    'channel' => 'general.Soap',
+                    'channel' => 'general.soap',
                     'redact' => true,
                 ),
             ),
@@ -250,16 +259,21 @@ class SoapClientTest extends DebugTestFramework
                 'method' => 'groupEnd',
                 'args' => array(),
                 'meta' => array(
-                    'channel' => 'general.Soap',
+                    'channel' => 'general.soap',
                 ),
             ),
         );
+        // time
+        $logEntriesExpect[1]['args'][0] = $logEntries[1]['args'][0];
         if (PHP_VERSION_ID < 50500) {
             // remove request headers and body from php 5.4
             // #reasons
             // ¯\_(ツ)_/¯
             \array_splice($logEntriesExpect, 1, 2);
         }
+
+        // \bdk\Debug::varDump('expect', $logEntriesExpect);
+        // \bdk\Debug::varDump('actual', $logEntries);
 
         $this->assertLogEntries($logEntriesExpect, $logEntries);
     }
@@ -283,7 +297,7 @@ class SoapClientTest extends DebugTestFramework
                 'Function ("noSuchAction") is not a valid method for this service',
             ),
             'meta' => array(
-                'channel' => 'general.Soap',
+                'channel' => 'general.soap',
                 // 'evalLine' => null,
                 'file' => __FILE__,
                 'line' => $line,
@@ -312,7 +326,7 @@ class SoapClientTest extends DebugTestFramework
                 'This is a test',
             ),
             'meta' => array(
-                'channel' => 'general.Soap',
+                'channel' => 'general.soap',
                 // 'evalLine' => null,
                 'file' => __FILE__,
                 'line' => $line,
@@ -353,8 +367,17 @@ class SoapClientTest extends DebugTestFramework
                 'method' => 'groupCollapsed',
                 'args' => array('soap', 'ProcessSRL'),
                 'meta' => array(
-                    'channel' => 'general.Soap',
+                    'channel' => 'general.soap',
                     'icon' => 'fa fa-exchange',
+                ),
+            ),
+            array(
+                'method' => 'time',
+                'args' => array(
+                    'time: 29.0709 ms',
+                ),
+                'meta' => array(
+                    'channel' => 'general.soap'
                 ),
             ),
             array(
@@ -372,7 +395,7 @@ class SoapClientTest extends DebugTestFramework
                     )),
                 ),
                 'meta' => array(
-                    'channel' => 'general.Soap',
+                    'channel' => 'general.soap',
                 ),
             ),
             array(
@@ -404,7 +427,7 @@ class SoapClientTest extends DebugTestFramework
                     'attribs' => array(
                         'class' => ['no-indent'],
                     ),
-                    'channel' => 'general.Soap',
+                    'channel' => 'general.soap',
                     'redact' => true,
                 ),
             ),
@@ -425,7 +448,7 @@ class SoapClientTest extends DebugTestFramework
                     )),
                 ),
                 'meta' => array(
-                    'channel' => 'general.Soap',
+                    'channel' => 'general.soap',
                     'redact' => true,
                 ),
             ),
@@ -457,7 +480,7 @@ class SoapClientTest extends DebugTestFramework
                     'attribs' => array(
                         'class' => ['no-indent'],
                     ),
-                    'channel' => 'general.Soap',
+                    'channel' => 'general.soap',
                     'redact' => true,
                 ),
             ),
@@ -468,7 +491,7 @@ class SoapClientTest extends DebugTestFramework
                     'This is a test',
                 ),
                 'meta' => array(
-                    'channel' => 'general.Soap',
+                    'channel' => 'general.soap',
                     // 'evalLine' => null,
                     'file' => __FILE__,
                     'line' => $line,
@@ -479,10 +502,13 @@ class SoapClientTest extends DebugTestFramework
                 'method' => 'groupEnd',
                 'args' => array(),
                 'meta' => array(
-                    'channel' => 'general.Soap',
+                    'channel' => 'general.soap',
                 ),
             ),
         );
+
+        // time
+        $logEntriesExpect[1]['args'][0] = $logEntries[1]['args'][0];
 
         try {
             $this->assertLogEntries($logEntriesExpect, $logEntries);

@@ -8,7 +8,7 @@ return array(
     'cfgFlags' => 29360127,
     'className' => 'bdk\Test\Debug\Fixture\Php71',
     'constants' => array(),
-    'debugMethod' => 'log',
+    // 'debugMethod' => 'log',
     'definition' => array(
         'extensionName' => false,
         'fileName' => TEST_DIR . '/Debug/Fixture/Php71.php',

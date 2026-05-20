@@ -68,7 +68,7 @@ class Time implements SubscriberInterface
         );
         $args = $logEntry['args'];
         $floats = \array_filter($args, static function ($val) {
-            return \is_float($val);
+            return \is_float($val) || \is_int($val);
         });
         $label = \array_values(\array_diff_key($args, $floats))[0];
         if ($floats) {

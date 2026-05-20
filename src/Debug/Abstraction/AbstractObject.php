@@ -173,7 +173,6 @@ class AbstractObject extends AbstractComponent
     protected static $values = array(
         'cfgFlags' => 0, // will default to everything sans "brief" & 'virtualValueCollect'
         'className' => '',
-        'debugMethod' => '',
         'interfacesCollapse' => array(),  // cfg.interfacesCollapse (intersected with reflector::getInterfaceNames())
         'isExcluded' => false,  // don't exclude if we're debugging directly
         'isLazy' => false,
@@ -315,7 +314,6 @@ class AbstractObject extends AbstractComponent
             array(
                 'cfgFlags' => $this->getCfgFlags($reflector),
                 'className' => $this->helper->getClassName($reflector),
-                'debugMethod' => $method,
                 'interfacesCollapse' => \array_values(\array_intersect($reflector->getInterfaceNames(), $this->cfg['interfacesCollapse'])),
                 'isExcluded' => $hist && $this->isExcluded($obj),    // don't exclude if we're debugging directly
                 'isLazy' => PHP_VERSION_ID >= 80400 && \is_object($obj) ? $reflector->isUninitializedLazyObject($obj) : false,
@@ -329,6 +327,7 @@ class AbstractObject extends AbstractComponent
             array(
                 // these are temporary values available during abstraction
                 'collectPropertyValues' => true,
+                'debugMethod' => $method,
                 'fullyQualifyPhpDocType' => $this->cfg['fullyQualifyPhpDocType'],
                 'hist' => $hist,
                 'propertyOverrideValues' => array(),

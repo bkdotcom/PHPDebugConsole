@@ -33,8 +33,12 @@ class Backtrace
     const INCL_ARGS = 1;
     const INCL_OBJECT = 2;
     const INCL_INTERNAL = 4; // whether to keep "internal" frames
+    const NO_XDEBUG = 8; // by default we use xdebug_get_function_stack if available, this option forces us to use debug_backtrace instead
 
     const REGEX_FUNCTION = '/^(?P<classname>.+)(?P<type>::|->)(?P<method>.+)$/';
+
+    /** @var callable[] */
+    protected static $processors = array();
 
     /** @var array */
     protected static $callerInfoDefault = array(
@@ -65,25 +69,66 @@ class Backtrace
     }
 
     /**
+     * Register a callable to process backtrace in get() method
+     *
+     * The callable should accept a backtrace array and return a backtrace array
+     *
+     * @param callable $callable Callable to process backtrace
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function addProcessor($callable)
+    {
+        if (!\is_callable($callable)) {
+            throw new InvalidArgumentException(\sprintf(
+                'addProcessor expects a callable.  %s provided.',
+                \strtolower(\gettype($callable))
+            ));
+        }
+        self::$processors[] = $callable;
+    }
+
+    /**
      * Helper method to get backtrace
      *
      * Uses passed exception, xdebug_get_function_stack, or debug_backtrace
      *
-     * @param int|null              $options   bitmask of options
-     * @param int                   $limit     limit the number of stack frames returned
-     * @param \Exception|\Throwable $exception (optional) Exception from which to get backtrace
+     * @param int|null                   $options   bitmask of options
+     * @param int                        $limit     limit the number of stack frames returned
+     * @param \Exception|\Throwable|null $exception (optional) Exception from which to get backtrace
      *
      * @return array[]
      */
     public static function get($options = 0, $limit = 0, $exception = null)
     {
-        $debugBacktraceOpts = self::translateOptions($options) & ~DEBUG_BACKTRACE_IGNORE_ARGS;
-        $trace = $exception
-            ? self::getExceptionTrace($exception)
-            : (\array_reverse(Xdebug::getFunctionStack() ?: [])
-                ?: \debug_backtrace($debugBacktraceOpts));
+        $trace = self::getTrace($options | self::INCL_ARGS, $exception);
         $trace = self::normalize($trace);
         return self::getFinish($trace, $options, $limit);
+    }
+
+    /**
+     * Get backtrace without performing any normalization or post processing
+     *
+     * @param int|null                   $options   bitmask of options
+     * @param \Exception|\Throwable|null $exception (optional) Exception from which to get backtrace
+     *
+     * @return array[]
+     */
+    public static function getTrace($options = 0, $exception = null)
+    {
+        if ($exception) {
+            return self::getExceptionTrace($exception);
+        }
+        $trace = !($options & self::NO_XDEBUG)
+            ? \array_reverse(Xdebug::getFunctionStack() ?: [])
+            : [];
+        if ($trace) {
+            return $trace;
+        }
+        $debugBacktraceOpts = self::translateOptions($options);
+        return \debug_backtrace($debugBacktraceOpts);
     }
 
     /**
@@ -108,19 +153,16 @@ class Backtrace
      */
     public static function getCallerInfo($offset = 0, $options = 0)
     {
-        /*
-            we need to collect object... we'll remove object at end if undesired
-        */
-        $phpOptions = static::translateOptions($options | self::INCL_OBJECT);
-        $backtrace = \debug_backtrace($phpOptions, 60);
-        $backtrace = self::normalize($backtrace);
-        $index = SkipInternal::getFirstIndex($backtrace, $offset);
-        $index = \max($index, 1); // ensure we're >= 1
-        $return = static::callerInfoBuild(\array_slice($backtrace, $index, 2));
-        if (!($options & self::INCL_OBJECT)) {
-            unset($return['object']);
+        $getOptions = ($options | self::INCL_OBJECT | self::NO_XDEBUG) & ~self::INCL_INTERNAL;
+        $trace = self::get($getOptions, 66);
+        if (isset($trace[0]['function']) && $trace[0]['function'] === __METHOD__) {
+            \array_shift($trace);
         }
-        return $return;
+        $callerInfo = static::callerInfoBuild(\array_slice($trace, $offset, 2));
+        if (!($options & self::INCL_OBJECT)) {
+            unset($callerInfo['object']);
+        }
+        return $callerInfo;
     }
 
     /**
@@ -167,6 +209,44 @@ class Backtrace
     }
 
     /**
+     * Parsed "normalized" function into class, type, & function components
+     *
+     * @param string $function Function string to parse
+     *
+     * @return array
+     */
+    public static function parseFunction($function)
+    {
+        return \preg_match(self::REGEX_FUNCTION, (string) $function, $matches)
+            ? array(
+                'class' => $matches['classname'],
+                'function' => $matches['method'],
+                'type' => $matches['type'],
+            )
+            : array(
+                'class' => null,
+                'function' => $function,
+                'type' => null,
+            );
+    }
+
+    /**
+     * Remove a previously registered processor
+     *
+     * @param callable $callable Callable to remove
+     *
+     * @return void
+     */
+    public static function removeProcessor($callable)
+    {
+        $key = \array_search($callable, self::$processors, true);
+        if ($key !== false) {
+            unset(self::$processors[$key]);
+            self::$processors = \array_values(self::$processors);
+        }
+    }
+
+    /**
      * Build callerInfo array from given backtrace segment
      *
      * @param array $backtrace backtrace
@@ -182,16 +262,15 @@ class Backtrace
             $return = \array_merge(
                 $return,
                 $backtrace[$iFunc],
-                self::parseFunction($backtrace[$iFunc]['function'])
+                isset($backtrace[$iFunc]['function'])
+                    ? self::parseFunction($backtrace[$iFunc]['function'])
+                    : []
             );
             $return['classCalled'] = $return['class'];
         }
         if (isset($backtrace[$iFileLine])) {
-            $fileLineVals = \array_intersect_key($backtrace[$iFileLine], \array_flip([
-                'evalLine',
-                'file',
-                'line',
-            ]));
+            $fileLineKeys = ['evalLine', 'file', 'line'];
+            $fileLineVals = \array_intersect_key($backtrace[$iFileLine], \array_flip($fileLineKeys));
             $return = \array_merge($return, $fileLineVals);
         }
         if ($return['type'] === '->') {
@@ -265,12 +344,22 @@ class Backtrace
         if (($options & self::INCL_INTERNAL) !== self::INCL_INTERNAL) {
             $trace = SkipInternal::removeInternalFrames($trace);
         }
-        // keep the calling file & line, but toss the called function (what initiated trace)
-        unset($trace[0]['function']);
+        if (empty($trace)) {
+            return $trace;
+        }
         unset($trace[\count($trace) - 1]['function']);  // remove "{main}"
         $trace = \array_slice($trace, 0, $sliceLimit);
         if (($options & self::INCL_ARGS) !== self::INCL_ARGS) {
             $trace = self::getRenameFunctions($trace);
+        }
+        // Process registered processors
+        foreach (self::$processors as $callable) {
+            $trace = $callable($trace);
+        }
+        // keep the calling file & line, but toss the called function (what initiated trace)
+        $parsedFunc = self::parseFunction($trace[0]['function']);
+        if ($parsedFunc['class'] !== __CLASS__) {
+            unset($trace[0]['function']);
         }
         return self::getRemoveKeys($trace, $options);
     }
@@ -286,8 +375,8 @@ class Backtrace
     {
         $count = \count($trace);
         for ($i = 1; $i < $count - 1; $i++) {
-            \preg_match(self::REGEX_FUNCTION, $trace[$i]['function'], $matches);
-            if ($matches && \in_array($matches['method'], ['__call', '__callStatic'], true) && $trace[$i]['args']) {
+            $parsedFunction = self::parseFunction($trace[$i]['function']);
+            if (\in_array($parsedFunction['function'], ['__call', '__callStatic'], true) && $trace[$i]['args']) {
                 $trace[$i]['function'] = \sprintf(
                     '%s(\'%s\')',
                     $trace[$i]['function'],
@@ -300,6 +389,8 @@ class Backtrace
 
     /**
      * Remove the keys we don't want
+     *
+     * Remove 'args' and 'object' based on INCL_ARGS and INCL_OBJECT options
      *
      * @param array $trace   backtrace frames
      * @param int   $options bitmask of options
@@ -315,28 +406,6 @@ class Backtrace
         return \array_map(static function ($frame) use ($keysRemove) {
             return \array_diff_key($frame, $keysRemove);
         }, $trace);
-    }
-
-    /**
-     * Parsed "normalized" function into class, type, & function components
-     *
-     * @param string $function Function string to parse
-     *
-     * @return array
-     */
-    private static function parseFunction($function)
-    {
-        return \preg_match(self::REGEX_FUNCTION, $function, $matches)
-            ? array(
-                'class' => $matches['classname'],
-                'function' => $matches['method'],
-                'type' => $matches['type'],
-            )
-            : array(
-                'class' => null,
-                'function' => $function,
-                'type' => null,
-            );
     }
 
     /**

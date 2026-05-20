@@ -64,7 +64,7 @@ class Html extends Base
         $meta = $this->mergeMetaDefaults($logEntry);
         $channelKey = $logEntry->getChannelKey();
         // phpError channel is handled separately
-        if (!isset($this->channels[$channelKey]) && $channelKey !== $this->channelKeyRoot . '.phpError') {
+        if (!isset($this->channels[$channelKey]) && $channelKey !== $this->channelKeyRoot . '.phperror') {
             $this->channels[$channelKey] = $logEntry->getSubject();
         }
         $this->logEntryAttribs = $this->debug->arrayUtil->mergeDeep(array(
@@ -228,7 +228,7 @@ class Html extends Base
     {
         $meta = $logEntry['meta'];
         $attribs = $this->logEntryAttribs;
-        if (isset($meta['file']) && $logEntry->getChannelKey() !== $this->channelKeyRoot . '.phpError') {
+        if (isset($meta['file']) && $logEntry->getChannelKey() !== $this->channelKeyRoot . '.phperror') {
             // PHP errors will have file & line as one of the arguments
             //    so no need to store file & line as data args
             $meta = \array_merge(array('evalLine' => null), $meta);

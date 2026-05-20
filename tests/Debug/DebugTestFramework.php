@@ -34,6 +34,7 @@ class DebugTestFramework extends DOMTestCase
 
     protected static $helper;
     protected static $outputMemoryUsage = false;
+    protected static $outputCurrentTest = false;
     protected $file;
     protected $line;
 
@@ -68,14 +69,12 @@ class DebugTestFramework extends DOMTestCase
      */
     public function setUp(): void
     {
-        /*
-        if (PHP_VERSION_ID < 50500) {
+        if (self::$outputCurrentTest) {
             \fwrite(STDERR, \sprintf(
                 '  setUp: %s' . "\n",
                 $this->getName()
             ));
         }
-        */
 
         self::$allowError = false;
         self::$obLevels = \ob_get_level();
@@ -114,7 +113,7 @@ class DebugTestFramework extends DOMTestCase
         }
         */
 
-        if (method_exists($this, 'doesNotPerformAssertions') && $this->doesNotPerformAssertions()) {
+        if (\method_exists($this, 'doesNotPerformAssertions') && $this->doesNotPerformAssertions()) {
             return;
         }
 
@@ -144,7 +143,7 @@ class DebugTestFramework extends DOMTestCase
      */
     public function tearDown(): void
     {
-        // self::memoryUsage();
+        self::memoryUsage();
 
         $this->debug->setCfg('output', false);
         $subscribers = $this->debug->eventManager->getSubscribers(Debug::EVENT_OUTPUT);
@@ -169,14 +168,12 @@ class DebugTestFramework extends DOMTestCase
 
     public static function setUpBeforeClass(): void
     {
-        /*
-        if (PHP_VERSION_ID < 50500) {
+        if (self::$outputCurrentTest) {
             \fwrite(STDERR, \sprintf(
                 'setUpBeforeClass: %s' . "\n",
                 \get_called_class()
             ));
         }
-        */
 
         self::$errorHandlerPrev = \set_error_handler(static function ($errno, $errstr, $errfile, $errline) {
             if (!(\error_reporting() & $errno)) {
@@ -269,6 +266,8 @@ class DebugTestFramework extends DOMTestCase
             if (\is_string($expect)) {
                 $expectContains = \preg_replace($regexLtrim, '', $expect);
                 if ($expectContains) {
+                    // \bdk\Debug::varDump('expect', $expectContains);
+                    // \bdk\Debug::varDump('actual', $output);
                     self::assertStringMatchesFormat('%A' . $expectContains . '%A', $output);
                 }
             } elseif (\is_callable($expect)) {
@@ -571,17 +570,17 @@ class DebugTestFramework extends DOMTestCase
         return Helper::deObjectifyData($logEntries);
     }
 
-    private static function memoryUsage()
+    private function memoryUsage()
     {
         static $memoryUsage = 0;
         $memoryUsageNew = \memory_get_usage(true);
         $memoryDelta = $memoryUsageNew - $memoryUsage;
-        if ($memoryUsage > 0 && $memoryDelta > 256000 && self::$outputMemoryUsage) {
+        if (self::$outputMemoryUsage && $memoryUsage > 0 && $memoryDelta > 256000) {
             \fwrite(STDERR, \sprintf(
                 'memory usage: %s (increase of %s) (%s)',
                 \number_format($memoryUsageNew),
                 \number_format($memoryDelta),
-                \get_called_class()
+                \get_called_class() . '::' . $this->getName()
             ) . "\n");
         }
         $memoryUsage = $memoryUsageNew;

@@ -102,7 +102,7 @@ class GeneralTest extends DebugTestFramework
                 ),
             ),
             'meta' => array(
-                'channel' => 'general.phpError',
+                'channel' => 'general.phperror',
                 // 'context' => null,
                 'errorCat' => 'notice',
                 'errorHash' => $logEntry['meta']['errorHash'],

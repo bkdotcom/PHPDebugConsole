@@ -101,7 +101,7 @@ ul.group-body {
   color: var(--color-warn-fg);
 }
 
-li[data-channel="general.phpError"] {
+li[data-channel="general.phperror"] {
   > i + .t_string:nth-child(2) { font-weight: bold; }
   > .t_string[data-type-more=filepath] {
     opacity: 0.85;

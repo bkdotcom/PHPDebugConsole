@@ -205,6 +205,7 @@ class Basic implements SubscriberInterface
             ? 'textAnsi'
             : 'text');
         $args = \array_map(static function ($val) use ($ansi, $dumper) {
+            $val = $dumper->debug->abstracter->crate($val);
             $new = $dumper->valDumper->dump($val);
             if ($ansi) {
                 $dumper->valDumper->escapeReset = "\e[0m";

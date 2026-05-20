@@ -31,22 +31,14 @@ class Autoloader
 
     /** @var array<string,string|list<string>> */
     protected $psr4Map = array(
-        'bdk\\Backtrace\\' => '../Backtrace',
-        'bdk\\Container\\' => '../Container',
-        'bdk\\CurlHttpMessage\\' => '../CurlHttpMessage',
-        'bdk\\Debug\\' => '.',
-        'bdk\\ErrorHandler\\' => '../ErrorHandler',
+        'bdk\\' => '..',
         'bdk\\HttpMessage\\' => '{vendor}/bdk/http-message/src/HttpMessage',
-        'bdk\\I18n\\' => '../I18n',
-        'bdk\\Promise\\' => '../Promise',
-        'bdk\\PubSub\\' => '../PubSub',
-        'bdk\\Slack\\' => '../Slack',
-        'bdk\\Teams\\' => '../Teams',
         'bdk\\Test\\Debug\\' => '../../tests/Debug',
         'Psr\\Http\\Message\\' => [
             '{vendor}/psr/http-message/src',
             '{vendor}/psr/http-factory/src',
         ],
+        'Psr\\SimpleCache\\' => '{vendor}/psr/simple-cache/src',
     );
 
     /** @var bool */

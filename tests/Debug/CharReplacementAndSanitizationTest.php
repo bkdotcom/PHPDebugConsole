@@ -161,7 +161,7 @@ class CharReplacementAndSanitizationTest extends DebugTestFramework
                                     array(
                                         // 'cfgFlags' => 29360127,
                                         'debug' => Abstracter::ABSTRACTION,
-                                        'debugMethod' => 'log',
+                                        // 'debugMethod' => 'log',
                                         // 'interfacesCollapse' => array(), // same as inherit value
                                         // 'isLazy' => false, // same as inherit value
                                         // 'isMaxDepth' => false, // same as inherit value

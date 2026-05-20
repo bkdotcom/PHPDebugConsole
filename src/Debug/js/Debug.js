@@ -1431,7 +1431,7 @@ var phpDebugConsole = (function (exports, $) {
   function applyFilterToNode ($node, channelKeyRoot) {
     var hiddenWas = $node.is('.filter-hidden');
     var isVis = true;
-    if ($node.data('channel') === channelKeyRoot + '.phpError') {
+    if ($node.data('channel') === channelKeyRoot + '.phperror') {
       // php Errors are filtered separately
       return
     }
@@ -1888,7 +1888,7 @@ var phpDebugConsole = (function (exports, $) {
     for (val in methodLabels) {
       haveEntry = val === 'other'
         ? $entries.not('.m_alert, .m_error, .m_warn, .m_info').length > 0
-        : $entries.filter('.m_' + val).not('[data-channel="' + channelKeyRoot + '.phpError"]').length > 0;
+        : $entries.filter('.m_' + val).not('[data-channel="' + channelKeyRoot + '.phperror"]').length > 0;
       $filters.append(
         $('<li />').append(
           $('<label class="toggle active" />').toggleClass('disabled', !haveEntry).append(
@@ -2018,8 +2018,8 @@ var phpDebugConsole = (function (exports, $) {
   function addErrorIcons () {
     var channelKeyRoot = $root.data('channelKeyRoot');
     var counts = {
-      error: $root.find('.m_error[data-channel="' + channelKeyRoot + '.phpError"]').length,
-      warn: $root.find('.m_warn[data-channel="' + channelKeyRoot + '.phpError"]').length
+      error: $root.find('.m_error[data-channel="' + channelKeyRoot + '.phperror"]').length,
+      warn: $root.find('.m_warn[data-channel="' + channelKeyRoot + '.phperror"]').length
     };
     var $icon;
     var $icons = $('<span>', { class: 'debug-error-counts' });
@@ -2117,7 +2117,7 @@ var phpDebugConsole = (function (exports, $) {
       return a.localeCompare(b)
     });
     $.each(channelKeys, function (channelKey) {
-      if (channelKey === 'phpError') {
+      if (channelKey === 'phperror') {
         // phpError is a special channel
         return
       }

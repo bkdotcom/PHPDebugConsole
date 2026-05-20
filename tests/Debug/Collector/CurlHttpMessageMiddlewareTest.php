@@ -42,11 +42,11 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
         );
         $this->assertInstanceOf('Psr\\Http\\Message\\ResponseInterface', $response);
         $this->outputTest(array(
-            'html' => '<li class="m_group" data-channel="general.CurlHttpMessage" data-icon="fa fa-exchange" id="curl_%s">
+            'html' => '<li class="m_group" data-channel="general.curlhttpmessage" data-icon="fa fa-exchange" id="curl_%s">
                 <div class="group-header">%sCurlHttpMessage(%sGET%shttp://example.com/%s)</span></div>
                 <ul class="group-body">
-                    <li class="m_log" data-channel="general.CurlHttpMessage">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
-                    <li class="m_log" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">request body</span> = <span class="string-encoded tabs-container" data-type-more="json">
+                    <li class="m_log" data-channel="general.curlhttpmessage">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
+                    <li class="m_log" data-channel="general.curlhttpmessage"><span class="no-quotes t_string">request body</span> = <span class="string-encoded tabs-container" data-type-more="json">
                         <nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">json</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">parsed</a></nav>
                         <div class="tab-1 tab-pane" role="tabpanel"><span class="value-container" data-type="string"><span class="prettified">(prettified)</span> <span class="highlight language-json no-quotes t_string">{
                         &quot;foo&quot;: &quot;bar&quot;
@@ -56,10 +56,10 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                         <li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>
                         </ul><span class="t_punct">)</span></span></div>
                         </span></li>
-                    <li class="m_time" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">time: %f %s</span></li>
-                    <li class="m_log" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 200 OK<span class="ws_r"></span><span class="ws_n"></span>
+                    <li class="m_time" data-channel="general.curlhttpmessage"><span class="no-quotes t_string">time: %f %s</span></li>
+                    <li class="m_log" data-channel="general.curlhttpmessage"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 200 OK<span class="ws_r"></span><span class="ws_n"></span>
                     X-Foo: Bar</span></li>
-                    <li class="m_log" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">response body</span> = <span class="t_string">Hello World</span></li>
+                    <li class="m_log" data-channel="general.curlhttpmessage"><span class="no-quotes t_string">response body</span> = <span class="t_string">Hello World</span></li>
                 </ul>
                 </li>',
             'wamp' => function ($messages) {
@@ -158,15 +158,15 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
         $response = $client->request('GET', $this->url)->wait();
         $this->assertInstanceOf('Psr\\Http\\Message\\ResponseInterface', $response);
         $this->outputTest(array(
-            'html' => '<li class="m_group" data-channel="general.CurlHttpMessage" data-icon="fa fa-exchange" id="curl_%s">
+            'html' => '<li class="m_group" data-channel="general.curlhttpmessage" data-icon="fa fa-exchange" id="curl_%s">
                 <div class="group-header">%sCurlHttpMessage(%sGET%shttp://example.com/%s)</span></div>
                 <ul class="group-body">
-                    <li class="m_info" data-channel="general.CurlHttpMessage" data-icon="fa fa-random"><span class="no-quotes t_string">asynchronous</span></li>
-                    <li class="m_log" data-channel="general.CurlHttpMessage">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
-                    <li class="m_time" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">time: %f %s</span></li>
-                    <li class="m_log" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 202 Accepted<span class="ws_r"></span><span class="ws_n"></span>
+                    <li class="m_info" data-channel="general.curlhttpmessage" data-icon="fa fa-random"><span class="no-quotes t_string">asynchronous</span></li>
+                    <li class="m_log" data-channel="general.curlhttpmessage">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
+                    <li class="m_time" data-channel="general.curlhttpmessage"><span class="no-quotes t_string">time: %f %s</span></li>
+                    <li class="m_log" data-channel="general.curlhttpmessage"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 202 Accepted<span class="ws_r"></span><span class="ws_n"></span>
                     Content-Length: 0</span></li>
-                    <li class="m_log" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">response body</span> = <span class="t_string"></span></li>
+                    <li class="m_log" data-channel="general.curlhttpmessage"><span class="no-quotes t_string">response body</span> = <span class="t_string"></span></li>
                 </ul>
                 </li>',
             'wamp' => function ($messages) {
@@ -195,7 +195,7 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                                 'class' => [],
                                 'id' => $id,
                             ),
-                            'channel' => 'general.CurlHttpMessage',
+                            'channel' => 'general.curlhttpmessage',
                         ),
                     ),
                     1 => array(
@@ -205,7 +205,7 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                         ),
                         'meta' => array(
                             'icon' => 'fa fa-random',
-                            'channel' => 'general.CurlHttpMessage',
+                            'channel' => 'general.curlhttpmessage',
                         ),
                     ),
                     2 => array(
@@ -215,7 +215,7 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                             $messages[2]['args'][1],
                         ),
                         'meta' => array(
-                            'channel' => 'general.CurlHttpMessage',
+                            'channel' => 'general.curlhttpmessage',
                         ),
                     ),
                     /*
@@ -227,7 +227,7 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                         ),
                         'meta' => array(
                             'redact' => true,
-                            'channel' => 'general.CurlHttpMessage',
+                            'channel' => 'general.curlhttpmessage',
                         ),
                     ),
                     */
@@ -235,7 +235,7 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                         'method' => 'groupEnd',
                         'args' => array(),
                         'meta' => array(
-                            'channel' => 'general.CurlHttpMessage',
+                            'channel' => 'general.curlhttpmessage',
                         ),
                     ),
                     4 => array(
@@ -245,7 +245,7 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                         ),
                         'meta' => array(
                             'appendGroup' => $id,
-                            'channel' => 'general.CurlHttpMessage',
+                            'channel' => 'general.curlhttpmessage',
                         ),
                     ),
                     5 => array(
@@ -256,7 +256,7 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                         ),
                         'meta' => array(
                             'appendGroup' => $id,
-                            'channel' => 'general.CurlHttpMessage',
+                            'channel' => 'general.curlhttpmessage',
                         ),
                     ),
                     6 => array(
@@ -268,7 +268,7 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
                         'meta' => array(
                             'redact' => true,
                             'appendGroup'  => $id,
-                            'channel' => 'general.CurlHttpMessage',
+                            'channel' => 'general.curlhttpmessage',
                         ),
                     ),
                 );
@@ -296,19 +296,19 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
         $response = $client->request('GET', $this->url)->wait();
         $this->assertInstanceOf('Psr\\Http\\Message\\ResponseInterface', $response);
         $this->outputTest(array(
-            'html' => '<li class="m_group" data-channel="general.CurlHttpMessage" data-icon="fa fa-exchange" id="curl_%s">
+            'html' => '<li class="m_group" data-channel="general.curlhttpmessage" data-icon="fa fa-exchange" id="curl_%s">
                     <div class="group-header">%sCurlHttpMessage(%sGET%shttp://example.com/%s)</span></div>
                     <ul class="group-body">
-                        <li class="m_info" data-channel="general.CurlHttpMessage" data-icon="fa fa-random"><span class="no-quotes t_string">asynchronous</span></li>
-                        <li class="m_log" data-channel="general.CurlHttpMessage">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
+                        <li class="m_info" data-channel="general.curlhttpmessage" data-icon="fa fa-random"><span class="no-quotes t_string">asynchronous</span></li>
+                        <li class="m_log" data-channel="general.curlhttpmessage">%srequest headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
                     </ul>
                 </li>
-                <li class="m_group" data-channel="general.CurlHttpMessage" data-icon="fa fa-exchange">
+                <li class="m_group" data-channel="general.curlhttpmessage" data-icon="fa fa-exchange">
                     <div class="group-header">%sCurlHttpMessage Response(%sGET%shttp://example.com/%s)</span></div>
                     <ul class="group-body">
-                        <li class="m_time" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">time: %f %s</span></li>
-                        <li class="m_log" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 200 OK</span></li>
-                        <li class="m_log" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">response body</span> = <span class="t_string">Test</span></li>
+                        <li class="m_time" data-channel="general.curlhttpmessage"><span class="no-quotes t_string">time: %f %s</span></li>
+                        <li class="m_log" data-channel="general.curlhttpmessage"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/1.1 200 OK</span></li>
+                        <li class="m_log" data-channel="general.curlhttpmessage"><span class="no-quotes t_string">response body</span> = <span class="t_string">Test</span></li>
                     </ul>
                 </li>',
         ));
@@ -332,12 +332,12 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
         }
         $this->assertTrue($caught);
         $this->outputTest(array(
-            'html' => '<li class="expanded m_group" data-channel="general.CurlHttpMessage" data-icon="fa fa-exchange" id="curl_%s">
+            'html' => '<li class="expanded m_group" data-channel="general.curlhttpmessage" data-icon="fa fa-exchange" id="curl_%s">
                     <div class="group-header">%sCurlHttpMessage(%sGET%shttp://example.com/%s)</span></div>
                     <ul class="group-body">
-                        <li class="m_log" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">request headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
-                        <li class="m_warn" data-channel="general.CurlHttpMessage" data-file="%s" data-line="%s"><span class="no-quotes t_string">bdk\CurlHttpMessage\Exception\RequestException</span>, <span class="t_int">0</span>, <span class="t_string">Error Communicating with Server</span></li>
-                        <li class="m_time" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">time: %f %s</span></li>
+                        <li class="m_log" data-channel="general.curlhttpmessage"><span class="no-quotes t_string">request headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
+                        <li class="m_warn" data-channel="general.curlhttpmessage" data-file="%s" data-line="%s"><span class="no-quotes t_string">bdk\CurlHttpMessage\Exception\RequestException</span>, <span class="t_int">0</span>, <span class="t_string">Error Communicating with Server</span></li>
+                        <li class="m_time" data-channel="general.curlhttpmessage"><span class="no-quotes t_string">time: %f %s</span></li>
                     </ul>
                 </li>',
         ));
@@ -364,13 +364,13 @@ class CurlHttpMessageMiddlewareTest extends DebugTestFramework
         }
         $this->assertTrue($caught);
         $this->outputTest(array(
-            'html' => '<li class="expanded m_group" data-channel="general.CurlHttpMessage" data-icon="fa fa-exchange" id="curl_%s">
+            'html' => '<li class="expanded m_group" data-channel="general.curlhttpmessage" data-icon="fa fa-exchange" id="curl_%s">
                     <div class="group-header">%sCurlHttpMessage(%sGET%shttp://example.com/%s)</span></div>
                     <ul class="group-body">
-                        <li class="m_info" data-channel="general.CurlHttpMessage" data-icon="fa fa-random"><span class="no-quotes t_string">asynchronous</span></li>
-                        <li class="m_log" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">request headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
-                        <li class="m_warn" data-channel="general.CurlHttpMessage" data-file="%s" data-line="%s"><span class="no-quotes t_string">bdk\CurlHttpMessage\Exception\RequestException</span>, <span class="t_int">0</span>, <span class="t_string">Error Communicating with Server</span></li>
-                        <li class="m_time" data-channel="general.CurlHttpMessage"><span class="no-quotes t_string">time: %f %s</span></li>
+                        <li class="m_info" data-channel="general.curlhttpmessage" data-icon="fa fa-random"><span class="no-quotes t_string">asynchronous</span></li>
+                        <li class="m_log" data-channel="general.curlhttpmessage"><span class="no-quotes t_string">request headers</span> = <span class="t_string">GET / HTTP/1.1%A</li>
+                        <li class="m_warn" data-channel="general.curlhttpmessage" data-file="%s" data-line="%s"><span class="no-quotes t_string">bdk\CurlHttpMessage\Exception\RequestException</span>, <span class="t_int">0</span>, <span class="t_string">Error Communicating with Server</span></li>
+                        <li class="m_time" data-channel="general.curlhttpmessage"><span class="no-quotes t_string">time: %f %s</span></li>
                     </ul>
                 </li>',
         ));

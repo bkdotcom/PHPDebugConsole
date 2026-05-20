@@ -507,7 +507,7 @@ class BasicTest extends DebugTestFramework
                             ),
                         ),
                         'meta' => array(
-                            'channel' => 'general.phpError',
+                            'channel' => 'general.phperror',
                             // 'context' => null,
                             'errorCat' => 'warning',
                             'errorHash' => $logEntry->getMeta('errorHash'),
@@ -523,7 +523,7 @@ class BasicTest extends DebugTestFramework
                     ), $this->helper->logEntryToArray($logEntry));
                 },
                 // note:  no data-file or data-line attributes
-                'html' => '<li class="error-warning m_error" data-channel="general.phpError"><span class="no-quotes t_string">Warning: </span><span class="t_string">this is a warning</span>, <span class="no-quotes t_string" data-type-more="filepath"><span class="t_string"><span class="file-path-rel">' . \dirname(__FILE__) . '/' . '</span><span class="file-basename">' . \basename(__FILE__) . '</span></span> (line <span class="t_int">42</span>)</span></li>',
+                'html' => '<li class="error-warning m_error" data-channel="general.phperror"><span class="no-quotes t_string">Warning: </span><span class="t_string">this is a warning</span>, <span class="no-quotes t_string" data-type-more="filepath"><span class="t_string"><span class="file-path-rel">' . \dirname(__FILE__) . '/' . '</span><span class="file-basename">' . \basename(__FILE__) . '</span></span> (line <span class="t_int">42</span>)</span></li>',
             )
         );
 
@@ -542,8 +542,12 @@ class BasicTest extends DebugTestFramework
     public function testVarDump()
     {
         $stream = \fopen('php://output', 'w');
-        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('methodBasic'), 'cliOutputStream', $stream);
-        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('methodBasic'), 'hasColorSupport', true);
+        $pluginMethodBasic = $this->debug->getPlugin('methodBasic');
+        $isCliWas = \bdk\Debug\Utility\Reflection::propGet($pluginMethodBasic, 'isCli');
+        $streamWas = \bdk\Debug\Utility\Reflection::propGet($pluginMethodBasic, 'cliOutputStream');
+        $hasColorSupportWas = \bdk\Debug\Utility\Reflection::propGet($pluginMethodBasic, 'hasColorSupport');
+        \bdk\Debug\Utility\Reflection::propSet($pluginMethodBasic, 'cliOutputStream', $stream);
+        \bdk\Debug\Utility\Reflection::propSet($pluginMethodBasic, 'hasColorSupport', true);
         $this->testMethod(
             'varDump',
             array(
@@ -561,6 +565,7 @@ class BasicTest extends DebugTestFramework
                     'false' => false,
                     'int' => 42,
                     'null' => null,
+                    'obj' => new \bdk\Test\Debug\Fixture\Test2(),
                     'true' => true,
                 ),
             ),
@@ -569,13 +574,21 @@ class BasicTest extends DebugTestFramework
                         \e[38;5;245m[\e[38;5;83mfalse\e[38;5;245m]\e[38;5;224m => \e[0m\e[91mfalse\e[0m
                         \e[38;5;245m[\e[38;5;83mint\e[38;5;245m]\e[38;5;224m => \e[0m\e[96m42\e[0m
                         \e[38;5;245m[\e[38;5;83mnull\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250mnull\e[0m
+                        \e[38;5;245m[\e[38;5;83mobj\e[38;5;245m]\e[38;5;224m => \e[0m\e[38;5;250mbdk\\Test\\Debug\\Fixture\\\e[0m\e[1mTest2\e[22m
+                        \e[4mproperties:\e[24m
+                        \e[38;5;250m✨ This object has a __get method\e[0m
+                        \e[38;5;250m↳\e[0m \e[38;5;250m(✨ magic)\e[0m \e[38;5;83mmagicProp\e[0m \e[38;5;224m=\e[0m \e[2mundefined\e[22m
+                        \e[38;5;250m↳\e[0m \e[38;5;250m(✨ magic-read protected)\e[0m \e[38;5;83mmagicReadProp\e[0m \e[38;5;224m=\e[0m \e[38;5;250m"\e[0mnot null\e[38;5;250m"\e[0m
+                        \e[4mmethods:\e[24m
+                        public\e[38;5;245m: \e[96m3\e[0m
+                        magic\e[38;5;245m: \e[96m1\e[0m
                         \e[38;5;245m[\e[38;5;83mtrue\e[38;5;245m]\e[38;5;224m => \e[0m\e[32mtrue\e[0m
                     \e[38;5;245m)\e[0m
                 '),
             )
         );
 
-        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('methodBasic'), 'isCli', false);
+        \bdk\Debug\Utility\Reflection::propSet($pluginMethodBasic, 'isCli', false);
         $this->testMethod(
             'varDump',
             array(
@@ -616,7 +629,9 @@ class BasicTest extends DebugTestFramework
                 )</pre>',
             )
         );
-        \bdk\Debug\Utility\Reflection::propSet($this->debug->getPlugin('methodBasic'), 'isCli', true);
+        \bdk\Debug\Utility\Reflection::propSet($pluginMethodBasic, 'isCli', $isCliWas);
+        \bdk\Debug\Utility\Reflection::propSet($pluginMethodBasic, 'cliOutputStream', $streamWas);
+        \bdk\Debug\Utility\Reflection::propSet($pluginMethodBasic, 'hasColorSupport', $hasColorSupportWas);
     }
 
     /**

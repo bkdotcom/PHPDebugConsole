@@ -11,6 +11,7 @@
 namespace bdk\Debug;
 
 use bdk\Debug;
+use InvalidArgumentException;
 
 /**
  * Maintain log data and other runtime info
@@ -57,7 +58,7 @@ class Data
     /**
      * Advanced usage
      *
-     * @param string $path path
+     * @param string|array $path path
      *
      * @return mixed
      */
@@ -92,12 +93,10 @@ class Data
             $this->setLogDest($value);
             return;
         }
+        $path = $this->pathToArray($path);
         $setLogDest = true;
-        if (\is_string($path) || \func_num_args() === 2) {
-            $key = \is_array($path)
-                ? $path[0]
-                : $path;
-            $setLogDest = \in_array($key, ['alerts', 'log', 'logSummary'], true);
+        if (\func_num_args() === 2) {
+            $setLogDest = \in_array($path[0], ['alerts', 'log', 'logSummary'], true);
             $this->arrayUtil->pathSet($this->data, $path, $value);
         } elseif (\is_array($path)) {
             $this->data = \array_merge($this->data, $path);
@@ -221,6 +220,26 @@ class Data
         }
         // we didn't find the logEntry... just point to the log
         return $this->data['log'];
+    }
+
+    /**
+     * Convert path (used by `set`) to array
+     *
+     * @param string|array $path Array path
+     *
+     * @return array
+     *
+     * @throws InvalidArgumentException if path is not string or array
+     */
+    private function pathToArray($path)
+    {
+        if (\is_string($path)) {
+            return \array_filter(\preg_split('#[\./]#', $path), 'strlen');
+        }
+        if (\is_array($path)) {
+            return $path;
+        }
+        throw new InvalidArgumentException('Path must be string or array');
     }
 
     /**

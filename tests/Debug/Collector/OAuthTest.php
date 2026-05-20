@@ -51,14 +51,14 @@ class OAuthTest extends DebugTestFramework
                     'POST',
                     self::$accessTokenUrl,
                 ),
-                'meta' => array('channel' => 'general.OAuth'),
+                'meta' => array('channel' => 'general.oauth'),
             ),
             array(
                 'method' => 'time',
                 'args' => array(
                     'time: %f ms',
                 ),
-                'meta' => array('channel' => 'general.OAuth'),
+                'meta' => array('channel' => 'general.oauth'),
             ),
             array(
                 'method' => 'log',
@@ -79,7 +79,7 @@ class OAuthTest extends DebugTestFramework
                         'oauth_version' => '1.0',
                     ),
                 ),
-                'meta' => array('channel' => 'general.OAuth'),
+                'meta' => array('channel' => 'general.oauth'),
             ),
             array(
                 'method' => 'log',
@@ -90,7 +90,7 @@ class OAuthTest extends DebugTestFramework
                         'sbs' => 'POST&http%3A%2F%2F127.0.0.1%3A8080%2Foauth%2Faccess_token&oauth_consumer_key%3Dkey%26oauth_nonce%3D%s%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3D%s%26oauth_version%3D1.0',
                     ),
                 ),
-                'meta' => array('channel' => 'general.OAuth'),
+                'meta' => array('channel' => 'general.oauth'),
             ),
             array(
                 'method' => 'log',
@@ -99,7 +99,7 @@ class OAuthTest extends DebugTestFramework
                     '%AAuthorization: OAuth oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1",oauth_nonce="%s",oauth_timestamp="%d",oauth_version="1.0",oauth_signature="█████████"%A',
                 ),
                 'meta' => array(
-                    'channel' => 'general.OAuth',
+                    'channel' => 'general.oauth',
                     'icon' => 'fa fa-arrow-right',
                 ),
             ),
@@ -114,7 +114,7 @@ class OAuthTest extends DebugTestFramework
                     )),
                 ),
                 'meta' => array(
-                    'channel' => 'general.OAuth',
+                    'channel' => 'general.oauth',
                     'icon' => 'fa fa-arrow-left',
                 ),
             ),
@@ -125,14 +125,14 @@ class OAuthTest extends DebugTestFramework
                     'oauth_token=access_token&oauth_token_secret=access_token_secret',
                 ),
                 'meta' => array(
-                    'channel' => 'general.OAuth',
+                    'channel' => 'general.oauth',
                     'icon' => 'fa fa-arrow-left',
                 ),
             ),
             array(
                 'method' => 'groupEnd',
                 'args' => array(),
-                'meta' => array('channel' => 'general.OAuth'),
+                'meta' => array('channel' => 'general.oauth'),
             ),
         ), $logEntries);
     }
@@ -148,13 +148,13 @@ class OAuthTest extends DebugTestFramework
         }
         $logEntries = $this->getLogEntries();
         $this->assertSame(array(
-            'method' => 'warn',
+            'method' => 'error',
             'args' => array(
                 'OAuthException',
                 'Invalid auth/bad request (got a 404, expected HTTP/1.1 20X or a redirect)',
             ),
             'meta' => array(
-                'channel' => 'general.OAuth',
+                'channel' => 'general.oauth',
                 // 'evalLine' => null,
                 'file' => __FILE__,
                 'line' => $line,
@@ -183,7 +183,7 @@ class OAuthTest extends DebugTestFramework
                     'GET',
                     self::$requestTokenUrl,
                 ),
-                'meta' => array('channel' => 'general.OAuth'),
+                'meta' => array('channel' => 'general.oauth'),
             ),
             array(
                 'method' => 'log',
@@ -191,14 +191,14 @@ class OAuthTest extends DebugTestFramework
                     'callback url',
                     'http://www.bradkent.com/',
                 ),
-                'meta' => array('channel' => 'general.OAuth'),
+                'meta' => array('channel' => 'general.oauth'),
             ),
             array(
                 'method' => 'time',
                 'args' => array(
                     'time: %f ms',
                 ),
-                'meta' => array('channel' => 'general.OAuth'),
+                'meta' => array('channel' => 'general.oauth'),
             ),
             array(
                 'method' => 'log',
@@ -223,7 +223,7 @@ class OAuthTest extends DebugTestFramework
                     ),
                 ),
                 'meta' => array(
-                    'channel' => 'general.OAuth',
+                    'channel' => 'general.oauth',
                 ),
             ),
             array(
@@ -236,7 +236,7 @@ class OAuthTest extends DebugTestFramework
                     ),
                 ),
                 'meta' => array(
-                    'channel' => 'general.OAuth',
+                    'channel' => 'general.oauth',
                 ),
             ),
             array(
@@ -246,7 +246,7 @@ class OAuthTest extends DebugTestFramework
                     '%AAuthorization: OAuth oauth_callback="http%3A%2F%2Fwww.bradkent.com%2F",oauth_consumer_key="key",oauth_signature_method="HMAC-SHA1",oauth_nonce="%s",oauth_timestamp="%d",oauth_version="1.0",oauth_signature="█████████"%A',
                 ),
                 'meta' => array(
-                    'channel' => 'general.OAuth',
+                    'channel' => 'general.oauth',
                     'icon' => 'fa fa-arrow-right',
                 ),
             ),
@@ -261,7 +261,7 @@ class OAuthTest extends DebugTestFramework
                     )),
                 ),
                 'meta' => array(
-                    'channel' => 'general.OAuth',
+                    'channel' => 'general.oauth',
                     'icon' => 'fa fa-arrow-left',
                 ),
             ),
@@ -272,14 +272,14 @@ class OAuthTest extends DebugTestFramework
                     'oauth_token=request_token&oauth_token_secret=request_token_secret',
                 ),
                 'meta' => array(
-                    'channel' => 'general.OAuth',
+                    'channel' => 'general.oauth',
                     'icon' => 'fa fa-arrow-left',
                 ),
             ),
             array(
                 'method' => 'groupEnd',
                 'args' => array(),
-                'meta' => array('channel' => 'general.OAuth'),
+                'meta' => array('channel' => 'general.oauth'),
             ),
         ), $logEntries);
     }
@@ -295,13 +295,13 @@ class OAuthTest extends DebugTestFramework
         }
         $logEntries = $this->getLogEntries();
         $this->assertSame(array(
-            'method' => 'warn',
+            'method' => 'error',
             'args' => array(
                 'OAuthException',
                 'Invalid auth/bad request (got a 404, expected HTTP/1.1 20X or a redirect)',
             ),
             'meta' => array(
-                'channel' => 'general.OAuth',
+                'channel' => 'general.oauth',
                 // 'evalLine' => null,
                 'file' => __FILE__,
                 'line' => $line,
@@ -335,14 +335,14 @@ class OAuthTest extends DebugTestFramework
                     'POST',
                     self::$oauthEndpoint,
                 ),
-                'meta' => array('channel' => 'general.OAuth'),
+                'meta' => array('channel' => 'general.oauth'),
             ),
             array(
                 'method' => 'time',
                 'args' => array(
                     'time: %f ms',
                 ),
-                'meta' => array('channel' => 'general.OAuth'),
+                'meta' => array('channel' => 'general.oauth'),
             ),
             array(
                 'method' => 'log',
@@ -363,7 +363,7 @@ class OAuthTest extends DebugTestFramework
                         'oauth_version' => '1.0',
                     ),
                 ),
-                'meta' => array('channel' => 'general.OAuth'),
+                'meta' => array('channel' => 'general.oauth'),
             ),
             array(
                 'method' => 'log',
@@ -375,7 +375,7 @@ class OAuthTest extends DebugTestFramework
                         'sbs' => 'POST&http%3A%2F%2F127.0.0.1%3A8080%2Fecho&foo%3Dbar%26oauth_consumer_key%3Dkey%26oauth_nonce%3D%s%26oauth_signature_method%3DHMAC-SHA1%26oauth_timestamp%3%s%26oauth_version%3D1.0',
                     ),
                 ),
-                'meta' => array('channel' => 'general.OAuth'),
+                'meta' => array('channel' => 'general.oauth'),
             ),
             array(
                 'method' => 'log',
@@ -387,7 +387,7 @@ class OAuthTest extends DebugTestFramework
                     )) . '%A',
                 ),
                 'meta' => array(
-                    'channel' => 'general.OAuth',
+                    'channel' => 'general.oauth',
                     'icon' => 'fa fa-arrow-right',
                 ),
             ),
@@ -398,7 +398,7 @@ class OAuthTest extends DebugTestFramework
                     'foo=bar',
                 ),
                 'meta' => array(
-                    'channel' => 'general.OAuth',
+                    'channel' => 'general.oauth',
                     'icon' => 'fa fa-arrow-right',
                     'redact' => true,
                 ),
@@ -414,7 +414,7 @@ class OAuthTest extends DebugTestFramework
                     )),
                 ),
                 'meta' => array(
-                    'channel' => 'general.OAuth',
+                    'channel' => 'general.oauth',
                     'icon' => 'fa fa-arrow-left',
                 ),
             ),
@@ -425,19 +425,20 @@ class OAuthTest extends DebugTestFramework
                     '%Afoo=bar%A',
                 ),
                 'meta' => array(
-                    'channel' => 'general.OAuth',
+                    'channel' => 'general.oauth',
                     'icon' => 'fa fa-arrow-left',
                 ),
             ),
             array(
                 'method' => 'groupEnd',
                 'args' => array(),
-                'meta' => array('channel' => 'general.OAuth'),
+                'meta' => array('channel' => 'general.oauth'),
             ),
 
         ), $logEntriesActual);
     }
 
+    // SBS = Signature Base String
     public function testFetchParamsViaSbs()
     {
         $this->assertOauth();
@@ -465,7 +466,7 @@ class OAuthTest extends DebugTestFramework
                     ),
                 ),
                 'meta' => array(
-                    'channel' => 'general.OAuth',
+                    'channel' => 'general.oauth',
                 ),
             ),
         ), \array_slice($this->getLogEntries(), 2, 1));
@@ -482,13 +483,13 @@ class OAuthTest extends DebugTestFramework
         }
         $logEntries = $this->getLogEntries();
         $this->assertSame(array(
-            'method' => 'warn',
+            'method' => 'error',
             'args' => array(
                 'OAuthException',
                 'Invalid auth/bad request (got a 404, expected HTTP/1.1 20X or a redirect)',
             ),
             'meta' => array(
-                'channel' => 'general.OAuth',
+                'channel' => 'general.oauth',
                 // 'evalLine' => null,
                 'file' => __FILE__,
                 'line' => $line,

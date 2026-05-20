@@ -134,7 +134,7 @@ function applyFilter ($root) {
 function applyFilterToNode ($node, channelKeyRoot) {
   var hiddenWas = $node.is('.filter-hidden')
   var isVis = true
-  if ($node.data('channel') === channelKeyRoot + '.phpError') {
+  if ($node.data('channel') === channelKeyRoot + '.phperror') {
     // php Errors are filtered separately
     return
   }

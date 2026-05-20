@@ -177,30 +177,28 @@ class Helper
     public static function getType($reflector, $phpDocType = null)
     {
         $typeInfo = $reflector instanceof Reflector
-            ? self::getTypeInfoViaReflection($reflector)
+            ? self::getTypeInfoReflection($reflector)
             : array(
                 'allowsNull' => null,
                 'php' => null,
             );
 
         $typeInfo['phpDoc'] = $phpDocType;
-        if ($phpDocType === null) {
-            return $typeInfo;
-        }
-        if ($typeInfo['php'] === null && $phpDocType !== 'mixed') {
+        if ($typeInfo['php'] === null && $phpDocType !== null && $phpDocType !== 'mixed') {
+            // not strictly enforced, but if phpDoc type is provided, we'll base nullability on that (vs assuming nullable if php type is missing)
             $typeInfo['allowsNull'] = false;
         }
         return $typeInfo;
     }
 
     /**
-     * Get parameter type from ReflectionParameter for PHP < 7.0
+     * Get parameter type from legacy ReflectionConstant, ReflectionParameter, or ReflectionProperty
      *
-     * @param ReflectionParameter $reflector ReflectionParameter instance
+     * @param Reflector $reflector Reflection instance
      *
      * @return array{allowsNull:bool,php:string|null}
      */
-    private static function getTypeInfoParamOld(ReflectionParameter $reflector)
+    private static function getTypeInfoLegacyParam(ReflectionParameter $reflector)
     {
         $type = null;
         if ($reflector->isArray()) {
@@ -215,6 +213,32 @@ class Helper
             'allowsNull' => $type === null || ($reflector->isDefaultValueAvailable() && $reflector->getDefaultValue() === null),
             'php' => $type,
         );
+    }
+
+    /**
+     * Get type-info
+     *
+     * @param ReflectionClassConstant|ReflectionMethod|ReflectionParameter|ReflectionProperty $reflector Reflector instance
+     *
+     * @return array{allowsNull:bool,php:string|null}
+     */
+    private static function getTypeInfoReflection($reflector)
+    {
+        if ($reflector instanceof ReflectionMethod) {
+            return self::getTypeInfoReturn($reflector);
+        }
+        if (\method_exists($reflector, 'getType')) {
+            // ReflectionClassConstant : php >= 8.3
+            // ReflectionParameter : php >= 7.0
+            // ReflectionProperty : php >= 7.4
+            return static::getTypeInfoRefType($reflector->getType(), $reflector);
+        }
+        return $reflector instanceof ReflectionParameter
+            ? static::getTypeInfoLegacyParam($reflector)
+            : array(
+                'allowsNull' => !($reflector instanceof ReflectionClassConstant),
+                'php' => null,
+            );
     }
 
     /**
@@ -260,33 +284,25 @@ class Helper
      */
     private static function getTypeInfoReturn(ReflectionMethod $reflector)
     {
+        if ($reflector->getName() === '__toString') {
+            // __toString must return string and cannot return null
+            return array(
+                'allowsNull' => false,
+                'php' => 'string',
+            );
+        }
+        if (PHP_VERSION_ID < 70000) {
+            // no return type info available prior to php 7.0
+            return array(
+                'allowsNull' => true,
+                'php' => null,
+            );
+        }
         $refType = $reflector->getReturnType();
         if (!$refType && \method_exists($reflector, 'getTentativeReturnType')) {
             $refType = $reflector->getTentativeReturnType();
         }
         return self::getTypeInfoRefType($refType, $reflector);
-    }
-
-    /**
-     * Get type-info
-     *
-     * @param ReflectionClassConstant|ReflectionMethod|ReflectionParameter|ReflectionProperty $reflector Reflector instance
-     *
-     * @return array{allowsNull:bool,php:string|null}
-     */
-    private static function getTypeInfoViaReflection($reflector)
-    {
-        if ($reflector instanceof ReflectionMethod && PHP_VERSION_ID >= 70000) {
-            return self::getTypeInfoReturn($reflector);
-        }
-        if (\method_exists($reflector, 'getType')) {
-            // ReflectionClassConstant : php >= 8.3
-            // ReflectionParameter : php >= 7.0
-            // ReflectionProperty : php >= 7.4
-            return static::getTypeInfoRefType($reflector->getType(), $reflector);
-        }
-        // old ReflectionParameter (php < 7.0) before getType() existed
-        return static::getTypeInfoParamOld($reflector);
     }
 
     /**

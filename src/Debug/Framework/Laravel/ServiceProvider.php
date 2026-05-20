@@ -143,6 +143,7 @@ class ServiceProvider extends BaseServiceProvider
         $modelCounts = array();
         foreach ($this->modelCounts as $class => $count) {
             $ref = new ReflectionClass($class);
+            // @phpcs:ignore SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys
             $modelCounts[] = array(
                 'model' => $this->debug->abstracter->crateWithVals($class, array(
                     'attribs' => array(

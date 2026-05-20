@@ -1,7 +1,14 @@
 <?php
 
 use bdk\HttpMessage\Response;
+use bdk\HttpMessage\Utility\ServerRequest as ServerRequestUtility;
 use Psr\Http\Message\RequestInterface;
+
+if (!isset($serverRequest)) {
+    // script called directly vs frontController
+    require __DIR__ . '/../../vendor/autoload.php';
+    $serverRequest = ServerRequestUtility::fromGlobals();
+}
 
 $queryParams = $serverRequest->getQueryParams();
 $uriNew = null;

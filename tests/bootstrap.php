@@ -46,6 +46,16 @@ if (\class_exists('OAuth') === false) {
      */
     class OAuth
     {
+        public $debugInfo = array();
+
+        public function enableDebug()
+        {
+        }
+
+        public function getLastResponseInfo()
+        {
+            return array();
+        }
     }
 }
 

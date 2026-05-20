@@ -122,7 +122,7 @@ class SwiftMailerLoggerTest extends DebugTestFramework
                     'Test Message',
                 ],
                 'meta' => array(
-                    'channel' => 'general.SwiftMailer',
+                    'channel' => 'general.swiftmailer',
                     'icon' => 'fa fa-envelope-o',
                 ),
             ),
@@ -141,7 +141,7 @@ Content-Transfer-Encoding: quoted-printable
 ',
                 ],
                 'meta' => array(
-                    'channel' => 'general.SwiftMailer',
+                    'channel' => 'general.swiftmailer',
                 ),
             ),
         ]);
@@ -192,7 +192,7 @@ Content-Transfer-Encoding: quoted-printable
                     1 => 'burp',
                 ],
                 'meta' => array(
-                    'channel' => 'general.SwiftMailer',
+                    'channel' => 'general.swiftmailer',
                     'icon' => 'fa fa-envelope-o',
                 ),
             ),
@@ -212,7 +212,7 @@ Content-Transfer-Encoding: quoted-printable
                     'some response',
                 ],
                 'meta' => array(
-                    'channel' => 'general.SwiftMailer',
+                    'channel' => 'general.swiftmailer',
                     'icon' => 'fa fa-envelope-o',
                 ),
             ),
@@ -232,7 +232,7 @@ Content-Transfer-Encoding: quoted-printable
                     'Starting Swift_SendmailTransport',
                 ],
                 'meta' => array(
-                    'channel' => 'general.SwiftMailer',
+                    'channel' => 'general.swiftmailer',
                     'icon' => 'fa fa-envelope-o',
                 ),
             ),
@@ -252,7 +252,7 @@ Content-Transfer-Encoding: quoted-printable
                     'Stopping Swift_SendmailTransport',
                 ],
                 'meta' => array(
-                    'channel' => 'general.SwiftMailer',
+                    'channel' => 'general.swiftmailer',
                     'icon' => 'fa fa-envelope-o',
                 ),
             ),
@@ -280,7 +280,7 @@ Content-Transfer-Encoding: quoted-printable
                     'Swift_SendmailTransport started',
                 ),
                 'meta' => array(
-                    'channel' => 'general.SwiftMailer',
+                    'channel' => 'general.swiftmailer',
                     'icon' => 'fa fa-envelope-o',
                 ),
             ),
@@ -300,7 +300,7 @@ Content-Transfer-Encoding: quoted-printable
                     'Swift_SendmailTransport stopped',
                 ],
                 'meta' => array(
-                    'channel' => 'general.SwiftMailer',
+                    'channel' => 'general.swiftmailer',
                     'icon' => 'fa fa-envelope-o',
                 ),
             ),

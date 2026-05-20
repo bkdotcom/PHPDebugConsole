@@ -16,26 +16,20 @@ return array (
     'classDefinitions' => array(
         '' . "\0" . 'default' . "\0" . '' => array(
             '__isUsed' => true,
-            'attributes' => array(
-            ),
-            'cases' => array(
-            ),
+            'attributes' => array(),
+            'cases' => array(),
             'cfgFlags' => 29360127,
             'className' => '' . "\0" . 'default' . "\0" . '',
-            'constants' => array(
-            ),
-            'debugMethod' => '',
+            'constants' => array(),
+            // 'debugMethod' => '',
             'definition' => array(
                 'extensionName' => false,
                 'fileName' => false,
                 'startLine' => false,
             ),
-            'extends' => array(
-            ),
-            'implements' => array(
-            ),
-            'interfacesCollapse' => array(
-            ),
+            'extends' => array(),
+            'implements' => array(),
+            'interfacesCollapse' => array(),
             'isAbstract' => false,
             'isAnonymous' => false,
             'isExcluded' => false,
@@ -46,18 +40,14 @@ return array (
             'isReadOnly' => false,
             'isRecursion' => false,
             'isTrait' => false,
-            'keys' => array(
-            ),
-            'methods' => array(
-            ),
-            'methodsWithStaticVars' => array(
-            ),
+            'keys' => array(),
+            'methods' => array(),
+            'methodsWithStaticVars' => array(),
             'phpDoc' => array(
                 'desc' => '',
                 'summary' => '',
             ),
-            'properties' => array(
-            ),
+            'properties' => array(),
             'scopeClass' => null,
             'sectionOrder' => array(
                 0 => 'attributes',
@@ -97,8 +87,7 @@ return array (
                     'isDeprecated' => false,
                     'isFinal' => false,
                     'isStatic' => false,
-                    'params' => array(
-                    ),
+                    'params' => array(),
                     'phpDoc' => array(
                         'desc' => '',
                         'summary' => '',
@@ -108,13 +97,11 @@ return array (
                         'type' => 'string',
                     ),
                     'returnValue' => null,
-                    'staticVars' => array(
-                    ),
+                    'staticVars' => array(),
                     'visibility' => 'public',
                 ),
                 'foo' => array(
-                    'attributes' => array(
-                    ),
+                    'attributes' => array(),
                     'declaredLast' => 'Simple',
                     'declaredOrig' => 'Simple',
                     'declaredPrev' => null,
@@ -145,22 +132,19 @@ return array (
                         'desc' => 'the fooed string',
                         'type' => 'string',
                     ),
-                    'staticVars' => array(
-                    ),
+                    'staticVars' => array(),
                     'visibility' => 'private',
                 ),
             ),
             'properties' => array(
                 'offLimits' => array(
-                    'attributes' => array(
-                    ),
+                    'attributes' => array(),
                     'debugInfoExcluded' => false,
                     'declaredLast' => 'Simple',
                     'declaredOrig' => 'Simple',
                     'declaredPrev' => null,
                     'forceShow' => false,
-                    'hooks' => array(
-                    ),
+                    'hooks' => array(),
                     'isDeprecated' => false,
                     'isFinal' => false,
                     'isPromoted' => false,
@@ -215,7 +199,7 @@ return array (
                     'null' => null,
                     'object' => array(
                         'debug' => \bdk\Debug\Abstraction\Abstracter::ABSTRACTION,
-                        'debugMethod' => 'log',
+                        // 'debugMethod' => 'log',
                         'inheritsFrom' => 'Simple',
                         'methods' => array(
                             '__toString' => array(
@@ -239,8 +223,7 @@ return array (
         ),
         2 => array(
             0 => 'groupEnd',
-            1 => array(
-            ),
+            1 => array(),
         ),
         3 => array(
             0 => 'table',

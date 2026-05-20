@@ -153,20 +153,17 @@ class TableCell extends Element
     }
 
     /**
-     * Get the column meta values for this cell's column
-     *   * Only applies to tbody cells without colspan/rowspan
+     * Get the "closest" Table element
      *
-     * @return array<string,mixed>
+     * @param Element     $element Element to start search from
+     * @param string|null $rowType Set to the row type (thead/tbody/tfoot) if found
+     *
+     * @return Element|null
      */
-    protected function getColumnMeta()
+    private function closestTable(Element $element, &$rowType = null)
     {
-        $columnMetaDefault = array(
-            'attribs' => array(),
-            'tagName' => null,
-        );
-        // find the table this cell belongs to
         $table = null;
-        $parent = $this->getParent();
+        $parent = $element->getParent();
         $rowType = 'tbody';
         while ($parent !== null) {
             $tagName = $parent->getTagName();
@@ -179,6 +176,23 @@ class TableCell extends Element
             }
             $parent = $parent->getParent();
         }
+        return $table;
+    }
+
+    /**
+     * Get the column meta values for this cell's column.
+     * Only applies to tbody cells without colspan/rowspan.
+     *
+     * @return array<string,mixed>
+     */
+    protected function getColumnMeta()
+    {
+        $columnMetaDefault = array(
+            'attribs' => array(),
+            'tagName' => null,
+        );
+        // find the table this cell belongs to
+        $table = $this->closestTable($this, $rowType);
         $attribs = $this->getAttribs();
         if ($table === null || $rowType !== 'tbody' || \array_intersect_key($attribs, \array_flip(['colspan', 'rowspan']))) {
             return $columnMetaDefault;

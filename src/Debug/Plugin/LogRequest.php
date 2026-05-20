@@ -66,15 +66,10 @@ class LogRequest extends AbstractLogReqRes implements SubscriberInterface
         }
         $this->debug = $this->debug->rootInstance->getChannel($this->cfg['channelKey'], $this->cfg['channelOptions']);
         $collectWas = $this->debug->setCfg('collect', true);
-        $this->debug->log(
-            $this->debug->i18n->trans('request'),
-            $this->debug->meta(array(
-                'attribs' => array(
-                    'style' => $this->headerStyle,
-                ),
-                'icon' => ':send:',
-            ))
-        );
+        $this->debug->log($this->debug->i18n->trans('request'), $this->debug->meta(array(
+            'attribs' => array( 'style' => $this->headerStyle ),
+            'icon' => ':send:',
+        )));
         $this->debug->alert(
             '%c%s%c %s',
             'font-weight:bold;',

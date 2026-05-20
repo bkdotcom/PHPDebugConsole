@@ -35,13 +35,55 @@ class UnserializeLogBackwards
     /**
      * Update class definition
      *
-     * @param ValueStore $def Class definition to update
+     * @param ValueStore $def   Class definition to update
+     * @param Debug      $debug Debug instance
      *
      * @return ValueStore
      */
     public static function updateClassDefinition(ValueStore $def, Debug $debug)
     {
         self::$debug = $debug;
+        $values = self::updateClassDefinitionValues($def);
+        if ($values['className'] !== "\x00default\x00") {
+            $valueStoreDefault = self::$debug->abstracter->abstractObject->definition->getValueStoreDefault();
+            $def = new ObjectAbstraction($valueStoreDefault, $values);
+            self::$debug->abstracter->abstractObject->definition->markAsUsed($valueStoreDefault);
+            return $def;
+        }
+        return $def->setValues($values);
+    }
+
+    /**
+     * Update LogEntry with any necessary changes to work with current version of debug
+     *
+     * @param LogEntry $logEntry LogEntry instance
+     *
+     * @return LogEntry
+     */
+    public static function updateLogEntry(LogEntry $logEntry)
+    {
+        self::$debug = $logEntry->getSubject();
+        $method = $logEntry['method'];
+        if ($method === 'alert') {
+            self::updateLogEntryAlert($logEntry);
+        }
+        if (\in_array($method, ['profileEnd', 'table', 'trace'], true) && !($logEntry['args'][0] instanceof Abstraction)) {
+            self::updateLogEntryTabular($logEntry);
+            return $logEntry;
+        }
+        self::updateLogEntryDefault($logEntry);
+        return $logEntry;
+    }
+
+    /**
+     * Get updated class definition values
+     *
+     * @param ValueStore $def Class definition
+     *
+     * @return array
+     */
+    private static function updateClassDefinitionValues(ValueStore $def)
+    {
         $values = $def->getValues();
         $values = \array_filter($values, static function ($val) {
             return $val !== null;
@@ -64,54 +106,29 @@ class UnserializeLogBackwards
         ) {
             $values['scopeClass'] = null;
         }
+        unset($values['debugMethod']);
         unset($values['traverseValues']);
-        $values = AbstractObject::buildValues(Definition::buildValues($values));
-        if ($values['className'] !== "\x00default\x00") {
-            $valueStoreDefault = self::$debug->abstracter->abstractObject->definition->getValueStoreDefault();
-            $def = new ObjectAbstraction($valueStoreDefault, $values);
-            self::$debug->abstracter->abstractObject->definition->markAsUsed($valueStoreDefault);
-            return $def;
-        }
-        $def->setValues($values);
-        return $def;
+        return AbstractObject::buildValues(Definition::buildValues($values));
     }
 
     /**
-     * Update LogEntry with any necessary changes to work with current version of debug
+     * Update alert log entry (translate class meta to level)
      *
-     * @param LogEntry $logEntry LogEntry instance
+     * @param LogEntry $logEntry Log entry to update
      *
-     * @return LogEntry
+     * @return void
      */
-    public static function updateLogEntry(LogEntry $logEntry)
-    {
-        self::$debug = $logEntry->getSubject();
-        $method = $logEntry['method'];
-        if ($method === 'alert') {
-            $logEntry = self::updateLogEntryAlert($logEntry);
-        }
-        if (\in_array($method, ['profileEnd', 'table', 'trace'], true) && !($logEntry['args'][0] instanceof Abstraction)) {
-            self::updateLogEntryTabular($logEntry);
-            return $logEntry;
-        }
-        self::updateLogEntryDefault($logEntry);
-        return $logEntry;
-    }
-
     private static function updateLogEntryAlert(LogEntry $logEntry)
     {
         if ($logEntry->getMeta('class')) {
-            $level = $logEntry->getMeta('class');
-            $levelTrans = array(
+            $level = \strtr($logEntry->getMeta('class'), array(
                 'danger' => 'error',
                 'warning' => 'warn',
-            );
-            $level = \str_replace(\array_keys($levelTrans), $levelTrans, $level);
+            ));
             $logEntry->setMeta('level', $level);
             $logEntry->setMeta('class', null);
             $logEntry->crate(); // removes the null meta value
         }
-        return $logEntry;
     }
 
     /**
@@ -190,7 +207,28 @@ class UnserializeLogBackwards
     private static function updateObjectAbstraction(Abstraction $abs)
     {
         $values = $abs->getValues();
+        $values = self::updateObjectAbstractionValues($values);
 
+        $classDefinition = self::$debug->data->get('classDefinitions.' . $values['className']);
+        if ($classDefinition === null) {
+            $valuesDef = \array_diff_key($values, \array_flip(['debugMethod']));
+            $classDefinition = new ValueStore($valuesDef);
+            $classDefinition = self::updateClassDefinition($classDefinition, self::$debug);
+            self::$debug->data->set('classDefinitions.' . $values['className'], $classDefinition);
+        }
+        $values = ArrayUtil::diffDeep($values, $classDefinition->getValues());
+        return new ObjectAbstraction($classDefinition, $values);
+    }
+
+    /**
+     * Update object abstraction values
+     *
+     * @param array $values Values to update
+     *
+     * @return array
+     */
+    private static function updateObjectAbstractionValues(array $values)
+    {
         if (isset($values['collectMethods'])) {
             if ($values['collectMethods'] === false) {
                 $values['cfgFlags'] &= ~AbstractObject::METHOD_COLLECT;
@@ -212,18 +250,11 @@ class UnserializeLogBackwards
         $values['properties'] = self::updateObjectProperties($values['properties']);
         $values = AbstractObject::buildValues($values);
 
+        unset($values['debugMethod']);
         unset($values['sort']);
         unset($values['traverseValues']);
 
-        $classDefinition = self::$debug->data->get('classDefinitions.' . $values['className']); // ?: self::$debug->abstracter->abstractObject->definition->getValueStoreDefault();
-        if ($classDefinition === null) {
-            $valuesDef = \array_diff_key($values, \array_flip(['debugMethod']));
-            $classDefinition = new ValueStore($valuesDef);
-            $classDefinition = self::updateClassDefinition($classDefinition, self::$debug);
-            self::$debug->data->set('classDefinitions.' . $values['className'], $classDefinition);
-        }
-        $values = ArrayUtil::diffDeep($values, $classDefinition->getValues());
-        return new ObjectAbstraction($classDefinition, $values);
+        return $values;
     }
 
     /**
@@ -261,32 +292,46 @@ class UnserializeLogBackwards
     private static function updateObjectMethods(array $methods, $isDefinition = false)
     {
         return ArrayUtil::mapWithKeys(static function (array $info, $methodName) use ($isDefinition) {
-            if ($methodName === '__toString') {
-                $info['implements'] = 'Stringable';
-                $info['return']['type'] = 'string';
-            }
-            $info = self::updateObjectInheritance($info);
-            $info = Methods::buildValues($info);
-            $info['params'] = \array_map(static function ($paramInfo) {
-                $paramInfo = MethodParams::buildValues($paramInfo);
-                $paramInfo['name'] = \trim($paramInfo['name'], '&$.');
-                unset($paramInfo['constantName']); // v2.3
-                return $paramInfo;
-            }, \array_values($info['params']));
-            $info['phpDoc'] = self::updatePhpDoc($info['phpDoc']);
-            if (isset($info['phpDoc']['return'])) {
-                $info['return'] = $info['phpDoc']['return'];
-                unset($info['phpDoc']['return']);
-            }
-            if (isset($info['return']['desc']) === false) {
-                $info['return']['desc'] = '';
-            }
-            if ($isDefinition && isset($info['returnValue'])) {
-                $info['returnValue'] = null;
-            }
-            \ksort($info['return']);
-            return $info;
+            return self::updateObjectMethod($info, $methodName, $isDefinition);
         }, $methods);
+    }
+
+    /**
+     * Update method info
+     *
+     * @param array  $info         Method info
+     * @param string $methodName   Method name
+     * @param bool   $isDefinition Whether the method info is for a class definition (vs method info on an object instance)
+     *
+     * @return array
+     */
+    private static function updateObjectMethod(array $info, $methodName, $isDefinition = false)
+    {
+        if ($methodName === '__toString') {
+            $info['implements'] = 'Stringable';
+            $info['return']['type'] = 'string';
+        }
+        $info = self::updateObjectInheritance($info);
+        $info = Methods::buildValues($info);
+        $info['params'] = \array_map(static function ($paramInfo) {
+            $paramInfo = MethodParams::buildValues($paramInfo);
+            $paramInfo['name'] = \trim($paramInfo['name'], '&$.');
+            unset($paramInfo['constantName']); // v2.3
+            return $paramInfo;
+        }, \array_values($info['params']));
+        $info['phpDoc'] = self::updatePhpDoc($info['phpDoc']);
+        if (isset($info['phpDoc']['return'])) {
+            $info['return'] = $info['phpDoc']['return'];
+            unset($info['phpDoc']['return']);
+        }
+        if (isset($info['return']['desc']) === false) {
+            $info['return']['desc'] = '';
+        }
+        if ($isDefinition && isset($info['returnValue'])) {
+            $info['returnValue'] = null;
+        }
+        \ksort($info['return']);
+        return $info;
     }
 
     /**

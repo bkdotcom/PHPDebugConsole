@@ -52,12 +52,16 @@ return array(
                     'php' => null,
                     'phpDoc' => Type::TYPE_STRING,
                 )
-                : null,
+                : array(
+                    'allowsNull' => false,
+                    'php' => null,
+                    'phpDoc' => null,
+                ),
             'value' => 'fσo',
             'visibility' => 'public',
         ),
     ),
-    'debugMethod' => 'log',
+    // 'debugMethod' => 'log',
     'definition' => array(
         'extensionName' => false,
         'fileName' => TEST_DIR . '/Debug/Fixture/ConfusableIdentifiers.php',

@@ -208,7 +208,7 @@ class InternalEventsTest extends DebugTestFramework
                 ),
             ),
             'meta' => array(
-                'channel' => 'general.phpError',
+                'channel' => 'general.phperror',
                 // 'context' => null,
                 'errorCat' => 'fatal',
                 'errorHash' => '',
@@ -293,7 +293,7 @@ class InternalEventsTest extends DebugTestFramework
                 ),
             ),
             'meta' => array(
-                'channel' => 'general.phpError',
+                'channel' => 'general.phperror',
                 'errorCat' => 'warning',
                 'errorType' => E_USER_WARNING,
                 'file' => $file,
@@ -427,9 +427,6 @@ class InternalEventsTest extends DebugTestFramework
             }
         }
         */
-        self::assertEquals(
-            $expect,
-            $this->helper->deObjectifyData($unserialized)
-        );
+        self::assertEquals($expect, $this->helper->deObjectifyData($unserialized));
     }
 }

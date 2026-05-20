@@ -122,7 +122,7 @@ class Component extends CApplicationComponent
         /*
             Since Yii doesn't use namespaces, we can usually use Debug::log()
         */
-        if (\class_exists('Debug') === false) {
+        if (\class_exists('Debug', false) === false) {
             \class_alias('bdk\Debug', 'Debug');
         }
 

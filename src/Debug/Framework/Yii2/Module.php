@@ -37,7 +37,7 @@ class Module extends BaseModule implements BootstrapInterface
                 'channelIcon' => ':event:',
                 'nested' => false,
             ),
-            'PDO' => array(
+            'pdo' => array(
                 'channelIcon' => ':database:',
                 'channelShow' => false,
             ),

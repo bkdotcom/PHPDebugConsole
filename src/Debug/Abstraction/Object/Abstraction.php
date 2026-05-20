@@ -26,6 +26,7 @@ class Abstraction extends BaseAbstraction
     /** @var list<string> */
     protected static $keysTemp = [
         'collectPropertyValues',
+        'debugMethod',
         'fullyQualifyPhpDocType',
         'hist',
         'propertyOverrideValues',
@@ -56,7 +57,14 @@ class Abstraction extends BaseAbstraction
      */
     public function __serialize()
     {
-        return $this->getInstanceValues() + array('inherited' => $this->inherited);
+        // when serializing for cache we don't want to include the inherited values
+        // only include the className of the inherited definition
+        $isCaching = !empty($this->values['caching']);
+        unset($this->values['caching']);
+        $inherited = $isCaching
+            ? array('inheritsFrom' => $this->inherited['className'])
+            : array('inherited' => $this->inherited);
+        return $this->getInstanceValues() + $inherited;
     }
 
     /**
@@ -80,9 +88,7 @@ class Abstraction extends BaseAbstraction
      */
     public function __unserialize(array $data)
     {
-        $data['inherited'] = $this->unserializeDataInherited($data);
-        $this->inherited = $data['inherited'];
-        unset($data['inherited']);
+        $this->unserializeDataInherited($data);
         $this->values = $data;
     }
 
@@ -117,7 +123,9 @@ class Abstraction extends BaseAbstraction
     {
         $values = $this->getInstanceValues() + array(
             'debug' => Abstracter::ABSTRACTION,
-            'inheritsFrom' => $this->inherited['className'],
+            'inheritsFrom' => $this->inherited
+                ? $this->inherited['className']
+                : $this->values['inheritsFrom'],
             'type' => Type::TYPE_OBJECT,
         );
         \ksort($values);
@@ -131,7 +139,9 @@ class Abstraction extends BaseAbstraction
      */
     public function getInheritedValues()
     {
-        $values = $this->inherited->getValues();
+        $values = $this->inherited
+            ? $this->inherited->getValues()
+            : array();
         unset($values['__isUsed']); // don't inherit __isUsed
         return $values;
     }
@@ -160,6 +170,20 @@ class Abstraction extends BaseAbstraction
         );
         \ksort($return, SORT_NATURAL);
         return $return;
+    }
+
+    /**
+     * Set "parent" ValueStore from which we inherit class values
+     *
+     * @param ValueStore $inherited ValueStore instance
+     *
+     * @return $this
+     */
+    public function setInherited(ValueStore $inherited)
+    {
+        $this->inherited = $inherited;
+        unset($this->values['inheritsFrom']);
+        return $this;
     }
 
     /**
@@ -240,7 +264,7 @@ class Abstraction extends BaseAbstraction
         $value = isset($this->values[$key])
             ? $this->values[$key]
             : null;
-        if (\in_array($key, self::$keysTemp, true) || $key === '__isUsed') {
+        if (\in_array($key, self::$keysTemp, true) || \in_array($key, ['__isUsed', 'inheritsFrom'], true)) {
             return $value;
         }
         $classVal = $this->inheritValue($key)
@@ -315,25 +339,24 @@ class Abstraction extends BaseAbstraction
     }
 
     /**
-     * Get inherited ValueStore
+     * Handle unserialized inherited value
      *
      * @param array $data Serialized data
      *
-     * @return ValueStore
+     * @return void
      */
     private function unserializeDataInherited(array &$data)
     {
-        if (isset($data['inherited'])) {
-            $inherited = $data['inherited'];
-            unset($data['inherited']);
-            return $inherited;
-        }
         if (isset($data['classDefinition'])) {
-            // maintain backwards compatibility - v3.1 used 'classDefinition'
-            $inherited = $data['classDefinition'];
+            // maintain backwards compatibility - v3.1 used 'classDefinition' vs 'inherited'
+            $data['inherited'] = $data['classDefinition'];
             unset($data['classDefinition']);
-            return $inherited;
         }
-        return new ValueStore(AbstractObject::buildValues(Definition::buildValues()));
+        if (isset($data['inherited'])) {
+            $this->inherited = $data['inherited'];
+            unset($data['inherited']);
+            return;
+        }
+        $this->inherited = new ValueStore(AbstractObject::buildValues(Definition::buildValues()));
     }
 }

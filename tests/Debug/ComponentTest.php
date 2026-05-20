@@ -10,10 +10,10 @@ class ComponentTest extends DebugTestFramework
     public function testGet()
     {
         $callInfo = new \bdk\Debug\Collector\SimpleCache\CallInfo('foo');
-        $this->assertTrue($callInfo->isSuccess);
+        $callInfo->end(true);
 
+        $this->assertTrue($callInfo->success);
         $this->assertSame('foo', $callInfo->method);
-
         $this->assertNull($callInfo->noSuchProperty);
     }
 

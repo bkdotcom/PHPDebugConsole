@@ -33,7 +33,7 @@ class UpdateCharData
         $filepathOut = \realpath(__DIR__ . '/' . self::$filepathOut);
         $php = '<?php' . "\n\n"
             . self::buildComment() . "\n\n"
-            . 'return ' . self::varExportPretty($charData) . ";\n";
+            . 'return ' . self::varExport($charData) . ";\n";
         $php = \preg_replace_callback('/[\'"](.)[\'"] => /u', static function ($matches) {
             $char = $matches[1];
             $codePoint = \mb_ord($char);
@@ -219,10 +219,11 @@ class UpdateCharData
      *
      * @return string
      */
-    protected static function varExportPretty($val)
+    protected static function varExport($val)
     {
         $php = \var_export($val, true);
         $php = \str_replace('array (', 'array(', $php);
+        $php = \preg_replace('/array\(\s*\)/s', 'array()', $php);
         $php = \preg_replace('/=> \n\s+array/', '=> array', $php);
         $php = \preg_replace_callback('/^(\s*)/m', static function ($matches) {
             return \str_repeat($matches[1], 2);

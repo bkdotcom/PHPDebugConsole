@@ -85,7 +85,7 @@ class MiddlewareTest extends DebugTestFramework
         $line = $this->debug->errorHandler->getLastError()['line'] -
         $this->assertStringContainsString('Middleware caught exception: something went wrong', $body);
         $this->assertStringContainsString('<li class="m_log"><span class="no-quotes t_string">running mock middleware</span></li>', $body);
-        $this->assertStringMatchesFormat('%A<li class="error-fatal m_error" data-channel="general.phpError"><span class="no-quotes t_string">Fatal Error: </span><span class="t_string">Uncaught exception %sException%s with message something went wrong</span>, '
+        $this->assertStringMatchesFormat('%A<li class="error-fatal m_error" data-channel="general.phperror"><span class="no-quotes t_string">Fatal Error: </span><span class="t_string">Uncaught exception %sException%s with message something went wrong</span>, '
             . '<span class="no-quotes t_string" data-type-more="filepath"><span class="t_string"><span class="file-path-rel">' . \dirname($file) . '/' . '</span><span class="file-basename">' . \basename($file) . '</span></span> (line <span class="t_int">' . $line . '</span>)</span></li>%A', $body);
     }
 }

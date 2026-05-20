@@ -124,6 +124,7 @@ class ConfigTest extends DebugTestFramework
             'key',
             'output',
             // 'arrayShowListKeys',
+            'cacheDir',
             'channels',
             'channelIcon',
             'channelKey',

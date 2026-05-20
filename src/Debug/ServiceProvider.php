@@ -29,6 +29,7 @@ class ServiceProvider implements ServiceProviderInterface
         'html',
         'php',
         'phpDoc',
+        'proxyManager',
         'reflection',
         'sql',
         'sqlQueryAnalysis',
@@ -57,6 +58,7 @@ class ServiceProvider implements ServiceProviderInterface
         */
         $container['services'] = \array_merge($this->utilities, [
             'backtrace',
+            'cache',
             'configNormalizer',
             'data',
             'errorHandler',
@@ -96,6 +98,13 @@ class ServiceProvider implements ServiceProviderInterface
                 'bdk\\Debug',
             ]);
             return $backtrace;
+        };
+        $container['cache'] = static function (Container $container) {
+            $cacheDir = $container['debug']->getCfg('cacheDir', Debug::CONFIG_DEBUG);
+            $cache = new \bdk\Cache\FileSystem($cacheDir);
+            $proxyManager = $container['proxyManager'];
+            return $proxyManager->buildFromClassName('Psr\SimpleCache\CacheInterface')
+                ->setSubject($cache);
         };
         $container['config'] = static function (Container $container) {
             return new \bdk\Debug\Config($container['debug'], $container['debug']->configNormalizer);
@@ -148,6 +157,63 @@ class ServiceProvider implements ServiceProviderInterface
         };
         $container['pluginManager'] = static function () {
             return new \bdk\Debug\Plugin\Manager();
+        };
+        $container['proxyManager'] = static function (Container $container) {
+            $debug = $container['debug'];
+            // we want to treat the proxy classes as "internal"
+            $debug->eventManager->subscribe(\bdk\ErrorHandler::EVENT_ERROR, static function (\bdk\PubSub\Event $error) {
+                $filePathProxyTrait = \realpath(__DIR__ . '/../Proxy/ProxyTrait.php');
+                if ($error['file'] !== $filePathProxyTrait) {
+                    return;
+                }
+                $trace = $error['exception']
+                    ? $error['exception']->getTrace()
+                    : \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+                $found = false;
+                foreach ($trace as $frame) {
+                    if ($found === false) {
+                        $found = isset($frame['file']) && $frame['file'] === $filePathProxyTrait;
+                        continue;
+                    }
+                    if (isset($frame['file']) && \dirname($frame['file']) !== \dirname($filePathProxyTrait)) {
+                        break;
+                    }
+                }
+                $error['file'] = $frame['file'];
+                $error['line'] = $frame['line'];
+            }, 1000);
+            $debug->backtrace->addProcessor(static function (array $trace) use ($debug) {
+                $proxyClasses = [
+                    'Curl_CurlProxy',
+                    'mysqliProxy',
+                    'OAuthProxy',
+                    'PDOProxy',
+                    'Psr_SimpleCache_CacheInterfaceProxy',
+                    'SoapClientProxy',
+                ];
+                $function = isset($trace[1]['function'])
+                    ? $trace[1]['function']
+                    : null;
+                $function = $debug->backtrace->parseFunction($function);
+                if (\in_array($function['class'], $proxyClasses, true) === false) {
+                    return $trace;
+                }
+                $class = $function['class'];
+                $count = \count($trace);
+                for ($i = 2; $i < $count; $i++) {
+                    $function = isset($trace[$i]['function'])
+                        ? $trace[$i]['function']
+                        : null;
+                    $function = $debug->backtrace->parseFunction($function);
+                    if ($function['class'] !== $class) {
+                        break;
+                    }
+                }
+                return \array_slice($trace, $i - 1);
+            });
+            $cacheDir = $debug->getCfg('cacheDir', Debug::CONFIG_DEBUG);
+            $cache = new \bdk\Cache\FileSystem($cacheDir);
+            return new \bdk\Proxy\Manager($cache);
         };
     }
 

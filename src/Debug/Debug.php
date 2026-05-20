@@ -123,6 +123,7 @@ class Debug extends AbstractDebug
 
     /** @var array<string,mixed> */
     protected $cfg = array(
+        'cacheDir' => 'auto',
         'channelIcon' => ':log:',
         'channelKey' => 'general', // programmatic channel key
         'channelName' => 'general', // name displayed to user (defaults to channelKey)

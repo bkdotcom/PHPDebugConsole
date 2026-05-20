@@ -66,6 +66,7 @@ class ConfigEvents implements SubscriberInterface
         $this->debug = $event->getSubject();
         $cfgDebug = $this->onConfigInit($event->getValues());
         $valActions = \array_intersect_key(array(
+            'cacheDir' => [$this, 'onCfgCacheDir'],
             'channels' => [$this, 'onCfgChannels'],
             'emailFrom' => [$this, 'onCfgEmail'],
             'emailFunc' => [$this, 'onCfgEmail'],
@@ -104,6 +105,42 @@ class ConfigEvents implements SubscriberInterface
             $requestKey = $cookieParams['debug'];
         }
         return $requestKey;
+    }
+
+    /**
+     * Get cache dir
+     *
+     * If value is "auto", determine cache dir based on server params
+     *
+     * @param string $val config value
+     *
+     * @return string cache dir path
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     */
+    private function onCfgCacheDir($val)
+    {
+        if ($val !== 'auto') {
+            return $val;
+        }
+        // 'auto': determine cache dir
+        $server = \array_merge(
+            array(
+                'PHP_SELF' => null,
+                'PWD' => null,
+                'SCRIPT_FILENAME' => null,
+                'SCRIPT_NAME' => null,
+            ),
+            $_SERVER,
+            $this->debug->serverRequest->getServerParams()
+        );
+        $path = $this->debug->isCli()
+            ? $server['PWD']
+            : \dirname($server['SCRIPT_FILENAME'] ?: $server['PHP_SELF'] ?: $server['SCRIPT_NAME']);
+        $path = \realpath($path);
+        return \sys_get_temp_dir() . DIRECTORY_SEPARATOR
+            . 'PHPDebugConsoleCache' . DIRECTORY_SEPARATOR
+            . \trim(\str_replace(DIRECTORY_SEPARATOR, '_', $path), '_');
     }
 
     /**

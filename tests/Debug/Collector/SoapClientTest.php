@@ -11,6 +11,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * PHPUnit tests for Debug class
  *
  * @covers \bdk\Debug\Collector\SoapClient
+ * @covers \bdk\Debug\Collector\SoapClientProxyListener
  */
 class SoapClientTest extends DebugTestFramework
 {

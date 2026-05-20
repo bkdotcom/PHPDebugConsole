@@ -9,6 +9,7 @@ use bdk\Test\Debug\DebugTestFramework;
 
 /**
  * @covers \bdk\Debug\Collector\OAuth
+ * @covers \bdk\Debug\Collector\OAuthProxyListener
  * @covers \bdk\Debug\Plugin\Redaction
  *
  * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder

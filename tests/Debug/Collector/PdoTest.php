@@ -15,7 +15,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * PHPUnit tests for Debug class
  *
  * @covers \bdk\Debug\Collector\Pdo
- * @covers \bdk\Debug\Collector\Pdo\CompatTrait
+ * @covers \bdk\Debug\Collector\PdoProxyListener
  * @covers \bdk\Debug\Collector\Pdo\Statement
  * @covers \bdk\Debug\Collector\StatementInfo
  * @covers \bdk\Debug\Collector\StatementInfoLogger

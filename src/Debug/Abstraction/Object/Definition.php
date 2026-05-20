@@ -113,31 +113,35 @@ class Definition
     /**
      * Get class ValueStore obj
      *
-     * @param object $obj    Object being abstracted
-     * @param array  $values Instance values
+     * @param object|class-string $obj    Object being abstracted
+     * @param array               $values Instance values
      *
      * @return ValueStore
      */
-    public function getAbstraction($obj, array $values)
+    public function getAbstraction($obj, array $values = array())
     {
-        $className = $values['className'];
-        $reflector = $values['reflector'];
-        $valueStoreKey = PHP_VERSION_ID >= 70000 && $reflector->isAnonymous()
-            ? $className . '|' . \md5($reflector->getName())
-            : $className;
-        $dataPath = ['classDefinitions', $valueStoreKey];
-        $valueStore = $this->debug->data->get($dataPath);
+        $values = $this->getValuesBootstrap($obj, $values);
+        $keys = $this->getCacheKeys($values);
+
+        $valueStore = $this->getAbstractionFromDataCache($keys['dataPath'], $keys['cache']);
         if ($valueStore) {
             return $valueStore;
         }
-        if (\array_filter([$values['isMaxDepth'], $values['isExcluded']])) {
-            return $this->getValueStoreDefault();
+
+        $valueStoreDefault = $this->getValueStoreDefault();
+        if (\array_filter([$obj === self::$values['className'], $values['isMaxDepth'], $values['isExcluded']])) {
+            return $valueStoreDefault;
         }
-        $abs = new ObjectAbstraction($this->getValueStoreDefault(), $this->getInitValues($values));
+
+        $abs = new ObjectAbstraction($valueStoreDefault, $this->getValuesInit($values));
         $abs->setSubject($obj);
-        $this->debug->data->set($dataPath, $abs);
+        $this->debug->data->set($keys['dataPath'], $abs); // set early to allow recursive references to work
         $this->doAbstraction($abs);
-        unset($abs['debugMethod']);
+
+        if ($abs['isAnonymous'] === false) {
+            $abs['caching'] = true; // affects Abstraction's __serialize behavior (__serialize removes this value)
+            $this->debug->cache->set($keys['cache'], $abs);
+        }
         return $abs;
     }
 
@@ -306,6 +310,56 @@ class Definition
     }
 
     /**
+     * Check if definition already stored in data or cache
+     *
+     * @param array  $dataPath Path to definition in data
+     * @param string $cacheKey Cache key for definition
+     *
+     * @return ObjectAbstraction|null
+     */
+    protected function getAbstractionFromDataCache(array $dataPath, $cacheKey)
+    {
+        $valueStore = $this->debug->data->get($dataPath);
+        if ($valueStore) {
+            return $valueStore;
+        }
+        $valueStore = $this->debug->cache->get($cacheKey);
+        if ($valueStore) {
+            // pulled from persistent cache
+            // make sure we have the default valueStore in data
+            if ($valueStore['inheritsFrom']) {
+                $inherited = $this->getAbstraction($valueStore['inheritsFrom']);
+                $valueStore->setInherited($inherited);
+            }
+            // store in data to keep track of which definitions are used in current request
+            $this->debug->data->set($dataPath, $valueStore);
+        }
+        return $valueStore;
+    }
+
+    /**
+     * Get data-path and cache key
+     *
+     * @param array $values Values to build keys from
+     *
+     * @return array<string,mixed>
+     */
+    private function getCacheKeys(array $values)
+    {
+        $className = $values['className'];
+        $reflector = $values['reflector'];
+        $valueStoreKey = PHP_VERSION_ID >= 70000 && $reflector && $reflector->isAnonymous()
+            ? $className . '|' . \md5($reflector->getName())
+            : $className;
+        $cacheKey = \str_replace("\x00", 'x00', $valueStoreKey);
+        $cacheKey = 'classDefinition_' . \preg_replace('/[{}()\\/\\\\@:]/', '_', $cacheKey);
+        return array(
+            'cache' => $cacheKey,
+            'dataPath' => ['classDefinitions', $valueStoreKey],
+        );
+    }
+
+    /**
      * Get a structured interface tree
      *
      * @param ReflectionClass $reflector ReflectionClass
@@ -334,13 +388,39 @@ class Definition
     }
 
     /**
+     * Get the values needed by getAbstraction()
+     *
+     * @param object|class-string $obj    Object or class being abstracted
+     * @param array               $values Values passed to getAbstraction()
+     *
+     * @return array
+     */
+    private function getValuesBootstrap($obj, array $values)
+    {
+        $values = \array_merge(array(
+            'className' => \is_object($obj)
+                ? \get_class($obj)
+                : (string) $obj,
+            'debugMethod' => null,
+            'fullyQualifyPhpDocType' => false,
+            'isExcluded' => false,
+            'isMaxDepth' => false,
+            'reflector' => null,
+        ), $values);
+        if ($values['reflector'] === null && $values['className'] !== self::$values['className']) {
+            $values['reflector'] = new ReflectionClass($values['className']);
+        }
+        return $values;
+    }
+
+    /**
      * Initialize class definition abstraction
      *
      * @param array $values values already collected
      *
      * @return Abstraction
      */
-    protected function getInitValues(array $values)
+    private function getValuesInit(array $values)
     {
         $reflector = $values['reflector'];
         $isAnonymous = PHP_VERSION_ID >= 70000 && $reflector->isAnonymous();

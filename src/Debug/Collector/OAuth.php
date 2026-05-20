@@ -11,268 +11,30 @@
 namespace bdk\Debug\Collector;
 
 use bdk\Debug;
-use bdk\Debug\Plugin\Redaction;
-use bdk\HttpMessage\Utility\Uri as UriUtils;
 use Oauth as OAuthBase;
-use OAuthException;
+
+\bdk\Debug::getInstance()->proxyManager->autoloadProxyClass('OAuth');
 
 /**
  * OAuth client with debugging
  */
-class OAuth extends OAuthBase
+class OAuth extends \OAuthProxy
 {
-    const OAUTH_CLASSNAME = 'OAuth';
-
-    /** @var Debug */
-    protected $debugger;
-
-    /** @var string */
-    protected $icon = ':authorize:';
-
-    /** @var float */
-    private $elapsed;
-
-    /** @var OAuthException|null */
-    private $exception;
-
     /**
      * Constructor
      *
-     * @param string $consumerKey     The consumer key provided by the service provider
-     * @param string $consumerSecret  The consumer secret provided by the service provide
-     * @param string $signatureMethod (OAUTH_SIG_METHOD_HMACSHA1) defines which signature method to use
-     * @param int    $authType        (OAUTH_AUTH_TYPE_AUTHORIZATION) defines how to pass the OAuth parameters to a consumer
-     * @param Debug  $debug           (optional) $debug instance
-     *
-     * @SuppressWarnings(PHPMD.StaticAccess)
+     * @param string     $consumerKey     The consumer key provided by the service provider
+     * @param string     $consumerSecret  The consumer secret provided by the service provide
+     * @param string     $signatureMethod (OAUTH_SIG_METHOD_HMACSHA1) defines which signature method to use
+     * @param int        $authType        (OAUTH_AUTH_TYPE_AUTHORIZATION) defines how to pass the OAuth parameters to a consumer
+     * @param Debug|null $debug           (optional) $debug instance
      */
     public function __construct($consumerKey, $consumerSecret, $signatureMethod = OAUTH_SIG_METHOD_HMACSHA1, $authType = OAUTH_AUTH_TYPE_AUTHORIZATION, $debug = null)
     {
-        parent::__construct($consumerKey, $consumerSecret, $signatureMethod, $authType);
-        $channelKey = self::OAUTH_CLASSNAME;
-        $channelOptions = array(
-            'channelIcon' => $this->icon,
-            'channelName' => 'OAuth',
-        );
-        if ($debug === null) {
-            $debug = Debug::getChannel($channelKey, $channelOptions);
-        } elseif ($debug === $debug->rootInstance) {
-            $debug = $debug->getChannel($channelKey, $channelOptions);
-        }
-        $this->enableDebug();
-        $this->debugger = $debug;
-    }
+        $subject = new OAuthBase($consumerKey, $consumerSecret, $signatureMethod, $authType);
+        $listener = new OAuthProxyListener($debug);
 
-    /**
-     * {@inheritDoc}
-     */
-    public function fetch($protectedResourceUrl, $extraParameters = array(), $httpMethod = OAUTH_HTTP_METHOD_GET, $httpHeaders = array())
-    {
-        $return = $this->profileCall(__FUNCTION__, \func_get_args());
-        if ($this->debugger) {
-            $this->debugger->groupCollapsed(self::OAUTH_CLASSNAME . '::' . __FUNCTION__, $this->getHttpMethod(), $protectedResourceUrl);
-            $this->logRequest($protectedResourceUrl);
-            $this->debugger->groupEnd();
-        }
-        if ($this->exception) {
-            throw $this->exception;
-        }
-        return $return;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getAccessToken($accessTokenUrl, $authSessionHandle = null, $verifierToken = null, $httpMethod = OAUTH_HTTP_METHOD_GET)
-    {
-        $return = $this->profileCall(__FUNCTION__, \func_get_args());
-        if ($this->debugger) {
-            $this->debugger->groupCollapsed(self::OAUTH_CLASSNAME . '::' . __FUNCTION__, $this->getHttpMethod(), $accessTokenUrl);
-            $this->logRequest($accessTokenUrl);
-            $this->debugger->groupEnd();
-        }
-        if ($this->exception) {
-            throw $this->exception;
-        }
-        return $return;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getRequestToken($requestTokenUrl, $callbackUrl = null, $httpMethod = OAUTH_HTTP_METHOD_GET)
-    {
-        $return = $this->profileCall(__FUNCTION__, \func_get_args());
-        if ($this->debugger) {
-            $this->debugger->groupCollapsed(self::OAUTH_CLASSNAME . '::' . __FUNCTION__, $this->getHttpMethod(), $requestTokenUrl);
-            $this->debugger->log($this->debugger->i18n->trans('oauth.callback_url'), $callbackUrl);
-            $this->logRequest($requestTokenUrl);
-            $this->debugger->groupEnd();
-        }
-        if ($this->exception) {
-            throw $this->exception;
-        }
-        return $return;
-    }
-
-    /**
-     * Get the http method used for last request
-     *
-     * @return string
-     */
-    private function getHttpMethod()
-    {
-        \preg_match('/^(\w+)/', $this->getDebugInfo()['sbs'], $matches);
-        return $matches
-            ? $matches[1]
-            : '';
-    }
-
-    /**
-     * Get debugInfo with default values
-     *
-     * @return array
-     */
-    private function getDebugInfo()
-    {
-        return \array_merge(array(
-            'body_recv' => null,
-            'body_sent' => null,
-            'headers_recv' => '',
-            'headers_sent' => '',
-            'sbs' => '',
-        ), $this->debugInfo ?: array());
-    }
-
-    /**
-     * Get query params from request url
-     *
-     * @return array
-     */
-    private function getQueryParams()
-    {
-        $parts = \array_merge(array(
-            'query' => '',
-        ), UriUtils::parseUrl($this->getLastResponseInfo()['url']));
-        $queryParams = array();
-        \parse_str($parts['query'], $queryParams);
-        return $queryParams;
-    }
-
-    /**
-     * debugInfo + lastResponseInfo.
-     * any values avail in headers or logged separately are omitted
-     *
-     * @param string $url requested url
-     *
-     * @return array
-     */
-    private function additionalInfo($url)
-    {
-        $debugInfo = \array_diff_key($this->getDebugInfo(), \array_flip([
-            'headers_sent', 'body_sent', 'headers_recv', 'body_recv',
-            // "sbs" may be only key remaining
-        ]));
-        $lastResponseInfo = \array_merge(array(
-            'download_content_length' => 0,
-            'size_download' => 0,
-            'url' => $url,
-        ), $this->getLastResponseInfo() ?: array());
-        $lastResponseInfo = \array_diff_key($lastResponseInfo, \array_filter(array(
-            'content_type' => true,
-            'download_content_length' => true,
-            'http_code' => true,
-            'size_download' => $lastResponseInfo['size_download'] === $lastResponseInfo['download_content_length'], // content length plus any overhead
-            'size_upload' => isset($this->debugInfo['body_sent']) === false,
-            'url' => $lastResponseInfo['url'] === $url,
-        )));
-        return $lastResponseInfo + $debugInfo;
-    }
-
-    /**
-     * Log oauth request details
-     *
-     * @param string $url requested url
-     *
-     * @return void
-     */
-    private function logRequest($url)
-    {
-        $this->debugger->time($this->elapsed);
-        $debugInfo = $this->getDebugInfo();
-        // values available in the headers or elsewhere
-        $this->debugger->log(self::OAUTH_CLASSNAME . ' ' . $this->debugger->i18n->trans('word.parameters'), $this->oauthParams(), $this->debugger->meta('cfg', 'abstracter.stringMinLen.encoded', -1));
-        $this->debugger->log($this->debugger->i18n->trans('info.additional'), $this->additionalInfo($url));
-        $this->debugger->log($this->debugger->i18n->trans('request.headers'), $this->debugger->redactHeaders($debugInfo['headers_sent']), $this->debugger->meta('icon', ':send:'));
-        if (isset($debugInfo['body_sent'])) {
-            $this->debugger->log($this->debugger->i18n->trans('request.body'), $debugInfo['body_sent'], $this->debugger->meta(array(
-                'icon' => ':send:',
-                'redact' => true,
-            )));
-        }
-        $this->debugger->log($this->debugger->i18n->trans('response.headers'), $debugInfo['headers_recv'], $this->debugger->meta('icon', ':receive:'));
-        $this->debugger->log($this->debugger->i18n->trans('response.body'), $debugInfo['body_recv'], $this->debugger->meta('icon', ':receive:'));
-        if ($this->exception) {
-            $this->debugger->warn(\get_class($this->exception), $this->exception->getMessage());
-        }
-    }
-
-    /**
-     * Get the request's OAuth parameters
-     *
-     * @return array
-     */
-    private function oauthParams()
-    {
-        $oauthParamKeys = [
-            'oauth_consumer_key',
-            'oauth_nonce',
-            'oauth_signature',
-            'oauth_signature_method',
-            'oauth_timestamp',
-            'oauth_token',
-            'oauth_version',
-        ];
-        $oauthParams = array();
-        $debugInfo = $this->getDebugInfo();
-        if (\preg_match('/^Authorization:\s+([^\r]+)/m', $debugInfo['headers_sent'], $matches)) {
-            // if OAUTH_AUTH_TYPE_AUTHORIZATION, we can get params from header
-            $authHeader = $matches[1];
-            \preg_match_all('/(\w+)="([^"]+)"/', $authHeader, $matches, PREG_PATTERN_ORDER);
-            $oauthParams = \array_map('urldecode', \array_combine($matches[1], $matches[2]));
-        } elseif ($debugInfo['sbs']) {
-            // get params from Signature Base String
-            $sbsParsed = array();
-            \parse_str(\urldecode($debugInfo['sbs']), $sbsParsed);
-            $oauthParams = \array_intersect_key($sbsParsed + $this->getQueryParams(), \array_flip($oauthParamKeys));
-        }
-        if (isset($oauthParams['oauth_signature'])) {
-            $oauthParams['oauth_signature'] = Redaction::REPLACEMENT;
-        }
-        \ksort($oauthParams);
-        return $oauthParams;
-    }
-
-    /**
-     * Call oauth method
-     * capture elapsed time and any thrown exception
-     *
-     * @param string $method Method being called
-     * @param array  $args   Arguments
-     *
-     * @return array|false
-     */
-    private function profileCall($method, $args)
-    {
-        $this->exception = null;
-        $return = false;
-        $this->debugger->time();
-        try {
-            $return = \call_user_func_array([self::OAUTH_CLASSNAME, $method], $args);
-        } catch (OAuthException $e) {
-            $this->exception = $e;
-        }
-        $this->elapsed = $this->debugger->timeEnd($this->debugger->meta('silent'));
-        return $return;
+        $this->setSubject($subject);
+        $this->setListener($listener);
     }
 }

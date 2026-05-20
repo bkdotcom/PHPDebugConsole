@@ -77,20 +77,39 @@ class StatementInfo extends AbstractComponent
     ];
 
     /**
-     * @param string     $sql    SQL
-     * @param array|null $params (optional) bound params
-     * @param array|null $types  (optional) bound types
+     * @param string     $sql           SQL
+     * @param array|null $params        (optional) bound params
+     * @param array|null $types         (optional) bound types
+     * @param array      $initialValues (optional) initial values for properties
      */
-    public function __construct($sql, $params = array(), $types = array())
+    public function __construct($sql, $params = array(), $types = array(), array $initialValues = array())
     {
-        \bdk\Debug\Utility\PhpType::assertType($params, 'array|null', 'params');
-        \bdk\Debug\Utility\PhpType::assertType($types, 'array|null', 'types');
-
-        $this->memoryStart = \memory_get_usage(false);
-        $this->params = $params ?: array();
-        $this->sql = \trim($sql);
-        $this->timeStart = \microtime(true);
-        $this->types = $types ?: array();
+        $values = array(
+            ['memoryStart', 'int', \memory_get_usage(false)],
+            ['params', 'array|null', array()],
+            ['sql', 'string', ''],
+            ['timeStart', 'float|int', \microtime(true)],
+            ['types', 'array|null', array()],
+        );
+        $typeAssertions = \array_column($values, 1, 0);
+        $defaultValues = \array_column($values, 2, 0);
+        // toss any unknown key/values
+        $initialValues = \array_diff_key($initialValues, $defaultValues);
+        // merge in arguments and give them priority over initialValues
+        $initialValues = \array_merge($initialValues, array(
+            'params' => $params,
+            'sql' => $sql,
+            'types' => $types,
+        ));
+        $initialValues = \array_filter($initialValues, static function ($value) {
+            return $value !== null;
+        });
+        $initialValues = \array_merge($defaultValues, $initialValues);
+        foreach ($initialValues as $property => $value) {
+            \bdk\Debug\Utility\PhpType::assertType($value, $typeAssertions[$property], $property);
+            $this->$property = $value;
+        }
+        $this->sql = \trim($this->sql);
     }
 
     /**

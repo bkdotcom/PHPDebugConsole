@@ -10,7 +10,7 @@
 
 namespace bdk\Debug\Collector\Pdo;
 
-use bdk\Debug\Collector\Pdo as DebugCollectorPdo;
+use bdk\Debug\Collector\PdoProxyListener;
 use bdk\Debug\Collector\StatementInfo;
 use PDO as PdoBase;   // PDO conflicts with namespace
 use PDOException;
@@ -21,7 +21,7 @@ use PDOStatement;
  */
 class Statement extends PDOStatement
 {
-    /** @var DebugCollectorPdo */
+    /** @var PdoBase */
     protected $pdo;
 
     /** @var array<string,mixed> */
@@ -30,14 +30,19 @@ class Statement extends PDOStatement
     /** @var array<string,int> */
     protected $boundParameterTypes = array();
 
+    /** @var PdoProxyListener */
+    protected $proxyListener;
+
     /**
      * Constructor.
      *
-     * @param DebugCollectorPdo $pdo \bdk\Debug\Collector\Pdo instance
+     * @param PdoBase          $pdo           Pdo instance
+     * @param PdoProxyListener $proxyListener Proxy listener instance
      */
-    protected function __construct(DebugCollectorPdo $pdo)
+    protected function __construct(PdoBase $pdo, PdoProxyListener $proxyListener)
     {
         $this->pdo = $pdo;
+        $this->proxyListener = $proxyListener;
     }
 
     /**
@@ -139,7 +144,7 @@ class Statement extends PDOStatement
         }
 
         $info->end($exception, $this->rowCount());
-        $this->pdo->addStatementInfo($info);
+        $this->proxyListener->addStatementInfo($info);
 
         if ($isExceptionMode && $exception) {
             throw $exception;

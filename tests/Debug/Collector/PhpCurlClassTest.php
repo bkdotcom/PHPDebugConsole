@@ -9,6 +9,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * PHPUnit tests for PhpCurlClass
  *
  * @covers \bdk\Debug\Collector\PhpCurlClass
+ * @covers \bdk\Debug\Collector\PhpCurlClassProxyListener
  */
 class PhpCurlClassTest extends DebugTestFramework
 {

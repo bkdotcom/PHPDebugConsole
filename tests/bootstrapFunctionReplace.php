@@ -20,6 +20,18 @@ namespace {
     $GLOBALS['timeOffset'] = 0;
 }
 
+namespace bdk\Cache {
+    /**
+     * Overwrite php's time method
+     *
+     * @return int current time as unix timestamp
+     */
+    function time()
+    {
+        return \time() + $GLOBALS['timeOffset'];
+    }
+}
+
 namespace bdk\Debug {
     /**
      * Overwrite php's header method

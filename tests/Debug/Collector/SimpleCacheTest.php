@@ -11,8 +11,8 @@ use bdk\Test\Debug\Mock\SimpleCache as SimpleCacheMock;
  * PHPUnit tests for Debug class
  *
  * @covers \bdk\Debug\Collector\SimpleCache
+ * @covers \bdk\Debug\Collector\SimpleCacheProxyListener
  * @covers \bdk\Debug\Collector\SimpleCache\CallInfo
- * @covers \bdk\Debug\Collector\SimpleCache\CompatTrait
  */
 class SimpleCacheTest extends DebugTestFramework
 {

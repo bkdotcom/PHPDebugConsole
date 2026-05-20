@@ -10,9 +10,10 @@
 
 namespace bdk\Debug\Collector\MySqli;
 
-use bdk\Debug\Collector\MySqli;
+use bdk\Debug\Collector\MySqliProxyListener;
 use bdk\Debug\Collector\StatementInfo;
 use Exception;
+use mysqli;
 use mysqli_stmt as mysqliStmtBase;
 
 /**
@@ -20,11 +21,14 @@ use mysqli_stmt as mysqliStmtBase;
  */
 class MySqliStmt extends mysqliStmtBase
 {
+    /** @var MySqliProxyListener */
+    private $listener;
+
+    /** @var mysqli */
+    private $mysqli;
+
     /** @var string */
     private $query;
-
-    /** @var MySqli */
-    private $mysqli;
 
     /** @var list<mixed> */
     private $params = array();
@@ -35,14 +39,16 @@ class MySqliStmt extends mysqliStmtBase
     /**
      * Constructor
      *
-     * @param MySqli $mysqli mysqli instance
-     * @param string $query  SQL query
+     * @param mysqli              $mysqli   mysqli instance
+     * @param MySqliProxyListener $listener MySqliProxyListener instance
+     * @param string|null         $query    SQL query
      */
-    public function __construct(MySqli $mysqli, $query = null)
+    public function __construct(mysqli $mysqli, MySqliProxyListener $listener, $query = null)
     {
         parent::__construct($mysqli, $query);
         $this->mysqli = $mysqli;
         $this->query = $query;
+        $this->listener = $listener;
     }
 
     /**
@@ -58,7 +64,7 @@ class MySqliStmt extends mysqliStmtBase
     #[\ReturnTypeWillChange]
     public function bind_param($types, &...$vals) // @phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
-        if ($this->mysqli->connectionAttempted === false) {
+        if ($this->listener->connectionAttempted === false) {
             return false;
         }
         $this->params = $vals;
@@ -73,14 +79,14 @@ class MySqliStmt extends mysqliStmtBase
     public function execute($params = null)
     {
         $statementInfo = new StatementInfo($this->query, $this->params, $this->types);
-        $return = $this->mysqli->connectionAttempted
+        $return = $this->listener->connectionAttempted
             ? (PHP_VERSION_ID >= 80100 ? parent::execute($params) : parent::execute())
             : false;
-        $exception = $this->mysqli->connectionAttempted
+        $exception = $this->listener->connectionAttempted
             ? null
             : new Exception('Not connected');
         $statementInfo->end($exception, $return ? $this->affected_rows : null);
-        $this->mysqli->addStatementInfo($statementInfo);
+        $this->listener->addStatementInfo($statementInfo);
         return $return;
     }
 }

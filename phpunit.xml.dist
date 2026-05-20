@@ -26,12 +26,9 @@
       <directory suffix=".php">src</directory>
     </include>
     <exclude>
-      <file>src/Debug/Collector/Debug/Pdo/CompatTrait.php</file>
       <file>src/Debug/Collector/Doctrine/LoggerCompatTrait_legacy.php</file>
       <file>src/Debug/Collector/Doctrine/LoggerCompatTrait.php</file>
       <file>src/Debug/Collector/MonologHandler/CompatTrait.php</file>
-      <file>src/Debug/Collector/Pdo/CompatTrait.php</file>
-      <file>src/Debug/Collector/SimpleCache/CompatTrait.php</file>
       <file>src/Debug/Dump/charData.php</file>
       <directory>src/Debug/lang</directory>
       <directory>src/Debug/Framework/Laravel</directory>
@@ -53,6 +50,9 @@
     </testsuite>
     <testsuite name="Backtrace">
       <directory>tests/Backtrace</directory>
+    </testsuite>
+    <testsuite name="Cache">
+      <directory>tests/Cache</directory>
     </testsuite>
     <testsuite name="Container">
       <directory>tests/Container</directory>
@@ -76,6 +76,9 @@
       <directory>tests/Promise</directory>
       <file phpVersion="7.0.0" phpVersionOperator=">=">tests/PromisePhpCond/CoroutineTest.php</file>
       <file phpVersion="5.5.0" phpVersionOperator=">=">tests/PromisePhpCond/EachPromiseTest.php</file>
+    </testsuite>
+    <testsuite name="Proxy">
+      <directory>tests/Proxy</directory>
     </testsuite>
     <testsuite name="PubSub">
       <directory>tests/PubSub</directory>

@@ -315,7 +315,8 @@ class LogRoute extends CLogRoute
             $matches['params'] ? \unserialize($matches['params']) : array()
         );
         $pdo = Yii::app()->phpDebugConsole->pdoCollector->getInstance($matches['connectionString']);
-        $pdo->getStatementInfoLogger()->log($statementInfo, array(
+        $statementInfoLogger = $pdo->getListener()->getStatementInfoLogger();
+        $statementInfoLogger->log($statementInfo, array(
             'attribs' => array('class' => 'logentry-muted'),
         ));
     }

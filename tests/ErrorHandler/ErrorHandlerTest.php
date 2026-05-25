@@ -394,10 +394,30 @@ class ErrorHandlerTest extends AbstractTestCase
         self::assertNull($event['error']);
     }
 
-    public function testOnShutdownNoError()
+    public function testOnShutdown()
     {
+        if (PHP_VERSION_ID >= 70000 && \function_exists('error_clear_last')) {
+            \error_clear_last();
+        }
+
+        $lastError = \error_get_last();
         $event = $this->errorHandler->eventManager->publish(EventManager::EVENT_PHP_SHUTDOWN);
-        self::assertNull($event['error']);
+
+        if ($lastError) {
+            $eventErrorValues = $event['error']
+                ? $event['error']->getValues()
+                : array();
+            $this->assertEquals($lastError, \array_intersect_key($eventErrorValues, $lastError));
+            return;
+        }
+
+        if ($event['error'] !== null) {
+            self::fail(
+                'shutdown event error should be null.  actual: '
+                . (\is_object($event['error']) ? \get_class($event['error']) : \gettype($event['error']))
+            );
+        }
+        self::assertTrue(true);
     }
 
     public function testOnShutdownErrorNotFatal()

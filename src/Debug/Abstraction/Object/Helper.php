@@ -266,11 +266,16 @@ class Helper
         \set_error_handler(static function () {
             // suppress ReflectionType::__toString() deprecation notice in php 7.x
         });
+        $allowsNull = $refType->allowsNull();
         // just use __toString() - handles namedType, unionType (php 8.0+), intersectionType (php 8.1+), and nullable types
         $type = (string) $refType;
         \restore_error_handler();
+        if (PHP_VERSION_ID < 80000 && $allowsNull) {
+            // PHP 7.x did not include the '?' prefix for nullable types, so we'll add it here for consistency with PHP 8.x
+            $type = '?' . $type;
+        }
         return array(
-            'allowsNull' => $refType->allowsNull(),
+            'allowsNull' => $allowsNull,
             'php' => $type,
         );
     }

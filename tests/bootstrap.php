@@ -60,7 +60,7 @@ if (\class_exists('OAuth') === false) {
 }
 
 $httpdCfg = array(
-    'errorLogPath' => __DIR__ . '/../tmp/httpd_error_log.txt',
+    'errorLogPath' => TEST_DIR . '/../tmp/httpd_error_log.txt',
 );
 
 /*
@@ -79,7 +79,7 @@ $debug = \bdk\Debug::getInstance(array(
     'errorHandler' => array(
         // 'onEUserError' => 'continue',
     ),
-    'errorStatsFile' => __DIR__ . '/../tmp/error_stats.json',
+    'errorStatsFile' => TEST_DIR . '/../tmp/error_stats.json',
     'exitCheck' => false,
     'filepathMap' => array(
         '/fakepath/' => '/fakepathNew/',
@@ -87,7 +87,7 @@ $debug = \bdk\Debug::getInstance(array(
     'fullyQualifyPhpDocType' => true,
     'i18n' => array(
         'domainFilepath' => array(
-            'wordpress' => __DIR__ . '/../src/Debug/Framework/WordPress/lang/{locale}.php',
+            'wordpress' => TEST_DIR . '/../src/Debug/Framework/WordPress/lang/{locale}.php',
         ),
     ),
     'logEnvInfo' => false,

@@ -387,7 +387,9 @@ return array(
                     'name' => 'arg1',
                     'type' => array(
                         'allowsNull' => true,
-                        'php' => '?self',
+                        'php' => PHP_VERSION_ID >= 80500
+                            ? '?bdk\Test\Debug\Fixture\Php71'
+                            : '?self',
                         'phpDoc' => null,
                     ),
                 ),
@@ -400,7 +402,9 @@ return array(
                 'desc' => '',
                 'type' => array(
                     'allowsNull' => true,
-                    'php' => '?self',
+                    'php' => PHP_VERSION_ID >= 80500
+                        ? '?bdk\Test\Debug\Fixture\Php71'
+                        : '?self',
                     'phpDoc' => null,
                 ),
             ),

@@ -110,7 +110,7 @@ class ComposerScripts
             return $info;
         }
         if (\version_compare(self::$phpVersion, '8.0.0', '>=')) {
-            \exec($composer . ' require vimeo/psalm ^5.22.2 --dev --with-all-dependencies --no-scripts');
+            \exec($composer . ' require vimeo/psalm --dev --with-all-dependencies --no-scripts');
         }
         if (\version_compare(self::$phpVersion, '7.2.0', '>=')) {
             \exec($composer . ' require slevomat/coding-standard ^8.9.0 --dev --with-all-dependencies --no-scripts');
@@ -137,7 +137,7 @@ class ComposerScripts
             : \exec($composer . ' require twig/twig ~1.42 --dev --no-scripts');
         if (\version_compare(self::$phpVersion, '7.0.0', '>=')) {
             \exec($composer . ' require psr/http-server-middleware --dev --no-scripts');
-            \exec($composer . ' require mindplay/middleman --dev --no-scripts');
+            \exec($composer . ' require mindplay/middleman --dev --no-scripts --with-all-dependencies');
         }
         if (\version_compare(self::$phpVersion, '5.5.0', '>=')) {
             \exec($composer . ' require guzzlehttp/guzzle --dev --no-scripts');

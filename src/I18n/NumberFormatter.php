@@ -187,7 +187,7 @@ class NumberFormatter
         \setlocale(LC_NUMERIC, $this->locale);
         \setlocale(LC_MONETARY, $this->locale);
         $localeConv = \localeconv();
-        if ($localeConv['p_sign_posn'] === 127) {
+        if (\in_array($localeConv['p_sign_posn'], [-1, 127], true)) {
             // It would appear we don't have locale information
             $localeConv = \array_filter($localeConv, static function ($value) {
                 $emptyVals = [127, '', []];

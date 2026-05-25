@@ -20,7 +20,7 @@ class ClassDefModifier
      */
     public function modify(array $classDef)
     {
-        if ($classDef['name'] === 'mysqli' && isset($classDef['methods']['mysqli'])) {
+        if ($classDef['name'] === 'mysqli') {
             return $this->modifyMysqli($classDef);
         }
         if ($classDef['name'] === 'OAuth') {
@@ -65,7 +65,9 @@ class ClassDefModifier
         $classDef['methods']['begin_transaction']['parameters'] = \array_replace_recursive($classDef['methods']['begin_transaction']['parameters'], $flagsAndName);
         $classDef['methods']['commit']['parameters'] = \array_replace_recursive($classDef['methods']['commit']['parameters'], $flagsAndName);
         $classDef['methods']['connect']['parameters'] = \array_replace_recursive($classDef['methods']['connect']['parameters'], $connectionParams);
-        $classDef['methods']['mysqli']['parameters'] = \array_replace_recursive($classDef['methods']['mysqli']['parameters'], $connectionParams);
+        if (isset($classDef['methods']['mysqli'])) {
+            $classDef['methods']['mysqli']['parameters'] = \array_replace_recursive($classDef['methods']['mysqli']['parameters'], $connectionParams);
+        }
         $classDef['methods']['real_connect']['parameters'] = \array_replace_recursive($classDef['methods']['real_connect']['parameters'], array_merge($connectionParams, $flags));
         $classDef['methods']['poll']['parameters'] = \array_replace_recursive($classDef['methods']['poll']['parameters'], [
             // int $usec = 0
@@ -136,15 +138,17 @@ class ClassDefModifier
         $classDef['methods']['quote']['parameters'] = \array_replace_recursive($classDef['methods']['quote']['parameters'], [
             1 => array( 'defaultValue' => 'PDO::PARAM_STR', 'isDefaultValueAvailable' => true, 'isDefaultValueConstant' => true ),
         ]);
-        $classDef['methods']['query']['proxyViaFuncGetArgs'] = true; // query is overloaded and does not like having default values passed, so proxy via func_get_args() to pass only what was given
-        $classDef['methods']['query']['parameters'] = \array_replace_recursive($classDef['methods']['query']['parameters'], [
-            array( 'name' => 'query' ),
-            array( 'name' => 'fetchMode', 'defaultValue' => 'PDO::FETCH_BOTH', 'isDefaultValueAvailable' => true, 'isDefaultValueConstant' => true ),
-            // arg 3 (colNo, className, or object based on fetch mode)
-            array( 'name' => 'arg3', 'defaultValue' => null, 'isDefaultValueAvailable' => true ),
-            // constructor args (for fetch_mode = PDO::FETCH_CLASS)
-            array( 'name' => 'constructorArgs', 'defaultValue' => null, 'isDefaultValueAvailable' => true ),
-        ]);
+        if (empty($classDef['methods']['query']['parameters']) || $classDef['methods']['query']['parameters'][2]['isVariadic'] === false) {
+            $classDef['methods']['query']['proxyViaFuncGetArgs'] = true; // query is overloaded and does not like having default values passed, so proxy via func_get_args() to pass only what was given
+            $classDef['methods']['query']['parameters'] = \array_replace_recursive($classDef['methods']['query']['parameters'], [
+                array( 'name' => 'query' ),
+                array( 'name' => 'fetchMode', 'defaultValue' => 'PDO::FETCH_BOTH', 'isDefaultValueAvailable' => true, 'isDefaultValueConstant' => true ),
+                // arg 3 (colNo, className, or object based on fetch mode)
+                array( 'name' => 'arg3', 'defaultValue' => null, 'isDefaultValueAvailable' => true ),
+                // constructor args (for fetch_mode = PDO::FETCH_CLASS)
+                array( 'name' => 'constructorArgs', 'defaultValue' => null, 'isDefaultValueAvailable' => true ),
+            ]);
+        }
         return $classDef;
     }
 
@@ -172,6 +176,9 @@ class ClassDefModifier
             1 => $this->defaultNull, // value
         ]);
         $classDef['methods']['__setLocation']['parameters'] = \array_replace_recursive($classDef['methods']['__setLocation']['parameters'], [
+            0 => $this->defaultNull, // new_location
+        ]);
+        $classDef['methods']['__setSoapHeaders']['parameters'] = \array_replace_recursive($classDef['methods']['__setSoapHeaders']['parameters'], [
             0 => $this->defaultNull, // new_location
         ]);
         return $classDef;

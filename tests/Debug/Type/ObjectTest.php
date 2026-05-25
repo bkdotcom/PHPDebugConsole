@@ -859,7 +859,9 @@ EOD;
                         self::assertSame($expect, $actual);
                     },
                     'html' => static function ($html) {
-                        $expect = \file_get_contents(__DIR__ . '/../data/Php71.html');
+                        \ob_start();
+                        require __DIR__ . '/../data/Php71.html.php';
+                        $expect = \ob_get_clean();
                         // echo 'expect: ' . $expect . "\n\n";
                         // echo 'actual: ' . $html . "\n\n";
                         self::assertStringMatchesFormatNormalized($expect, $html);
@@ -1448,7 +1450,7 @@ EOD;
                 'text' => 'anonymous = stdClass@anonymous
                     properties:
                     (public) thing = "hammer"
-                    (debug) file = "%s/PHPDebugConsole/tests/Debug/Fixture/Anonymous.php"
+                    (debug) file = "%s/tests/Debug/Fixture/Anonymous.php"
                     (debug) line = %d
                     methods:
                     public: 2',

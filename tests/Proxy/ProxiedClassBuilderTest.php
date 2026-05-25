@@ -154,6 +154,30 @@ class bdk_Test_Proxy_Fixture_VariadicAndReferenceProxy extends bdk\Test\Proxy\Fi
 
     public function variadic(...$params)
     {
+        return $this->proxyCall('variadic', [...$params]);
+    }
+
+    public function variadicByRef(&...$params)
+    {
+        return $this->proxyCall('variadicByRef', [...$params]);
+    }
+}
+EOD;
+        if (PHP_VERSION_ID < 70400) {
+            $codeExpected = <<<'EOD'
+use bdk\Proxy\ProxyTrait;
+
+class bdk_Test_Proxy_Fixture_VariadicAndReferenceProxy extends bdk\Test\Proxy\Fixture\VariadicAndReference
+{
+    use ProxyTrait;
+
+    public static function byRef(&$paramByRef)
+    {
+        return self::proxyCallStatic('byRef', [&$paramByRef]);
+    }
+
+    public function variadic(...$params)
+    {
         $proxyParamsTemp = [];
         foreach ($params as &$value) {
             $proxyParamsTemp[] = &$value;
@@ -171,6 +195,9 @@ class bdk_Test_Proxy_Fixture_VariadicAndReferenceProxy extends bdk\Test\Proxy\Fi
     }
 }
 EOD;
+
+        }
+
         $this->assertSame($codeExpected, $code);
     }
 

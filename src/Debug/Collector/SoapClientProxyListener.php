@@ -145,7 +145,7 @@ class SoapClientProxyListener implements ListenerInterface
                 $val = $matches[2] . ': ' . $matches[1];
             }
             return $val;
-        }, $this->subject->__getFunctions());
+        }, $this->subject->__getFunctions() ?: []);
     }
 
     /**

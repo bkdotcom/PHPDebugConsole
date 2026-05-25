@@ -205,7 +205,7 @@ class ServiceProvider implements ServiceProviderInterface
                         ? $trace[$i]['function']
                         : null;
                     $function = $debug->backtrace->parseFunction($function);
-                    if ($function['class'] !== $class) {
+                    if ($function['class'] !== $class && \strpos($function['class'], 'bdk\\Debug') === false) {
                         break;
                     }
                 }

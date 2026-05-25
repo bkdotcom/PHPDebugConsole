@@ -68,11 +68,16 @@ class SwiftMailerLoggerTest extends DebugTestFramework
 
     public function getMessage()
     {
-        return (new Swift_Message('Test Message'))
+        \set_error_handler(static function () {
+            // suppress Swift_Message deprecation notice in php 8.2+
+        });
+        $return = (new Swift_Message('Test Message'))
             ->setFrom(['fake@fake.com' => 'Brad Kent'])
             // ->setTo(['receiver@domain.org', 'randyr@domain.org' => 'Randy Recipient'])
             ->setTo(['test@test.com'])
             ->setBody('Here is the message itself');
+        \restore_error_handler();
+        return $return;
     }
 
     public function getTransport()

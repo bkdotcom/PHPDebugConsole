@@ -12,7 +12,7 @@ use RuntimeException;
 /**
  * This trait is used by proxied objects
  *
- * @property bool         $proxyExtendOnly             Whether be are unable to proxy an instance of the parent class
+ * @property bool         $proxyExtendOnly             Whether we are unable to proxy an instance of the parent class
  * @property class-string $proxyParentClassName        The class name of the extended class
  * @property array        $proxyParentPublicProperties List of public properties of the parent
  *

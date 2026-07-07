@@ -17,6 +17,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Abstraction\Object\Subscriber
  * @covers \bdk\Debug\Dump\Html\HtmlObject
  * @covers \bdk\Debug\Dump\Html\Object\Cases
+ * @covers \bdk\Debug\Dump\Html\Object\Enum
  */
 class EnumTest extends DebugTestFramework
 {

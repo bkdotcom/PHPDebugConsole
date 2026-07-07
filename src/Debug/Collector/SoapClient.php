@@ -13,14 +13,16 @@ namespace bdk\Debug\Collector;
 use bdk\Debug;
 use bdk\Debug\Collector\SoapClientProxyListener;
 use Exception;
-use SoapClient as SoapClientBase;
 
 \bdk\Debug::getInstance()->proxyManager->autoloadProxyClass('SoapClient');
 
 /**
  * A replacement SoapClient which traces requests
+ *
+ * @mixin \bdk\Proxy\ProxyTrait
+ * @mixin \SoapClient
  */
-class SoapClient extends \SoapClientProxy // SoapClientBase
+class SoapClient extends \SoapClientProxy
 {
     /**
      * Constructor

@@ -22,6 +22,26 @@ use RuntimeException;
 class Utility
 {
     /**
+     * Replacement for php's `basename()` function
+     *
+     * basename() on legacy PHP does not play nice with multibyte chars, so we'll do it ourselves
+     *
+     * @param string $filePath file path
+     * @param string $suffix   If the name component ends in suffix this will also be cut off.
+     *
+     * @return string
+     */
+    public static function basename($filePath, $suffix = '')
+    {
+        $pathParts = \preg_split('/[\/\\\\]/u', $filePath);
+        $basename = \end($pathParts);
+        if ($suffix && \substr($basename, -\strlen($suffix)) === $suffix) {
+            $basename = \substr($basename, 0, 0 - \strlen($suffix));
+        }
+        return $basename;
+    }
+
+    /**
      * Call function while suppressing errors/exceptions
      *
      * @param callable        $function        Closure/callable to call
@@ -34,10 +54,10 @@ class Utility
     {
         $caughtException = null;
         $return = null;
-        \set_error_handler(static function ($errno, $errstr, $errfile, $errline) use (&$caughtException) {
-            $isError = \in_array($errno, [E_USER_ERROR, E_RECOVERABLE_ERROR], true);
+        \set_error_handler(static function ($errNo, $errStr, $errFile, $errLine) use (&$caughtException) {
+            $isError = \in_array($errNo, [E_USER_ERROR, E_RECOVERABLE_ERROR], true);
             if ($isError && $caughtException === null) {
-                $caughtException = new ErrorException($errstr, 0, $errno, $errfile, $errline);
+                $caughtException = new ErrorException($errStr, 0, $errNo, $errFile, $errLine);
             }
             return true;
         }, E_ALL);

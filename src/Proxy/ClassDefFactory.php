@@ -209,7 +209,7 @@ class ClassDefFactory
     /**
      * Get parameter type from legacy ReflectionParameter or ReflectionMethod
      *
-     * @param Reflector $reflector Reflection instance
+     * @param ReflectionParameter $refParam Reflection instance
      *
      * @return array{allowsNull:bool,php:string|null}
      */

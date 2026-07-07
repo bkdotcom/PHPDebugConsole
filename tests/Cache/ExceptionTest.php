@@ -4,6 +4,8 @@ namespace bdk\Test\Cache;
 
 use bdk\Cache\FileSystem;
 use bdk\Cache\NullCache;
+use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -12,6 +14,9 @@ use PHPUnit\Framework\TestCase;
  */
 class ExceptionTest extends TestCase
 {
+    use AssertionTrait;
+    use ExpectExceptionTrait;
+
     /** @var string */
     private $cacheDir;
 

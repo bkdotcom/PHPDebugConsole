@@ -15,6 +15,7 @@ use bdk\Debug\LogEntry;
 use bdk\Debug\Utility\Php;
 use bdk\Debug\Utility\StringUtil;
 use bdk\Debug\Utility\UnserializeLogBackwards;
+use bdk\Debug\Utility\UnserializeLogBackwardsObject;
 
 /**
  * Unserialize / decompress / base64 decode log data
@@ -47,12 +48,8 @@ class UnserializeLog
         }
         $debug->setCfg($data['config'], Debug::CONFIG_NO_RETURN);
 
-        if ($data['classDefinitions'] && empty($data['classDefinitions']["\x00default\x00"])) {
-            $data['classDefinitions']["\x00default\x00"] = self::$debug->abstracter->abstractObject->definition->getValueStoreDefault();
-        }
-        $data['classDefinitions'] = \array_map(static function ($def) {
-            return UnserializeLogBackwards::updateClassDefinition($def, self::$debug);
-        }, $data['classDefinitions']);
+        $data = self::importUpdateClassDefinitions($data);
+
         // set classDefinitions early so can reference them when importing log entries
         $debug->data->set('classDefinitions', $data['classDefinitions']);
 
@@ -155,6 +152,24 @@ class UnserializeLog
         $vals = \array_replace(['', array(), array()], $vals);
         $logEntry = new LogEntry(self::$debug, $vals[0], $vals[1], $vals[2]);
         return UnserializeLogBackwards::updateLogEntry($logEntry);
+    }
+
+    /**
+     * Ensure data[classDefinitions] is as expected
+     *
+     * @param array $data Unpacked / Unserialized log data
+     *
+     * @return array
+     */
+    private static function importUpdateClassDefinitions(array $data)
+    {
+        if ($data['classDefinitions'] && empty($data['classDefinitions']["\x00default\x00"])) {
+            $data['classDefinitions']["\x00default\x00"] = self::$debug->abstracter->abstractObject->definition->getValueStoreDefault();
+        }
+        $data['classDefinitions'] = \array_map(static function ($def) {
+            return UnserializeLogBackwardsObject::updateClassDefinition($def, self::$debug);
+        }, $data['classDefinitions']);
+        return $data;
     }
 
     /**

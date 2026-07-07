@@ -8,8 +8,8 @@ namespace bdk\Proxy;
  */
 class ClassDefModifier
 {
-    private $defaultNull = array( 'defaultValue' => null, 'isDefaultValueAvailable' => true );
-    private $defaultArray = array( 'defaultValue' => array(), 'isDefaultValueAvailable' => true );
+    private $defaultNull = array('defaultValue' => null, 'isDefaultValueAvailable' => true);
+    private $defaultArray = array('defaultValue' => array(), 'isDefaultValueAvailable' => true);
 
     /**
      * Update / override class definition
@@ -38,37 +38,32 @@ class ClassDefModifier
     /**
      * Modify mysqli definition
      *
-     * @param array $classDef
+     * @param array $classDef Class definition
      *
      * @return array Modified class definition
      */
     private function modifyMysqli(array $classDef)
     {
-        $connectionParams = [
-            $this->defaultNull, // hostname
-            $this->defaultNull, // username
-            $this->defaultNull, // password
-            $this->defaultNull, // database
-            $this->defaultNull, // port
-            $this->defaultNull, // socket
-        ];
+        $connectionParams = \array_fill(0, 6, $this->defaultNull);
         $flags = [
             // flags
-            array( 'defaultValue' => 0, 'isDefaultValueAvailable' => true ),
+            array( 'defaultValue' => 0, 'isDefaultValueAvailable' => true, 'name' => 'flags' ),
         ];
         $flagsAndName = [
             // flags
-            array( 'defaultValue' => 0, 'isDefaultValueAvailable' => true ),
+            array( 'defaultValue' => 0, 'isDefaultValueAvailable' => true, 'name' => 'flags' ),
             // name
-            $this->defaultNull,
+            \array_merge($this->defaultNull, array('name' => 'name')),
         ];
-        $classDef['methods']['begin_transaction']['parameters'] = \array_replace_recursive($classDef['methods']['begin_transaction']['parameters'], $flagsAndName);
+        if (isset($classDef['methods']['begin_transaction'])) {
+            $classDef['methods']['begin_transaction']['parameters'] = \array_replace_recursive($classDef['methods']['begin_transaction']['parameters'], $flagsAndName);
+        }
         $classDef['methods']['commit']['parameters'] = \array_replace_recursive($classDef['methods']['commit']['parameters'], $flagsAndName);
         $classDef['methods']['connect']['parameters'] = \array_replace_recursive($classDef['methods']['connect']['parameters'], $connectionParams);
         if (isset($classDef['methods']['mysqli'])) {
             $classDef['methods']['mysqli']['parameters'] = \array_replace_recursive($classDef['methods']['mysqli']['parameters'], $connectionParams);
         }
-        $classDef['methods']['real_connect']['parameters'] = \array_replace_recursive($classDef['methods']['real_connect']['parameters'], array_merge($connectionParams, $flags));
+        $classDef['methods']['real_connect']['parameters'] = \array_replace_recursive($classDef['methods']['real_connect']['parameters'], \array_merge($connectionParams, $flags));
         $classDef['methods']['poll']['parameters'] = \array_replace_recursive($classDef['methods']['poll']['parameters'], [
             // int $usec = 0
             4 => array( 'defaultValue' => 0, 'isDefaultValueAvailable' => true ),
@@ -81,7 +76,7 @@ class ClassDefModifier
     /**
      * Modify OAuth definition
      *
-     * @param array $classDef
+     * @param array $classDef Class definition
      *
      * @return array Modified class definition
      */
@@ -89,41 +84,41 @@ class ClassDefModifier
     {
         // OAuth doesn't work well with reflection
         // We need to hardcode some of the method definitions
-        $classDef['methods']['fetch']['parameters'] = \array_merge(array(
+        $classDef['methods']['fetch']['parameters'] = \array_replace_recursive($classDef['methods']['fetch']['parameters'], array(
             // extra parameters
             1 => $this->defaultArray,
             // http_method
             2 => array( 'defaultValue' => 'OAUTH_HTTP_METHOD_GET', 'isDefaultValueAvailable' => true, 'isDefaultValueConstant' => true ),
             // request_headers
             3 => $this->defaultArray,
-        ), $classDef['methods']['fetch']['parameters']);
-        $classDef['methods']['generateSignature']['parameters'] = \array_merge(array(
+        ));
+        $classDef['methods']['generateSignature']['parameters'] = \array_replace_recursive($classDef['methods']['generateSignature']['parameters'], array(
             2 => $this->defaultArray, // extra parameters
-        ), $classDef['methods']['generateSignature']['parameters']);
-        $classDef['methods']['getAccessToken']['parameters'] = \array_merge(array(
+        ));
+        $classDef['methods']['getAccessToken']['parameters'] = \array_replace_recursive($classDef['methods']['getAccessToken']['parameters'], array(
             // auth_session_handle
             1 => array( 'defaultValue' => '', 'isDefaultValueAvailable' => true ),
             // verifier_token
             2 => array( 'defaultValue' => '', 'isDefaultValueAvailable' => true ),
             // http_method
             3 => array( 'defaultValue' => 'OAUTH_HTTP_METHOD_GET', 'isDefaultValueAvailable' => true, 'isDefaultValueConstant' => true ),
-        ), $classDef['methods']['getAccessToken']['parameters']);
-        $classDef['methods']['getRequestHeader']['parameters'] = \array_merge(array(
+        ));
+        $classDef['methods']['getRequestHeader']['parameters'] = \array_replace_recursive($classDef['methods']['getRequestHeader']['parameters'], array(
             2 => $this->defaultArray, // extra parameters
-        ), $classDef['methods']['getRequestHeader']['parameters']);
-        $classDef['methods']['getRequestToken']['parameters'] = \array_merge(array(
+        ));
+        $classDef['methods']['getRequestToken']['parameters'] = \array_replace_recursive($classDef['methods']['getRequestToken']['parameters'], array(
             // callback_url
             1 => array( 'defaultValue' => '', 'isDefaultValueAvailable' => true ),
             // http_method
             2 => array( 'defaultValue' => 'OAUTH_HTTP_METHOD_GET', 'isDefaultValueAvailable' => true, 'isDefaultValueConstant' => true ),
-        ), $classDef['methods']['getRequestToken']['parameters']);
+        ));
         return $classDef;
     }
 
     /**
      * Modify PDO definition
      *
-     * @param array $classDef
+     * @param array $classDef Class definition
      *
      * @return array Modified class definition
      */
@@ -155,7 +150,7 @@ class ClassDefModifier
     /**
      * Modify SoapClient definition
      *
-     * @param array $classDef
+     * @param array $classDef Class definition
      *
      * @return array Modified class definition
      */

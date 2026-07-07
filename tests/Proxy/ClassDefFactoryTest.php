@@ -2,6 +2,8 @@
 
 namespace bdk\Test\Proxy;
 
+use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Proxy\ClassDefFactory;
 use PHPUnit\Framework\TestCase;
 
@@ -10,8 +12,12 @@ use PHPUnit\Framework\TestCase;
  */
 class ClassDefFactoryTest extends TestCase
 {
+    use AssertionTrait;
+    use ExpectExceptionTrait;
+
     public function testGetClassDefForNonExistingInterface(): void
     {
+        $this->expectException('ReflectionException');
         $this->expectExceptionMessage('Class (or interface) "bdk\Test\Proxy\Fixture\NonExistingNodeInterface" does not exist');
 
         $factory = new ClassDefFactory();

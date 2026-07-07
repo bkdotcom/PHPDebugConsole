@@ -17,6 +17,9 @@ use PDO as PdoBase;
 
 /**
  * A PDO decorator/proxy which traces statements
+ *
+ * @mixin \bdk\Proxy\ProxyTrait
+ * @mixin \PDO
  */
 class Pdo extends \PDOProxy
 {

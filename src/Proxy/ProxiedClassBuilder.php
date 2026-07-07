@@ -119,7 +119,7 @@ class ProxiedClassBuilder
     private function buildMethods()
     {
 
-        $methods = \array_filter($this->classDef['methods'], function ($method) {
+        $methods = \array_filter($this->classDef['methods'], static function ($method) {
             $modifiers = isset($method['modifiers']) ? $method['modifiers'] : ['public'];
             // don't proxy final methods, as they can't be overridden in the proxy class
             return !\in_array('final', $modifiers, true);
@@ -155,7 +155,7 @@ class ProxiedClassBuilder
      */
     private function buildMethodBody(array $method)
     {
-        $lastParamInfo = end($method['parameters']);
+        $lastParamInfo = \end($method['parameters']);
         $lastParamInfo = $lastParamInfo
             ? \array_merge(ClassDefFactory::$defaultParam, $lastParamInfo)
             : false;
@@ -164,20 +164,34 @@ class ProxiedClassBuilder
             ? '{{return}}self::proxyCallStatic({{name}}, {{paramsCall}});'
             : '{{return}}$this->proxyCall({{name}}, {{paramsCall}});';
         $params = $this->buildMethodCallParams($method['parameters']);
-
         if ($method['proxyViaFuncGetArgs']) {
             $params = 'func_get_args()';
         } elseif ($haveVariadicParameter && PHP_VERSION_ID < 70400) {
             // array unpacking not supported until php 7.4... use ugly workaround for older versions
             \preg_match('/\[(?:(.*?), )?&?\.\.\.(\$\S+)\]/', $params, $matches);
             $template  = '$proxyParamsTemp = [' . $matches[1] . '];' . "\n"
-                . 'foreach (' . $matches[2]. ' as &$value) {' . "\n"
+                . 'foreach (' . $matches[2] . ' as &$value) {' . "\n"
                 . '    $proxyParamsTemp[] = &$value;' . "\n"
                 . '}' . "\n"
                 . $template;
             $params = '$proxyParamsTemp';
         }
+        $values = $this->buildMethodBodyValues($method, $params);
+        $output =  \strtr($template, $values);
+        $indent = $this->buildIndent(2);
+        return $indent . \str_replace("\n", "\n" . $indent, $output);
+    }
 
+    /**
+     * Get the substitution values for the method body
+     *
+     * @param array  $method Method definition
+     * @param string $params Params as a string
+     *
+     * @return array
+     */
+    private function buildMethodBodyValues(array $method, $params)
+    {
         $values = array(
             '{{name}}' => "'" . $method['name'] . "'",
             '{{paramsCall}}' => $params,
@@ -190,9 +204,7 @@ class ProxiedClassBuilder
             $values['{{name}}'] = '$method';
             $values['{{paramsCall}}'] = '$args';
         }
-        $output =  \strtr($template, $values);
-        $indent = $this->buildIndent(2);
-        return $indent . \str_replace("\n", "\n" . $indent, $output);
+        return $values;
     }
 
     /**
@@ -204,7 +216,7 @@ class ProxiedClassBuilder
      */
     private function buildMethodCallParams(array $parameters)
     {
-        $parameters = \array_map(function ($param) {
+        $parameters = \array_map(static function ($param) {
             $param = \array_merge(ClassDefFactory::$defaultParam, $param);
             return ''
                 . ($param['isPassedByReference'] && !$param['isVariadic'] ? '&' : '')

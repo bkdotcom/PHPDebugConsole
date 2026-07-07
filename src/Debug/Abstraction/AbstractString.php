@@ -223,7 +223,7 @@ class AbstractString extends AbstractComponent
         $docRoot = (string) $this->debug->serverRequest->getServerParam('DOCUMENT_ROOT');
         $filePath = $this->debug->filepathMap($abs['value']);
         $containsDocRoot = $docRoot && \strpos($filePath, $docRoot) === 0;
-        $baseName = \basename($filePath);
+        $baseName = $this->debug->utility->basename($filePath);
         $pathRel = \substr($filePath, 0, 0 - \strlen($baseName));
         if ($containsDocRoot) {
             $pathRel = \substr($pathRel, \strlen($docRoot));
@@ -319,7 +319,6 @@ class AbstractString extends AbstractComponent
         $maxLen = $cat && \array_key_exists($cat, $stringMaxLen)
             ? $stringMaxLen[$cat]
             : $stringMaxLen['other'];
-
         if (\is_array($maxLen)) {
             $maxLen = $this->getBreakpointBasedMaxLen($maxLen, $strlen);
         }

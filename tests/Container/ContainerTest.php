@@ -35,6 +35,7 @@ class ContainerTest extends TestCase
             'aliases' => array(
                 'test' => 'param',
             ),
+            'allowOverrides' => [],
             'cfg' => array(
                 'allowOverride' => false,
                 'onInvoke' => null,
@@ -59,11 +60,11 @@ class ContainerTest extends TestCase
         $container = new Container(array(), array(
             'allowOverride' => true,
         ));
-        $container['service'] = function () {
+        $container['service'] = static function () {
             return new Fixture\Service();
         };
         $container->get('service');
-        $container['service'] = function () {
+        $container['service'] = static function () {
             return 'And now for something completely different';
         };
         $this->assertSame('And now for something completely different', $container['service']);
@@ -72,7 +73,7 @@ class ContainerTest extends TestCase
     public function testExtend()
     {
         $container = new Container();
-        $container['service'] = function () {
+        $container['service'] = static function () {
             return new Fixture\Service();
         };
         $container->extend('service', static function (Fixture\Service $service, Container $container) {
@@ -80,6 +81,7 @@ class ContainerTest extends TestCase
             return $service;
         });
 
+        /** @var Fixture\Service */
         $service = $container['service'];
         $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $service);
         $this->assertSame('extended', $service->value);
@@ -89,17 +91,27 @@ class ContainerTest extends TestCase
     {
         $args = array();
         $container = new Container(array(), array(
-            'onInvoke' => function ($val, $id, Container $container) use (&$args) {
+            'onInvoke' => static function ($val, $id, Container $container) use (&$args) {
                 $args = \func_get_args();
             },
         ));
         $container['int'] = 42;
-        $container['service'] = function () {
+        $container['service'] = static function () {
             return new Fixture\Service();
         };
-        $container['factory'] = $container->factory(function () {
+        $container['factory'] = $container->factory(static function () {
             return new Fixture\Service();
         });
+
+        $container->get('int');
+        $this->assertSame(42, $args[0]);
+        $this->assertSame('int', $args[1]);
+        $this->assertSame($container, $args[2]);
+
+        // onInvoke shouldn't be called again
+        $args = [];
+        $container->get('int');
+        $this->assertSame([], $args);
 
         $container->get('service');
         $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $args[0]);
@@ -115,18 +127,18 @@ class ContainerTest extends TestCase
     public function testSetCfg()
     {
         $container = new Container();
-        $container['someService'] = function () {
+        $container['someService'] = static function () {
             return new Fixture\Service();
         };
         // can override if not yet invoked
-        $container['someService'] = function () {
+        $container['someService'] = static function () {
             return 'new';
         };
         // invoke it
         $this->assertSame('new', $container['someService']);
         $exceptionMessage = null;
         try {
-            $container['someService'] = function () {
+            $container['someService'] = static function () {
                 return 'new 2';
             };
         } catch (\Exception $e) {
@@ -136,11 +148,11 @@ class ContainerTest extends TestCase
         $args = array();
         $container->setCfg('allowOverride', true);
         $container->setCfg(array(
-            'onInvoke' => function ($val, $id, Container $container) use (&$args) {
+            'onInvoke' => static function ($val, $id, Container $container) use (&$args) {
                 $args = \func_get_args();
             },
         ));
-        $container['someService'] = function () {
+        $container['someService'] = static function () {
             return 'new 3';
         };
         $this->assertSame('new 3', $container->get('someService'));
@@ -159,7 +171,7 @@ class ContainerTest extends TestCase
     public function testWithClosure()
     {
         $container = new Container();
-        $container['service'] = function () {
+        $container['service'] = static function () {
             return new Fixture\Service();
         };
         $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $container['service']);
@@ -189,7 +201,7 @@ class ContainerTest extends TestCase
     public function testFactoryValuesDifferent()
     {
         $container = new Container();
-        $container['service'] = $container->factory(function () {
+        $container['service'] = $container->factory(static function () {
             return new Fixture\Service();
         });
 
@@ -257,11 +269,11 @@ class ContainerTest extends TestCase
     public function testShouldPassContainerAsParameter()
     {
         $container = new Container(array(
-            'service' => function () {
-                return new Fixture\Service();
-            },
-            'container' => function ($container) {
+            'container' => static function ($container) {
                 return $container;
+            },
+            'service' => static function () {
+                return new Fixture\Service();
             },
         ));
 
@@ -301,25 +313,25 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
         $container['hereFirst'] = 'I was here first';
-        $closure = function () {
+        $closure = static function () {
             return 'this is a test';
         };
         $container->setValues(array(
-            'string' => 'foo',
-            'service' => function () {
-                return new Fixture\Service();
-            },
-            'factoryService' => $container->factory(function () {
+            'factoryService' => $container->factory(static function () {
                 return new Fixture\Service();
             }),
             'protected' => $container->protect($closure),
+            'service' => static function () {
+                return new Fixture\Service();
+            },
+            'string' => 'foo',
         ));
         $this->assertSame(array(
             'hereFirst',
-            'string',
-            'service',
             'factoryService',
             'protected',
+            'service',
+            'string',
         ), $container->keys());
         $this->assertSame('I was here first', $container->get('hereFirst'));
         $this->assertSame('foo', $container->get('string'));
@@ -341,7 +353,7 @@ class ContainerTest extends TestCase
     {
         $container = new Container(array(
             'param' => 'value',
-            'service' => function () {
+            'service' => static function () {
                 return new Fixture\Service();
             },
             'null' => null,
@@ -363,7 +375,7 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
         $container['param'] = 'value';
-        $container['service'] = function () {
+        $container['service'] = static function () {
             return new Fixture\Service();
         };
         $container->addAlias('myAlias', 'param');
@@ -376,6 +388,7 @@ class ContainerTest extends TestCase
 
         $expect = array(
             'aliases' => array(),
+            'allowOverrides' => [],
             'cfg' => array(
                 'allowOverride' => false,
                 'onInvoke' => null,
@@ -407,11 +420,11 @@ class ContainerTest extends TestCase
     public function testRaw()
     {
         $container = new Container();
-        $service = function () {
+        $service = static function () {
             return 'service';
         };
         $container['service'] = $service;
-        $factory = $container->factory(function () {
+        $factory = $container->factory(static function () {
             return 'factory';
         });
         $container['factory'] = $factory;
@@ -461,7 +474,7 @@ class ContainerTest extends TestCase
     public function testDefiningNewServiceAfterInvoke()
     {
         $container = new Container(array(
-            'foo' => function () {
+            'foo' => static function () {
                 return 'foo';
             },
         ));
@@ -469,7 +482,7 @@ class ContainerTest extends TestCase
         // invoke it
         $container['foo'];
 
-        $container['bar'] = function () {
+        $container['bar'] = static function () {
             return 'bar';
         };
         $this->assertSame('bar', $container['bar']);
@@ -481,7 +494,7 @@ class ContainerTest extends TestCase
         $this->expectExceptionMessage('Cannot update "foo" after it has been instantiated.');
 
         $container = new Container(array(
-            'foo' => function () {
+            'foo' => static function () {
                 return 'foo';
             },
         ));
@@ -489,24 +502,44 @@ class ContainerTest extends TestCase
         // invoke it
         $container['foo'];
 
-        $container['foo'] = function () {
+        $container['foo'] = static function () {
             return 'bar';
         };
+    }
+
+    public function testOverridingInvokedServiceAllowed()
+    {
+        $container = new Container(array(
+            'foo' => static function () {
+                return 'foo';
+            },
+        ));
+        $container->allowOverride('foo');
+
+        // invoke it
+        self::assertSame('foo', $container['foo']);
+
+        // update it
+        $container['foo'] = static function () {
+            return 'bar';
+        };
+
+        self::assertSame('bar', $container['foo']);
     }
 
     public function testRemovingServiceAfterInvoke()
     {
         $container = new Container(array(
-            'foo' => function () {
+            'foo' => static function () {
                 return 'foo';
-            }
+            },
         ));
 
         // invoke it
         $container['foo'];
 
         unset($container['foo']);
-        $container['foo'] = function () {
+        $container['foo'] = static function () {
             return 'bar';
         };
         $this->assertSame('bar', $container['foo']);
@@ -529,7 +562,7 @@ class ContainerTest extends TestCase
     public static function providerServiceDefinition()
     {
         return [
-            [function ($value) {
+            [static function ($value) {
                 $service = new Fixture\Service();
                 $service->value = $value;
 

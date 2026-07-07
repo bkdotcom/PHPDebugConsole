@@ -40,7 +40,7 @@ class Factory
         'columns' => [], // list of keys
         'getValInfo' => null, // callable to get type info
         'inclIndex' => true,
-        'totalCols' => [],
+        'totalCols' => [], // list of column keys to total..  get's moved to column meta
     );
 
     /** @var array<string, mixed> */
@@ -101,6 +101,7 @@ class Factory
                 unset($columnMeta['class']);
             }
             unset($columnMeta['total']);
+            unset($columnMeta['totalShow']);
             return $columnMeta;
         }, $this->meta['columns']);
         $this->table->setMeta($this->meta);
@@ -109,27 +110,27 @@ class Factory
     }
 
     /**
-     * Add header row to table
+     * Add footer row to table
      *
      * @return void
      */
     private function addFooter()
     {
-        if (empty($this->options['totalCols'])) {
-            return;
-        }
+        $totalCells = 0;
         $footerCells = array();
         foreach ($this->meta['columns'] as $columnMeta) {
-            $key = $columnMeta['key'];
-            $footerCells[] = \in_array($key, $this->options['totalCols'], true)
+            $totalCells += (int) $columnMeta['totalShow'];
+            $footerCells[] = $columnMeta['totalShow']
                 ? new TableCell($columnMeta['total'])
                 : (new TableCell())->setHtml('');
         }
-        $this->table->setFooter(new TableRow($footerCells));
+        if ($totalCells > 0) {
+            $this->table->setFooter(new TableRow($footerCells));
+        }
     }
 
     /**
-     * Add footer row to table
+     * Add header row to table
      *
      * @return void
      */
@@ -222,6 +223,7 @@ class Factory
                     //    'class' => null,
                     //    'key' => int|string,
                     //    'total' => null,
+                    //    'totalShow' => false,
                     // )
                 ),
                 'haveObjectRow' => false,
@@ -235,12 +237,11 @@ class Factory
                 'class' => null, // if all values in column are objects of same class, store class name here
                 'key' => $key,
                 'total' => null, // temporary total value for column
+                'totalShow' => false,
             ), $columnMeta);
+            $columnMeta['totalShow'] = \in_array($key, $this->options['totalCols'], true) || $columnMeta['total'] !== null;
             \ksort($columnMeta);
             $this->meta['columns'][] = $columnMeta;
-            if ($columnMeta['total'] !== null && !\in_array($key, $this->options['totalCols'], true)) {
-                $this->options['totalCols'][] = $key;
-            }
         }
     }
 
@@ -423,17 +424,15 @@ class Factory
     /**
      * Update totals with current row's values
      *
-     * @param array $values Row key=>value array
+     * @param array $values Row values
      *
      * @return void
      */
     private function updateTotals(array $values)
     {
-        $keys = \array_column($this->meta['columns'], 'key'); // index to key mapping
-        $indexes = \array_keys(\array_intersect($keys, $this->options['totalCols']));
-        foreach ($indexes as $i) {
+        foreach ($this->meta['columns'] as $i => $columnMeta) {
             $value = $values[$i];
-            if (\is_numeric($value)) {
+            if ($columnMeta['totalShow'] && \is_numeric($value)) {
                 $this->meta['columns'][$i]['total'] += $value;
             }
         }

@@ -2,16 +2,10 @@
 
 namespace bdk\Test\Proxy;
 
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\Proxy\ClassDefFactory;
 use bdk\Proxy\Manager;
 use bdk\Proxy\ProxiedClassBuilder;
-use bdk\Test\Proxy\Fixture\FinalImplements;
-use bdk\Test\Proxy\Fixture\FinalNoImplement;
-use bdk\Test\Proxy\Fixture\TypesDisjunctiveNormalForm;
-use bdk\Test\Proxy\Fixture\TypesIntersection;
-use bdk\Test\Proxy\Fixture\TypesUnion;
-use bdk\Test\Proxy\Fixture\VariadicAndReference;
-use bdk\Test\Proxy\Fixture\WidgetInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -21,6 +15,8 @@ use PHPUnit\Framework\TestCase;
  */
 class ProxiedClassBuilderTest extends TestCase
 {
+    use AssertionTrait;
+
     public function testBuildInterface(): void
     {
         $manager = new Manager();
@@ -136,6 +132,9 @@ final class bdk_Test_Proxy_Fixture_FinalImplementsProxy implements bdk\Test\Prox
 
     public function testVariadicAndReferenceParameters(): void
     {
+        if (PHP_VERSION_ID < 50600) {
+            $this->markTestSkipped('Variadic params require PHP 5.6');
+        }
         $factory = new ClassDefFactory();
         $builder = new ProxiedClassBuilder();
         $definition = $factory->getClassDef('bdk\\Test\\Proxy\\Fixture\\VariadicAndReference');
@@ -207,6 +206,9 @@ EOD;
      */
     public function testTypesDisjunctiveNormalForm(): void
     {
+        if (PHP_VERSION_ID < 80200) {
+            $this->markTestSkipped('Types in disjunctive normal form require PHP 8.2');
+        }
         $factory = new ClassDefFactory();
         $builder = new ProxiedClassBuilder();
         $definition = $factory->getClassDef('bdk\\Test\\Proxy\\Fixture\\TypesDisjunctiveNormalForm');
@@ -233,6 +235,9 @@ EOD;
      */
     public function testTypesIntersection(): void
     {
+        if (PHP_VERSION_ID < 80100) {
+            $this->markTestSkipped('Intersection types require PHP 8.1');
+        }
         $factory = new ClassDefFactory();
         $builder = new ProxiedClassBuilder();
         $definition = $factory->getClassDef('bdk\\Test\\Proxy\\Fixture\\TypesIntersection');
@@ -259,6 +264,9 @@ EOD;
      */
     public function testTypesUnion(): void
     {
+        if (PHP_VERSION_ID < 80000) {
+            $this->markTestSkipped('Union types require PHP 8.0');
+        }
         $factory = new ClassDefFactory();
         $builder = new ProxiedClassBuilder();
         $definition = $factory->getClassDef('bdk\\Test\\Proxy\\Fixture\\TypesUnion');

@@ -323,8 +323,8 @@ Content-Transfer-Encoding: quoted-printable
 
     private static function fwrite()
     {
-        if (PHP_VERSION_ID < 50500) {
-            \fwrite(STDERR, implode(' ', \func_get_args()) . "\n");
+        if (false && PHP_VERSION_ID < 50500) {
+            \fwrite(STDERR, \implode(' ', \func_get_args()) . "\n");
         }
     }
 }

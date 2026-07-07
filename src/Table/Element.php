@@ -255,9 +255,6 @@ class Element implements JsonSerializable, Serializable
      */
     public function appendChild(self $child)
     {
-        if (!($child instanceof self)) {
-            throw new InvalidArgumentException('Child must be an instance of ' . __CLASS__);
-        }
         $child->setParent($this);
         $this->children[] = $child;
         return $this;
@@ -503,10 +500,15 @@ class Element implements JsonSerializable, Serializable
     /**
      * Normalize class value
      *
-     * @param string|array $class  Class(es)
-     * @param bool         $asList Whether to return current classes as list
+     * class may be a
+     *  - class string (space-separated)
+     *  - list of class strings
+     *  - associative array of class => boolean (true=add, false=remove)
      *
-     * @return array
+     * @param string|array $class  Class(es)
+     * @param bool         $asList Whether to return passed classes as list
+     *
+     * @return array new classes and current classes
      */
     private function normalizeClass($class, $asList = false)
     {

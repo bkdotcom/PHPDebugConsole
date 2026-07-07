@@ -6,6 +6,7 @@ use bdk\Debug;
 use bdk\Debug\Abstraction\Abstracter;
 use bdk\Debug\Abstraction\Type;
 use bdk\Debug\LogEntry;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Test\Debug\DebugTestFramework;
 use bdk\Test\Debug\Helper;
 
@@ -19,6 +20,7 @@ use bdk\Test\Debug\Helper;
  * @covers \bdk\Debug\Dump\Html
  * @covers \bdk\Debug\Dump\Html\HtmlString
  * @covers \bdk\Debug\Dump\Html\HtmlStringBinary
+ * @covers \bdk\Debug\Dump\Html\HtmlStringEncoded
  * @covers \bdk\Debug\Dump\Text
  * @covers \bdk\Debug\Dump\Text\Value
  * @covers \bdk\Debug\Dump\TextAnsi\Value
@@ -27,12 +29,21 @@ use bdk\Test\Debug\Helper;
  */
 class StringTest extends DebugTestFramework
 {
+    use ExpectExceptionTrait;
+
     public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();
         $debug = Debug::getInstance();
         $htmlString = $debug->getDump('html')->valDumper->string;
         \bdk\Debug\Utility\Reflection::propSet($htmlString, 'lazy', array());
+    }
+
+    public function testInvalidHtmlStringPropertyThrowsException()
+    {
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('Property bdk\Debug\Dump\Html\HtmlString::noSuchProperty is not defined or is inaccessible');
+        $this->debug->getDump('html')->valDumper->string->noSuchProperty;
     }
 
     public function testEmptyBinary()
@@ -165,6 +176,34 @@ EOD;
                         . '<span class="ws_t">' . "\t" . '</span>line 2</span></li>',
                     'script' => 'console.log("string","a \"string\"\r\n\tline 2");',
                     'text' => "string = \"a \"string\"\r\n\tline 2\"",
+                ),
+            ),
+
+            'filepath.withEvalLine' => array(
+                'log',
+                [
+                    \bdk\Debug::getInstance()->abstracter->crateWithVals('/foo/bar/baz.txt', array(
+                        'type' => Type::TYPE_STRING,
+                        'typeMore' => Type::TYPE_STRING_FILEPATH,
+                        'line' => 123,
+                        'evalLine' => 42,
+                    )),
+                ],
+                array(
+                    'html' => '<li class="m_log"><span class="no-quotes t_string" data-type-more="filepath"><span class="t_string"><span class="file-path-rel">/foo/bar/</span><span class="file-basename">baz.txt</span></span> (line <span class="t_int">123</span>, line eval\'d <span class="t_int">42</span>)</span></li>',
+                ),
+            ),
+            'filepath.withLine' => array(
+                'log',
+                [
+                    \bdk\Debug::getInstance()->abstracter->crateWithVals('/foo/bar/baz.txt', array(
+                        'type' => Type::TYPE_STRING,
+                        'typeMore' => Type::TYPE_STRING_FILEPATH,
+                        'line' => 123,
+                    )),
+                ],
+                array(
+                    'html' => '<li class="m_log"><span class="no-quotes t_string" data-type-more="filepath"><span class="t_string"><span class="file-path-rel">/foo/bar/</span><span class="file-basename">baz.txt</span></span> (line <span class="t_int">123</span>)</span></li>',
                 ),
             ),
 
@@ -481,6 +520,41 @@ EOD;
                     ),
                     'script' => 'console.log(' . \json_encode('\u0000 / foo \ bar', JSON_UNESCAPED_SLASHES) . ');',
                     'text' => '\u0000 / foo \ bar',
+                ),
+            ),
+
+            // test getSeriaized() method
+            //   encoded strings have dedicated tests in StringEncodedTest.php
+            'encoded.serialized' => array(
+                'log',
+                array(
+                    \serialize(array('foo' => 'bar')),
+                ),
+                array(
+                    'entry' => array(
+                        'method' => 'log',
+                        'args' => array(
+                            array(
+                                'debug' => Abstracter::ABSTRACTION,
+                                'brief' => false,
+                                'type' => Type::TYPE_STRING,
+                                'typeMore' => Type::TYPE_STRING_SERIALIZED,
+                                'value' => 'a:1:{s:3:"foo";s:3:"bar";}',
+                                'valueDecoded' => array(
+                                    'foo' => 'bar',
+                                ),
+                            ),
+                        ),
+                        'meta' => array(),
+                    ),
+                    'html' => '<li class="m_log"><span class="string-encoded tabs-container" data-type-more="serialized">' . "\n"
+                        . '<nav role="tablist"><a class="nav-link" data-target=".tab-1" data-toggle="tab" role="tab">serialized</a><a class="active nav-link" data-target=".tab-2" data-toggle="tab" role="tab">unserialized</a></nav>' . "\n"
+                        . '<div class="tab-1 tab-pane" role="tabpanel"><span class="no-quotes t_string">a:1:{s:3:&quot;foo&quot;;s:3:&quot;bar&quot;;}</span></div>' . "\n"
+                        . '<div class="active tab-2 tab-pane" role="tabpanel"><span class="t_array"><span class="t_keyword">array</span><span class="t_punct">(</span>' . "\n"
+                        . '<ul class="array-inner list-unstyled">' . "\n"
+                        . '<li><span class="t_key">foo</span><span class="t_operator">=&gt;</span><span class="t_string">bar</span></li>' . "\n"
+                        . '</ul><span class="t_punct">)</span></span></div>' . "\n"
+                        . '</span></li>',
                 ),
             ),
         );

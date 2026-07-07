@@ -152,14 +152,19 @@ class SkipInternal
     {
         $count = \count($backtrace);
         $index = \max(\min($index, $count - 1), 0); // make sure between 0 and $count - 1 (inclusive)
-        if ($index === $count - 1 && $backtrace[$index]['function'] !== '{main}') {
-            // everything skipped * didn't enter via {main} -> don't rewind
-            return $index;
-        }
+        $allSkipped = $index === $count - 1;
+        $allPhpFuncOrClosure = true;
         for ($i = $index; $i > 0; $i--) {
             $frame = $backtrace[$i];
+            if (self::isSkippable($frame, $level) === false) {
+                continue;
+            }
+            if ($allPhpFuncOrClosure && \in_array(\bdk\Backtrace::parseFunction($frame['function'])['function'], ['__call', '__callStatic'], true)) {
+                break;
+            }
             $isPhpFuncOrClosure = self::isPhpDefinedFunction($frame['function']) || $frame['function'] === '{closure}';
-            if (self::isSkippable($frame, $level) && $isPhpFuncOrClosure === false && $frame['function'] !== 'ReflectionMethod->invokeArgs') {
+            $allPhpFuncOrClosure = $allPhpFuncOrClosure && $isPhpFuncOrClosure;
+            if ($allSkipped === false && $isPhpFuncOrClosure === false && $frame['function'] !== 'ReflectionMethod->invokeArgs') {
                 break;
             }
         }

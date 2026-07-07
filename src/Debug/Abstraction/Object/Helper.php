@@ -194,7 +194,7 @@ class Helper
     /**
      * Get parameter type from legacy ReflectionConstant, ReflectionParameter, or ReflectionProperty
      *
-     * @param Reflector $reflector Reflection instance
+     * @param ReflectionParameter $reflector Reflection instance
      *
      * @return array{allowsNull:bool,php:string|null}
      */

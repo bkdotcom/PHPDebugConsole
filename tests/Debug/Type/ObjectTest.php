@@ -1469,7 +1469,7 @@ EOD;
                     $abs = $logEntry['args'][1];
                     self::assertArraySubset(array(
                         // 'className' => "\x00default\x00",
-                        'className' => 'class@anonymous|' . md5($reflector->getName()),
+                        'className' => 'class@anonymous|' . \md5($reflector->getName()),
                         'definition' => array(
                             'extensionName' => false,
                             'fileName' => $filepath,

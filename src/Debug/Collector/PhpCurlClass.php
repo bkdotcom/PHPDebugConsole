@@ -17,6 +17,9 @@ use Curl\Curl;
 
 /**
  * Extends auto-generated proxy class for Curl\Curl
+ *
+ * @mixin \bdk\Proxy\ProxyTrait
+ * @mixin \Curl\Curl
  */
 class PhpCurlClass extends \Curl_CurlProxy
 {

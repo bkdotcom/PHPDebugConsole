@@ -46,9 +46,7 @@ class Definition
     /** @var ValueStore|null base/default class values */
     protected $default;
 
-    /**
-     * @var array<string,mixed> Array of key/values
-     */
+    /** @var array<string,mixed> Array of key/values */
     protected static $values = array(
         'attributes' => array(),
         'cases' => array(),
@@ -76,6 +74,14 @@ class Definition
             'summary' => '',
         ),
         'properties' => array(),
+    );
+
+    /** @var array<string,mixed> Temporary values available during abstraction */
+    protected static $valuesTemp = array(
+        'debugMethod' => null,
+        'fullyQualifyPhpDocType' => false,
+        'hist' => [],
+        'reflector' => null,
     );
 
     /**
@@ -121,26 +127,35 @@ class Definition
     public function getAbstraction($obj, array $values = array())
     {
         $values = $this->getValuesBootstrap($obj, $values);
-        $keys = $this->getCacheKeys($values);
+        $dataPath = ['classDefinitions', $values['className']];
 
-        $valueStore = $this->getAbstractionFromDataCache($keys['dataPath'], $keys['cache']);
+        $valueStore = $this->debug->data->get($dataPath);
         if ($valueStore) {
+            return $valueStore;
+        }
+
+        $cacheKey = $this->getCacheKey($values['className']);
+        $valueStore = $this->getAbstractionFromCache($cacheKey);
+        if ($valueStore) {
+            // store in data to keep track of which definitions are used in current request
+            $this->debug->data->set($dataPath, $valueStore);
             return $valueStore;
         }
 
         $valueStoreDefault = $this->getValueStoreDefault();
         if (\array_filter([$obj === self::$values['className'], $values['isMaxDepth'], $values['isExcluded']])) {
+            // getting "default", maxDepth, or excluded
             return $valueStoreDefault;
         }
 
         $abs = new ObjectAbstraction($valueStoreDefault, $this->getValuesInit($values));
         $abs->setSubject($obj);
-        $this->debug->data->set($keys['dataPath'], $abs); // set early to allow recursive references to work
+        $this->debug->data->set($dataPath, $abs); // set early to allow recursive references to work
         $this->doAbstraction($abs);
 
         if ($abs['isAnonymous'] === false) {
             $abs['caching'] = true; // affects Abstraction's __serialize behavior (__serialize removes this value)
-            $this->debug->cache->set($keys['cache'], $abs);
+            $this->debug->cache->set($cacheKey, $abs);
         }
         return $abs;
     }
@@ -157,7 +172,7 @@ class Definition
         }
         $values = $this->object->buildValues(static::buildValues());
         $this->default = new ValueStore($values);
-        $dataPath = ['classDefinitions', $values['className']];
+        $dataPath = ['classDefinitions', self::$values['className']];
         $this->debug->data->set($dataPath, $this->default);
         return $this->default;
     }
@@ -192,8 +207,7 @@ class Definition
     {
         // perform cfgFlag check even though we've enabled all flags for definition
         if ($abs['cfgFlags'] & AbstractObject::OBJ_ATTRIBUTE_COLLECT) {
-            $reflector = $abs['reflector'];
-            $abs['attributes'] = $this->helper->getAttributes($reflector);
+            $abs['attributes'] = $this->helper->getAttributes($abs['reflector']);
         }
     }
 
@@ -231,13 +245,12 @@ class Definition
      */
     protected function addExtends(ValueStore $abs)
     {
+        $extends = array();
+        $reflector = $abs['reflector'];
         if ($abs['isInterface']) {
             // interfaces can EXTEND multiple interfaces
-            $abs['extends'] = $this->getInterfaces($abs['reflector']);
-            return;
+            $extends = $this->getInterfaces($reflector);
         }
-        $reflector = $abs['reflector'];
-        $extends = array();
         while ($reflector = $reflector->getParentClass()) {
             $extends[] = $reflector->getName();
         }
@@ -310,29 +323,23 @@ class Definition
     }
 
     /**
-     * Check if definition already stored in data or cache
+     * Pull class definition from persistent cache
      *
-     * @param array  $dataPath Path to definition in data
      * @param string $cacheKey Cache key for definition
      *
      * @return ObjectAbstraction|null
      */
-    protected function getAbstractionFromDataCache(array $dataPath, $cacheKey)
+    protected function getAbstractionFromCache($cacheKey)
     {
-        $valueStore = $this->debug->data->get($dataPath);
-        if ($valueStore) {
-            return $valueStore;
-        }
         $valueStore = $this->debug->cache->get($cacheKey);
-        if ($valueStore) {
-            // pulled from persistent cache
-            // make sure we have the default valueStore in data
-            if ($valueStore['inheritsFrom']) {
-                $inherited = $this->getAbstraction($valueStore['inheritsFrom']);
-                $valueStore->setInherited($inherited);
-            }
-            // store in data to keep track of which definitions are used in current request
-            $this->debug->data->set($dataPath, $valueStore);
+        if (!$valueStore) {
+            return null;
+        }
+        // pulled from cache
+        // make sure we have the default valueStore in data
+        if ($valueStore['inheritsFrom']) {
+            $inherited = $this->getAbstraction($valueStore['inheritsFrom']);
+            $valueStore->setInherited($inherited);
         }
         return $valueStore;
     }
@@ -340,23 +347,14 @@ class Definition
     /**
      * Get data-path and cache key
      *
-     * @param array $values Values to build keys from
+     * @param string $className Class name to build key from
      *
-     * @return array<string,mixed>
+     * @return string
      */
-    private function getCacheKeys(array $values)
+    private function getCacheKey($className)
     {
-        $className = $values['className'];
-        $reflector = $values['reflector'];
-        $valueStoreKey = PHP_VERSION_ID >= 70000 && $reflector && $reflector->isAnonymous()
-            ? $className . '|' . \md5($reflector->getName())
-            : $className;
-        $cacheKey = \str_replace("\x00", 'x00', $valueStoreKey);
-        $cacheKey = 'classDefinition_' . \preg_replace('/[{}()\\/\\\\@:]/', '_', $cacheKey);
-        return array(
-            'cache' => $cacheKey,
-            'dataPath' => ['classDefinitions', $valueStoreKey],
-        );
+        $cacheKey = \str_replace("\x00", 'x00', $className);
+        return 'classDefinition_' . \preg_replace('/[{}()\\/\\\\@:]/', '_', $cacheKey);
     }
 
     /**
@@ -401,14 +399,16 @@ class Definition
             'className' => \is_object($obj)
                 ? \get_class($obj)
                 : (string) $obj,
-            'debugMethod' => null,
-            'fullyQualifyPhpDocType' => false,
             'isExcluded' => false,
             'isMaxDepth' => false,
             'reflector' => null,
         ), $values);
         if ($values['reflector'] === null && $values['className'] !== self::$values['className']) {
+            // className !== "default"
             $values['reflector'] = new ReflectionClass($values['className']);
+        }
+        if ($values['reflector'] && PHP_VERSION_ID >= 70000 && $values['reflector']->isAnonymous()) {
+            $values['className'] = $values['className'] . '|' . \md5($values['reflector']->getName());
         }
         return $values;
     }
@@ -418,32 +418,22 @@ class Definition
      *
      * @param array $values values already collected
      *
-     * @return Abstraction
+     * @return array
      */
     private function getValuesInit(array $values)
     {
         $reflector = $values['reflector'];
-        $isAnonymous = PHP_VERSION_ID >= 70000 && $reflector->isAnonymous();
         return self::buildValues(\array_merge(
             array(
-                'cfgFlags' => self::$values['cfgFlags'],
-                'className' => $isAnonymous
-                    ? $values['className'] . '|' . \md5($reflector->getName())
-                    : $values['className'],
+                'className' => $values['className'],
                 'isAbstract' => $reflector->isAbstract(),
-                'isAnonymous' => $isAnonymous,
+                'isAnonymous' => PHP_VERSION_ID >= 70000 && $reflector->isAnonymous(),
                 'isFinal' => $reflector->isFinal(),
                 'isInterface' => $reflector->isInterface(),
                 'isReadOnly' => PHP_VERSION_ID >= 80200 && $reflector->isReadOnly(),
                 'isTrait' => $reflector->isTrait(),
             ),
-            array(
-                // these are temporary values available during abstraction
-                'debugMethod' => $values['debugMethod'],
-                'fullyQualifyPhpDocType' => $values['fullyQualifyPhpDocType'],
-                'hist' => array(),
-                'reflector' => $values['reflector'],
-            )
+            \array_intersect_key($values, self::$valuesTemp)
         ));
     }
 }

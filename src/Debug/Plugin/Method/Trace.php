@@ -135,7 +135,7 @@ class Trace implements SubscriberInterface
         if ($meta['inclContext']) {
             $trace = $this->debug->backtrace->addContext($trace);
         }
-        return $this->getTraceFinish($trace, $meta);
+        return $this->getTraceFinish($trace);
     }
 
     /**
@@ -217,7 +217,7 @@ class Trace implements SubscriberInterface
     private function parseFilePath($filePath, $commonPrefix)
     {
         $docRoot = (string) $this->debug->serverRequest->getServerParam('DOCUMENT_ROOT');
-        $baseName = \basename($filePath);
+        $baseName = $this->debug->utility->basename($filePath);
         $containsDocRoot = $docRoot && \strpos($filePath, $docRoot) === 0;
         $pathCommon = '';
         $pathRel = \substr($filePath, 0, 0 - \strlen($baseName));

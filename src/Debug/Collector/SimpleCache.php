@@ -18,6 +18,9 @@ use Psr\SimpleCache\CacheInterface;
 
 /**
  * A SimpleCache (PSR-16) proxy for logging SimpleCache operations
+ *
+ * @mixin \bdk\Proxy\ProxyTrait
+ * @mixin \Psr\SimpleCache\CacheInterface
  */
 class SimpleCache extends \Psr_SimpleCache_CacheInterfaceProxy
 {

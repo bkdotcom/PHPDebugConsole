@@ -251,7 +251,6 @@ class PhpCurlClassProxyListener implements ListenerInterface
         $this->debug->time(\microtime(true) - $this->initValues['timeStart']);
         // Curl provides no means to get the request body
         if ($this->subject->error) {
-            $this->debug->backtrace->addInternalClass('Curl_CurlProxy');
             $this->debug->warn($this->subject->errorCode, $this->subject->errorMessage);
         }
         if ($this->subject->effectiveUrl !== $this->curlOptions['CURLOPT_URL']) {

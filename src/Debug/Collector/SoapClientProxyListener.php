@@ -21,7 +21,7 @@ class SoapClientProxyListener implements ListenerInterface
     /** @var DOMDocument */
     private $dom;
 
-    /** @var Exception|null */
+    /** @var \Exception|null */
     private $exception = null;
 
     /** @var array */
@@ -115,12 +115,28 @@ class SoapClientProxyListener implements ListenerInterface
         $this->debug->groupEnd();
     }
 
+    /**
+     * Log call to __call()
+     *
+     * @param array $args   Method arguments
+     * @param mixed $result Method result
+     *
+     * @return mixed
+     */
     protected function afterCallCall(array $args, $result)
     {
         $this->logReqRes($args[0]);
         return $result;
     }
 
+    /**
+     * Log call to __doRequest()
+     *
+     * @param array $args   Method arguments
+     * @param mixed $result Method result
+     *
+     * @return mixed
+     */
     protected function afterCallDoRequest(array $args, $result)
     {
         $this->setLastRequest($args[0]);

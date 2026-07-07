@@ -266,8 +266,7 @@ class SoapClientTest extends DebugTestFramework
         );
         // time
         $logEntriesExpect[1]['args'][0] = $logEntries[1]['args'][0];
-        if (PHP_VERSION_ID < 50500) {
-            // remove request headers and body from php 5.4
+        if (PHP_VERSION_ID < 50500 && \count($logEntries) < 7) {
             // #reasons
             // ¯\_(ツ)_/¯
             \array_splice($logEntriesExpect, 1, 2);

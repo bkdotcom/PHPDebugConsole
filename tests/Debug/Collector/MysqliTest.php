@@ -18,6 +18,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Collector\MySqli\MySqliStmt
  * @covers \bdk\Debug\Collector\StatementInfo
  * @covers \bdk\Debug\Collector\StatementInfoLogger
+ * @covers \bdk\Debug\Plugin\ProxyHooks
  * @covers \bdk\Debug\Utility\Sql
  */
 class MysqliTest extends DebugTestFramework

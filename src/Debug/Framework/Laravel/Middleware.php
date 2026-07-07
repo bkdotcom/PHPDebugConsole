@@ -245,6 +245,9 @@ class Middleware
         }
         $router = $this->container->make(Router::class);
         $route = $router->current();
+        if (!$route) {
+            return;
+        }
         $methods = $route->methods();
         $uri = \reset($methods) . ' ' . $route->uri();
 

@@ -3,6 +3,8 @@
 namespace bdk\Test\Cache;
 
 use bdk\Cache\NullCache;
+use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -11,6 +13,9 @@ use PHPUnit\Framework\TestCase;
  */
 class NullCacheTest extends TestCase
 {
+    use AssertionTrait;
+    use ExpectExceptionTrait;
+
     /** @var NullCache */
     private $cache;
 

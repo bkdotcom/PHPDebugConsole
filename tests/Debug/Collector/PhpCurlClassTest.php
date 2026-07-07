@@ -212,11 +212,8 @@ class PhpCurlClassTest extends DebugTestFramework
             // 'verbose' => true,
         ), $this->debug);
         // $userAgent = $curl->getOpt(CURLOPT_USERAGENT);
-        $curl->get($this->baseUrl . '/echo?headers[]=HTTP/1.1');
+        $curl->get($this->baseUrl . '/echo?statusCode=500');
         $this->outputTest(array(
-            /*
-            'html' => ,
-            */
             'html' => function ($htmlActual) {
                 $expect = '%A<li class="expanded m_group" data-channel="general.curl" data-icon="fa fa-exchange">
                     <div class="group-header">%sCurl(%sGET%s' . $this->baseUrl . '/echo%s)</span></div>
@@ -225,9 +222,10 @@ class PhpCurlClassTest extends DebugTestFramework
                             <ul class="array-inner list-unstyled">
                                 %A
                             </ul><span class="t_punct">)</span></span></li>
-                        <li class="m_log" data-channel="general.curl">%srequest headers</span> = <span class="t_string">GET /echo%s HTTP/1.1%A</li>
+                        <li class="m_log" data-channel="general.curl">%srequest headers</span> = <span class="t_string">GET /echo%s HTTP/%f%A</li>
                         <li class="m_time" data-channel="general.curl"><span class="no-quotes t_string">time: %f %s</span></li>
-                        <li class="m_warn" data-channel="general.curl" data-file="' . __FILE__ . '" data-line="%d"><span class="t_int">%d</span>, <span class="t_string">%SUnsupported %S in response</span></li>
+                        <li class="m_warn" data-channel="general.curl" data-file="' . __FILE__ . '" data-line="%d"><span class="t_int">%d</span>, <span class="t_string">%SHTTP/%f 500 Internal Server Error</span></li>
+                        <li class="m_log" data-channel="general.curl"><span class="no-quotes t_string">response headers</span> = <span class="t_string">HTTP/%f 500 Internal Server Error%A</li>
                     </ul>
                 </li>%A';
                 // \bdk\Debug::varDump('expect', $expect);

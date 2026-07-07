@@ -14,6 +14,8 @@ Log, Debug, Inspect
   * Plain text / file
   * &lt;script&gt;
   * WebSocket (WAMP)
+  * email
+  * Discord, Slack, Teams
   * "plugin"
 * "Collectors" / wrappers for
   * Guzzle
@@ -31,7 +33,6 @@ Log, Debug, Inspect
   * errors (even fatal) are captured / logged / displayed
   * optionally send error notices via email (throttled as to not to send out a flood of emails)
 * password protected
-* send debug log via email / Discord / Slack / MS Teams
 
 ![Screenshot of PHPDebugConsole's Output](http://www.bradkent.com/images/php/screenshot_1.4.png)
 

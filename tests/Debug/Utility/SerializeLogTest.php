@@ -14,6 +14,7 @@ use bdk\Test\Debug\DebugTestFramework;
  * @covers \bdk\Debug\Utility\SerializeLog
  * @covers \bdk\Debug\Utility\UnserializeLog
  * @covers \bdk\Debug\Utility\UnserializeLogBackwards
+ * @covers \bdk\Debug\Utility\UnserializeLogBackwardsObject
  *
  * @phpcs:disable SlevomatCodingStandard.Arrays.AlphabeticallySortedByKeys.IncorrectKeyOrder
  */

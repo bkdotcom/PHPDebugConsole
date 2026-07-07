@@ -17,6 +17,9 @@ use Oauth as OAuthBase;
 
 /**
  * OAuth client with debugging
+ *
+ * @mixin \bdk\Proxy\ProxyTrait
+ * @mixin \OAuth
  */
 class OAuth extends \OAuthProxy
 {

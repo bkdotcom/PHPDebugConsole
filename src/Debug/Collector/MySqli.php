@@ -21,6 +21,9 @@ use bdk\Debug;
  *   (mysqli properties can not be proxied via __get/__set)
  *
  * Must instantiate and use this class as mysqli replacement
+ *
+ * @mixin \bdk\Proxy\ProxyTrait
+ * @mixin \mysqli
  */
 class MySqli extends \mysqliProxy
 {

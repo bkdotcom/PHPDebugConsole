@@ -40,9 +40,12 @@ class Container implements ArrayAccess
     /** @var array */
     private $aliases = array();
 
+    /** @var list<string> list of keys that can be overridden - even if allowOverride is false*/
+    private $allowOverrides = [];
+
     /** @var array */
     private $cfg = array(
-        'allowOverride' => false,  // whether can update already built service
+        'allowOverride' => false,  // whether can update already built services
         'onInvoke' => null, // callable  callable will receive [value, name, container].
                             //  value is the value returned by the service definition (or factory)
                             //  reminder that value is mixed type (not necessarily an object)
@@ -51,7 +54,7 @@ class Container implements ArrayAccess
     /**
      * Closures used to modify / extend service definitions when invoked
      *
-     * @var array<string,Closure>
+     * @var array<string,\Closure>
      */
     private $extenders;
 
@@ -119,6 +122,7 @@ class Container implements ArrayAccess
     {
         return array(
             'aliases' => $this->aliases,
+            'allowOverrides' => $this->allowOverrides,
             'cfg' => $this->cfg,
             'invoked' => $this->invoked,
             'raw' => "\x00notInspected\x00",
@@ -153,6 +157,21 @@ class Container implements ArrayAccess
     }
 
     /**
+     * Allow a value to be overridden even if allowOverride is false
+     * ie allow storing and updating PSR-7 http-message response
+     *
+     * @param string $name service or factory name
+     *
+     * @return $this
+     */
+    public function allowOverride($name)
+    {
+        $this->allowOverrides[] = $this->nameActual($name);
+        $this->allowOverrides = \array_unique($this->allowOverrides);
+        return $this;
+    }
+
+    /**
      * Extends an object definition.
      *
      * Useful for
@@ -164,7 +183,7 @@ class Container implements ArrayAccess
      *  - return the modified value
      *
      * @param string   $name     The unique identifier for the object
-     * @param callable $callable A service definition to extend the original
+     * @param callable $callable A callable that will receive the resolved value and the container as arguments
      *
      * @return void
      */
@@ -261,6 +280,7 @@ class Container implements ArrayAccess
     public function needsInvoked($name)
     {
         $this->assertExists($name);
+        $name = $this->nameActual($name);
         $notNeedInvoked = isset($this->invoked[$name]) === true
             || \is_object($this->values[$name]) === false
             || \method_exists($this->values[$name], '__invoke') === false
@@ -278,7 +298,8 @@ class Container implements ArrayAccess
     #[\ReturnTypeWillChange]
     public function offsetExists($name)
     {
-        return \array_key_exists($name, $this->values) || isset($this->aliases[$name]);
+        $name = $this->nameActual($name);
+        return \array_key_exists($name, $this->values);
     }
 
     /**
@@ -293,24 +314,28 @@ class Container implements ArrayAccess
     public function offsetGet($name)
     {
         $this->assertExists($name);
+        $name = $this->nameActual($name);
+        $raw = $this->values[$name];
 
-        if ($this->needsInvoked($name) === false) {
-            return $this->values[$name];
+        if (\is_object($raw) && isset($this->factories[$raw])) {
+            // we're a factory
+            return $this->onInvoke($name, $raw($this));
         }
 
-        if (isset($this->factories[$this->values[$name]])) {
-            // we're a factory
-            $val = $this->values[$name]($this);
-            return $this->onInvoke($name, $val);
+        if ($this->needsInvoked($name) === false) {
+            // already invoked, protected, or not a closure
+            $val = $raw;
+            if (empty($this->invoked[$name])) {
+                $this->invoked[$name] = true;
+                $val = $this->onInvoke($name, $val);
+            }
+            return $val;
         }
 
         // we're a service
-        $raw = $this->values[$name];
         $this->invoked[$name] = true;
         $this->raw[$name] = $raw;
-
-        $val = $raw($this);
-        $val = $this->onInvoke($name, $val);
+        $val = $this->onInvoke($name, $raw($this));
         $this->values[$name] = $val;
 
         return $val;
@@ -319,29 +344,31 @@ class Container implements ArrayAccess
     /**
      * ArrayAccess: Sets a parameter or an object.
      *
-     * @param string $offset The unique identifier for the parameter or object
-     * @param mixed  $value  The value of the parameter or a closure to define an object
+     * @param string $name  The unique identifier for the parameter or object
+     * @param mixed  $value The value of the parameter or a closure to define an object
      *
      * @throws RuntimeException Prevent override of a already built service
      * @return void
      */
     #[\ReturnTypeWillChange]
-    public function offsetSet($offset, $value)
+    public function offsetSet($name, $value)
     {
-        if (isset($this->aliases[$offset])) {
-            $offset = $this->aliases[$offset];
-        }
+        $name = $this->nameActual($name);
 
-        if (isset($this->invoked[$offset]) && $this->cfg['allowOverride'] === false) {
+        if (
+            isset($this->invoked[$name])
+            && $this->cfg['allowOverride'] === false
+            && \in_array($name, $this->allowOverrides, true) === false
+        ) {
             throw new RuntimeException(
-                \sprintf('Cannot update "%s" after it has been instantiated.', $offset)
+                \sprintf('Cannot update "%s" after it has been instantiated.', $name)
             );
         }
 
-        $this->values[$offset] = $value;
+        $this->values[$name] = $value;
         unset(
-            $this->invoked[$offset],
-            $this->raw[$offset]
+            $this->invoked[$name],
+            $this->raw[$name]
         );
     }
 
@@ -361,6 +388,7 @@ class Container implements ArrayAccess
             return;
         }
         if (isset($this->aliases[$name])) {
+            // only remove the alias, not the actual value
             unset($this->aliases[$name]);
             return;
         }
@@ -478,14 +506,25 @@ class Container implements ArrayAccess
      */
     private function assertExists(&$name)
     {
-        if (isset($this->aliases[$name])) {
-            $name = $this->aliases[$name];
-        }
         if ($this->offsetExists($name) === false) {
             throw new OutOfBoundsException(
                 \sprintf('Unknown identifier: "%s"', $name)
             );
         }
+    }
+
+    /**
+     * Get the non-aliased name
+     *
+     * @param string $name The service or factory name
+     *
+     * @return string
+     */
+    private function nameActual($name)
+    {
+        return isset($this->aliases[$name])
+            ? $this->aliases[$name]
+            : $name;
     }
 
     /**

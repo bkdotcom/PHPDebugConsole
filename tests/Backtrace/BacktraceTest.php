@@ -4,6 +4,7 @@ namespace bdk\Test\Backtrace;
 
 use bdk\Backtrace;
 use bdk\PhpUnitPolyfill\AssertionTrait;
+use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Test\Backtrace\Fixture\ChildObj;
 use bdk\Test\Backtrace\Fixture\ParentObj;
 use PHPUnit\Framework\TestCase;
@@ -16,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 class BacktraceTest extends TestCase
 {
     use AssertionTrait;
+    use ExpectExceptionTrait;
 
     protected static $line = 0;
 

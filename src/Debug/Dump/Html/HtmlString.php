@@ -13,6 +13,7 @@ namespace bdk\Debug\Dump\Html;
 use bdk\Debug;
 use bdk\Debug\Abstraction\Abstraction;
 use bdk\Debug\Abstraction\Type;
+use bdk\Debug\Dump\Html\HtmlStringBinary;
 use bdk\Debug\Dump\Html\HtmlStringEncoded;
 use bdk\Debug\Dump\Html\Value as ValDumper;
 use bdk\Debug\Utility\Utf8;
@@ -345,9 +346,6 @@ class HtmlString
      */
     protected function getBinary()
     {
-        if (isset($this->lazy['binary'])) {
-            return $this->lazy['binary'];
-        }
         return new HtmlStringBinary($this);
     }
 
@@ -358,9 +356,6 @@ class HtmlString
      */
     protected function getEncoded()
     {
-        if (isset($this->lazy['encoded'])) {
-            return $this->lazy['encoded'];
-        }
         return new HtmlStringEncoded($this);
     }
 

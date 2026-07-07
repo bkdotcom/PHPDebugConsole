@@ -27,7 +27,7 @@ abstract class AbstractValue extends AbstractComponent
     /** @var Debug */
     public $debug;
 
-    /** @var array<string,charInfo> */
+    /** @var array<string,array> */
     public $charData = array();
 
     /** @var array<string,mixed> */

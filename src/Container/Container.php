@@ -281,11 +281,19 @@ class Container implements ArrayAccess
     {
         $this->assertExists($name);
         $name = $this->nameActual($name);
-        $notNeedInvoked = isset($this->invoked[$name]) === true
-            || \is_object($this->values[$name]) === false
-            || \method_exists($this->values[$name], '__invoke') === false
-            || isset($this->protected[$this->values[$name]]) === true;
-        return $notNeedInvoked === false;
+        if (isset($this->invoked[$name])) {
+            // already invoked
+            return false;
+        }
+        $raw = $this->values[$name];
+        if (\is_object($raw) === false) {
+            return false;
+        }
+        if (isset($this->protected[$raw])) {
+            // protected
+            return false;
+        }
+        return \method_exists($raw, '__invoke');
     }
 
     /**
@@ -317,19 +325,14 @@ class Container implements ArrayAccess
         $name = $this->nameActual($name);
         $raw = $this->values[$name];
 
+        if ($this->needsInvoked($name) === false) {
+            // already invoked, protected, or not a closure
+            return $raw;
+        }
+
         if (\is_object($raw) && isset($this->factories[$raw])) {
             // we're a factory
             return $this->onInvoke($name, $raw($this));
-        }
-
-        if ($this->needsInvoked($name) === false) {
-            // already invoked, protected, or not a closure
-            $val = $raw;
-            if (empty($this->invoked[$name])) {
-                $this->invoked[$name] = true;
-                $val = $this->onInvoke($name, $val);
-            }
-            return $val;
         }
 
         // we're a service

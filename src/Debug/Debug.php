@@ -53,7 +53,7 @@ use bdk\Debug\Abstraction\Abstracter;
  * @method static int|bool string getResponseCode()
  * @method static array|string getResponseHeader(string $header = 'Content-Type', string|null $delimiter = ', ')
  * @method static array|string getResponseHeaders($asString = false)
- * @method static object|bool getRoute(string $name, bool $checkOnly)
+ * @method static object|bool getRoute(string $name, bool $checkOnly = false)
  * @method static mixed getServerParam($name, $default = null)
  * @method static bool hasLog()
  * @method static void obEnd()

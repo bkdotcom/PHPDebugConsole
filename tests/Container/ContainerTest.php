@@ -104,13 +104,9 @@ class ContainerTest extends TestCase
         });
 
         $container->get('int');
-        $this->assertSame(42, $args[0]);
-        $this->assertSame('int', $args[1]);
-        $this->assertSame($container, $args[2]);
-
-        // onInvoke shouldn't be called again
-        $args = [];
-        $container->get('int');
+        // $this->assertSame(42, $args[0]);
+        // $this->assertSame('int', $args[1]);
+        // $this->assertSame($container, $args[2]);
         $this->assertSame([], $args);
 
         $container->get('service');
@@ -118,6 +114,17 @@ class ContainerTest extends TestCase
         $this->assertSame('service', $args[1]);
         $this->assertSame($container, $args[2]);
 
+        // onInvoke shouldn't be called again
+        $args = [];
+        $container->get('service');
+        $this->assertSame([], $args);
+
+        $container->get('factory');
+        $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $args[0]);
+        $this->assertSame('factory', $args[1]);
+        $this->assertSame($container, $args[2]);
+
+        // onInvoke is called again for factory services
         $container->get('factory');
         $this->assertInstanceOf('bdk\\Test\\Container\\Fixture\\Service', $args[0]);
         $this->assertSame('factory', $args[1]);

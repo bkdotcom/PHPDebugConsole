@@ -97,7 +97,7 @@ class ProxyTest extends TestCase
                     'subject' => 'bdk\Test\Proxy\Fixture\Widget',
                 ),
                 array(
-                    'arguments' => array(),
+                    'arguments' => ['test'],  // broken doesn't have any arguments, but func_get_args() is used
                     'exception' => $exception,
                     'initValues' => array(
                         'memoryStart' => '%d',

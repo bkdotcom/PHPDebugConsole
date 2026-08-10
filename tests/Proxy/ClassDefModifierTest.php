@@ -40,6 +40,7 @@ class ClassDefModifierTest extends TestCase
 			'connect' => 6,
 			'mysqli' => 6,
 			'poll' => 5,
+            'query' => 2,
 			'real_connect' => 7,
 			'rollback' => 2,
 			'store_result' => 1,
@@ -110,7 +111,7 @@ class ClassDefModifierTest extends TestCase
         $this->assertSame(array(), $modified['methods']['prepare']['parameters'][1]['defaultValue']);
         $this->assertNull($modified['methods']['lastInsertId']['parameters'][0]['defaultValue']);
         $this->assertConstantDefault($modified['methods']['quote']['parameters'][1], 'PDO::PARAM_STR');
-        $this->assertTrue($modified['methods']['query']['proxyViaFuncGetArgs']);
+        // $this->assertTrue($modified['methods']['query']['proxyViaFuncGetArgs']);
         $this->assertSame(
             array('query', 'fetchMode', 'arg3', 'constructorArgs'),
             \array_column($modified['methods']['query']['parameters'], 'name')

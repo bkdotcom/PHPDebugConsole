@@ -345,7 +345,7 @@ class Value extends TextValue
             'addQuotes' => false,
         ));
         return self::ANSI_BOLD
-            . $caption .  "\n"
+            . $caption . "\n"
             . \str_repeat('-', \strlen($caption))
             . $this->escapeReset . "\n"
             . $this->dumpArray($tableAsArray);

@@ -144,7 +144,7 @@ abstract class AbstractSection
                 ? '<span class="t_operator">' . $operator . '</span>'
                 : '',
             '5_value' => $info['value'] !== Abstracter::UNDEFINED
-                ?  $this->valDumper->dump($info['value'], $cfg)
+                ? $this->valDumper->dump($info['value'], $cfg)
                 : '',
         ));
         return \implode(' ', $parts);

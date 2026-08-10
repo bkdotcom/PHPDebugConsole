@@ -47,7 +47,7 @@ class bdk_Test_Proxy_Fixture_WidgetInterfaceProxy implements bdk\Test\Proxy\Fixt
 
     public function test($param)
     {
-        return $this->proxyCall(\'test\', [$param]);
+        return $this->proxyCall(\'test\', func_get_args());
     }
 }';
         // \bdk\Debug::varDump('actual', $code);
@@ -90,7 +90,7 @@ final class bdk_Test_Proxy_Fixture_FinalNoImplementProxy
 
     public function count()
     {
-        return $this->proxyCall('count', []);
+        return $this->proxyCall('count', func_get_args());
     }
 }
 EOD;
@@ -118,12 +118,12 @@ final class bdk_Test_Proxy_Fixture_FinalImplementsProxy implements bdk\Test\Prox
 
     public function __construct($values = array())
     {
-        $this->proxyCall(\'__construct\', [$values]);
+        $this->proxyCall(\'__construct\', func_get_args());
     }
 
     public function test($param = null)
     {
-        return $this->proxyCall(\'test\', [$param]);
+        return $this->proxyCall(\'test\', func_get_args());
     }
 }';
 
@@ -222,7 +222,7 @@ class bdk_Test_Proxy_Fixture_TypesDisjunctiveNormalFormProxy extends bdk\Test\Pr
 
     public function test((Stringable&Countable)|string|int|null $param): bdk\Test\Proxy\Fixture\WidgetInterface|(Stringable&Countable)|null
     {
-        return $this->proxyCall('test', [$param]);
+        return $this->proxyCall('test', func_get_args());
     }
 }
 EOD;
@@ -251,7 +251,7 @@ class bdk_Test_Proxy_Fixture_TypesIntersectionProxy extends bdk\Test\Proxy\Fixtu
 
     public function test(Stringable&Countable $param): Stringable&Countable
     {
-        return $this->proxyCall('test', [$param]);
+        return $this->proxyCall('test', func_get_args());
     }
 }
 EOD;
@@ -280,7 +280,7 @@ class bdk_Test_Proxy_Fixture_TypesUnionProxy extends bdk\Test\Proxy\Fixture\Type
 
     public function test(string|int|null $param): string|int|null
     {
-        return $this->proxyCall('test', [$param]);
+        return $this->proxyCall('test', func_get_args());
     }
 }
 EOD;

@@ -189,7 +189,7 @@ class HtmlStringEncoded
             'decoded' => isset($labelsDecoded[$typeMore])
                 ? $labelsDecoded[$typeMore]
                 : 'decoded',
-            'raw' =>  isset($labelsRaw[$typeMore])
+            'raw' => isset($labelsRaw[$typeMore])
                 ? $labelsRaw[$typeMore]
                 : 'raw',
         );

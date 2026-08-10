@@ -135,7 +135,7 @@ class CurlReqResOptions
      */
     private function setOptionsBodyContent()
     {
-        $body     = $this->request->getBody();
+        $body = $this->request->getBody();
         $bodySize = $body->getSize();
 
         if ($body->isSeekable()) {
@@ -339,7 +339,7 @@ class CurlReqResOptions
             // @codeCoverageIgnoreEnd
         }
 
-        $name  = \trim($headerParts[0]);
+        $name = \trim($headerParts[0]);
         $value = \trim($headerParts[1]);
 
         return $response->withAddedHeader($name, $value);
@@ -358,7 +358,7 @@ class CurlReqResOptions
     protected function responseWithStatus(ResponseInterface $response, $statusLine)
     {
         $statusParts = \explode(' ', $statusLine, 3);
-        $partsCount  = \count($statusParts);
+        $partsCount = \count($statusParts);
 
         if ($partsCount < 2) {
             // CURL will catch this first with CURLE_UNSUPPORTED_PROTOCOL

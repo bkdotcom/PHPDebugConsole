@@ -113,7 +113,7 @@ class TextAnsiObject extends TextObject
             return $this->dumpPropertiesBody($abs, $cfg);
         }
         $header = \count($abs['properties']) > 0
-            ? "\e[4m" . $this->debug->i18n->trans('object.properties')  . ':' . "\e[24m" . "\n"
+            ? "\e[4m" . $this->debug->i18n->trans('object.properties') . ':' . "\e[24m" . "\n"
             : $this->debug->i18n->trans('object.properties.none') . "\n";
         $magicMethods = \array_intersect(['__get', '__set'], \array_keys($abs['methods']));
         $subHeader = $this->magicMethodInfo($magicMethods);

@@ -41,7 +41,7 @@ class ClassDefFactoryTest extends TestCase
             'name' => 'bdk\Test\Proxy\Fixture\NodeInterface',
             'methods' => [
                 'nodeInterfaceMethod1' => array(
-                    'modifiers' =>  [
+                    'modifiers' => [
                         'abstract',
                         'public',
                         'static',
@@ -263,7 +263,7 @@ class ClassDefFactoryTest extends TestCase
                             'isPassedByReference' => false,
                             'isVariadic' => false,
                             'name' => 'values',
-                            'type' =>  null,
+                            'type' => null,
                         ),
                     ],
                     'returnType' => null,
@@ -279,7 +279,7 @@ class ClassDefFactoryTest extends TestCase
                             'isPassedByReference' => false,
                             'isVariadic' => false,
                             'name' => 'name',
-                            'type' =>  null,
+                            'type' => null,
                         ),
                     ],
                     'returnType' => null,
@@ -295,7 +295,7 @@ class ClassDefFactoryTest extends TestCase
                             'isPassedByReference' => false,
                             'isVariadic' => false,
                             'name' => 'name',
-                            'type' =>  null,
+                            'type' => null,
                         ),
                         array(
                             'defaultValue' => null,
@@ -304,7 +304,7 @@ class ClassDefFactoryTest extends TestCase
                             'isPassedByReference' => false,
                             'isVariadic' => false,
                             'name' => 'value',
-                            'type' =>  null,
+                            'type' => null,
                         ),
                     ],
                     'returnType' => null,
@@ -320,7 +320,7 @@ class ClassDefFactoryTest extends TestCase
                             'isPassedByReference' => false,
                             'isVariadic' => false,
                             'name' => 'param',
-                            'type' =>  null,
+                            'type' => null,
                         ),
                     ],
                     'returnType' => null,

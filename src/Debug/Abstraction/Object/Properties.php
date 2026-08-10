@@ -204,7 +204,7 @@ class Properties extends AbstractInheritable
             'isDeprecated' => isset($phpDoc['deprecated']), // if inspecting an instance,
                                                             // we will also check if ReflectionProperty::getValue throws a deprecation notice
             'isFinal' => PHP_VERSION_ID >= 80400 && $refProperty->isFinal(),
-            'isPromoted' =>  PHP_VERSION_ID >= 80000 && $refProperty->isPromoted(),
+            'isPromoted' => PHP_VERSION_ID >= 80000 && $refProperty->isPromoted(),
             'isReadOnly' => PHP_VERSION_ID >= 80100 && $refProperty->isReadOnly(),
             'isStatic' => $refProperty->isStatic(),
             'isVirtual' => PHP_VERSION_ID >= 80400 && $refProperty->isVirtual(), // at least one hook and none of the hooks reference the property

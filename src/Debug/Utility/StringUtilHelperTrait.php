@@ -75,9 +75,9 @@ trait StringUtilHelperTrait
             case '<=':
                 return $valA <= $valB;
             case '>':
-                return $valA >  $valB;
+                return $valA > $valB;
             case '<':
-                return $valA <  $valB;
+                return $valA < $valB;
         }
         $ret = \call_user_func($operator, $valA, $valB);
         $ret = \min(\max($ret, -1), 1);

@@ -43,7 +43,7 @@ final class Each
 
         return (new EachPromise($iterable, array(
             'fulfilled' => $onFulfilled,
-            'rejected'  => $onRejected,
+            'rejected' => $onRejected,
         )))->promise();
     }
 
@@ -74,8 +74,8 @@ final class Each
 
         return (new EachPromise($iterable, array(
             'concurrency' => $concurrency,
-            'fulfilled'   => $onFulfilled,
-            'rejected'    => $onRejected,
+            'fulfilled' => $onFulfilled,
+            'rejected' => $onRejected,
         )))->promise();
     }
 

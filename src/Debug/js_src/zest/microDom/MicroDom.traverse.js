@@ -66,7 +66,7 @@ function find(mixed) {
  */
 function next (...args) {
   args = getArgs(args)
-  return  args.inclTextNodes
+  return args.inclTextNodes
     ? this.alter((el) => el.nextSibling, args.filter)
     : this.alter((el) => el.nextElementSibling, args.filter)
 }

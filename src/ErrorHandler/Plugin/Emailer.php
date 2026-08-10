@@ -92,8 +92,8 @@ class Emailer extends AbstractComponent implements SubscriberInterface
         $error['stats'] = \array_merge(array(
             'email' => array(
                 'countSince' => 0,
-                'emailedTo'  => null,
-                'timestamp'  => null,
+                'emailedTo' => null,
+                'timestamp' => null,
             ),
         ), $error['stats']);
         $tsCutoff = \time() - $this->cfg['emailMin'] * 60;

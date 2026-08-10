@@ -55,6 +55,7 @@ class ClassDefModifier
             // name
             \array_merge($this->defaultNull, array('name' => 'name')),
         ];
+        $nullableArray = PHP_VERSION_ID >= 70100 ? '?array' : 'array';
         if (isset($classDef['methods']['begin_transaction'])) {
             $classDef['methods']['begin_transaction']['parameters'] = \array_replace_recursive($classDef['methods']['begin_transaction']['parameters'], $flagsAndName);
         }
@@ -63,14 +64,18 @@ class ClassDefModifier
         if (isset($classDef['methods']['mysqli'])) {
             $classDef['methods']['mysqli']['parameters'] = \array_replace_recursive($classDef['methods']['mysqli']['parameters'], $connectionParams);
         }
-        $classDef['methods']['real_connect']['parameters'] = \array_replace_recursive($classDef['methods']['real_connect']['parameters'], \array_merge($connectionParams, $flags));
         $classDef['methods']['poll']['parameters'] = \array_replace_recursive($classDef['methods']['poll']['parameters'], [
-            // int $usec = 0
+            0 => array( 'type' => $nullableArray ),
+            1 => array( 'type' => $nullableArray ),
+            2 => array( 'type' => $nullableArray ),
             4 => array( 'defaultValue' => 0, 'isDefaultValueAvailable' => true ),
         ]);
+        $classDef['methods']['query']['parameters'] = \array_replace_recursive($classDef['methods']['query']['parameters'], array(
+            1 => array( 'defaultValue' => 'MYSQLI_STORE_RESULT', 'isDefaultValueAvailable' => true, 'isDefaultValueConstant' => true ),
+        ));
+        $classDef['methods']['real_connect']['parameters'] = \array_replace_recursive($classDef['methods']['real_connect']['parameters'], \array_merge($connectionParams, $flags));
         $classDef['methods']['rollback']['parameters'] = \array_replace_recursive($classDef['methods']['rollback']['parameters'], $flagsAndName);
         $classDef['methods']['store_result']['parameters'] = \array_replace_recursive($classDef['methods']['store_result']['parameters'], $flags);
-        $classDef['methods']['store_result']['proxyViaFuncGetArgs'] = true; // store_result is overloaded and does not like having default values passed, so proxy via func_get_args() to pass only what was given
         return $classDef;
     }
 
@@ -135,7 +140,6 @@ class ClassDefModifier
             1 => array( 'defaultValue' => 'PDO::PARAM_STR', 'isDefaultValueAvailable' => true, 'isDefaultValueConstant' => true ),
         ]);
         if (empty($classDef['methods']['query']['parameters']) || $classDef['methods']['query']['parameters'][2]['isVariadic'] === false) {
-            $classDef['methods']['query']['proxyViaFuncGetArgs'] = true; // query is overloaded and does not like having default values passed, so proxy via func_get_args() to pass only what was given
             $classDef['methods']['query']['parameters'] = \array_replace_recursive($classDef['methods']['query']['parameters'], [
                 array( 'name' => 'query' ),
                 array( 'name' => 'fetchMode', 'defaultValue' => 'PDO::FETCH_BOTH', 'isDefaultValueAvailable' => true, 'isDefaultValueConstant' => true ),

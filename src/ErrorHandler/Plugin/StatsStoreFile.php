@@ -71,9 +71,9 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
             $this->data['errors'][$hash] = array(
                 'count' => 1,
                 'info' => array(
-                    'file'    => $error['file'],
-                    'line'    => $error['line'],
-                    'message'  => $error['message'],
+                    'file' => $error['file'],
+                    'line' => $error['line'],
+                    'message' => $error['message'],
                     'type' => $error['type'],
                 ),
                 'tsAdded' => $tsNow,
@@ -203,7 +203,7 @@ class StatsStoreFile extends AbstractComponent implements StatsStoreInterface
      */
     protected function garbageCollection()
     {
-        $tsNow    = \time();
+        $tsNow = \time();
         $tsCutoff = $tsNow - $this->cfg['ttl'];
         if ($this->data['tsGarbageCollection'] > $tsCutoff) {
             // we've recently performed garbage collection

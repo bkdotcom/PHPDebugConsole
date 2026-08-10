@@ -69,7 +69,7 @@ class HtmlString
         $getter = 'get' . \ucfirst($property);
         if (!\method_exists($this, $getter)) {
             throw new RuntimeException($this->debug->i18n->trans('exception.property-inaccessible', array(
-                'property' =>  __CLASS__ . '::' . $property,
+                'property' => __CLASS__ . '::' . $property,
             )));
         }
         $val = $this->{$getter}();

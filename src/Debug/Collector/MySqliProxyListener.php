@@ -161,7 +161,9 @@ class MySqliProxyListener implements ListenerInterface
             $this->debug->warn($this->subject->error);
             return $this->result;
         }
-        $name = $this->arguments[1];
+        $name = isset($this->arguments[1])
+            ? $this->arguments[1]
+            : null;
         $this->savePoints = $name !== null
             ? [$name]
             : [];
@@ -181,8 +183,7 @@ class MySqliProxyListener implements ListenerInterface
             return $this->result;
         }
         $this->savePoints = array();
-        $name = $this->arguments[1];
-        if ($name !== null) {
+        if (isset($this->arguments[1])) {
             $this->debug->warn('passing $name param to mysqli::commit() does nothing!');
         }
         $this->debug->info('commit', $this->meta());
@@ -281,7 +282,7 @@ class MySqliProxyListener implements ListenerInterface
             return;
         }
         $this->savePoints = [];
-        if ($this->arguments[0] !== null) {
+        if (isset($this->arguments[1])) {
             $this->logWithStyling('warn', 'passing $name param to %cmysqli::rollback()%c does not %cROLLBACK TO name%c as you would expect!');
         }
         $this->debug->info('rollBack', $this->meta());

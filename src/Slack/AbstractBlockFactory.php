@@ -170,7 +170,7 @@ abstract class AbstractBlockFactory
     protected static function renameDefault(array $block)
     {
         $typeToDefault = array(
-            'checkboxes' =>  'initial_options',
+            'checkboxes' => 'initial_options',
             'datepicker' => 'initial_date',
             'datetimepicker' => 'initial_date_time',
             'multi_static_select' => 'initial_options',

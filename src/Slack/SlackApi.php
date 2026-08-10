@@ -93,7 +93,7 @@ class SlackApi extends AbstractSlack
         $info = $this->getMethodInfo($method);
         $url = $this->baseUrl . $info['uri'];
         $headers = array(
-            'Authorization' =>  'Bearer ' . $this->token,
+            'Authorization' => 'Bearer ' . $this->token,
         );
         if ($info['httpMethod'] === 'get') {
             if (\is_array($args[0])) {

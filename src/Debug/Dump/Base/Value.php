@@ -216,7 +216,7 @@ class Value extends AbstractValue
             $strLenDiff = $abs['strlen'] - $abs['strlenValue'];
         }
         if ($strLenDiff) {
-            $val .= '[' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $strLenDiff))  . ']';
+            $val .= '[' . $this->debug->i18n->trans('string.more-bytes', array('bytes' => $strLenDiff)) . ']';
         }
         return $val;
     }

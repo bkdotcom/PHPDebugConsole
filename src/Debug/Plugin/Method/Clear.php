@@ -376,7 +376,7 @@ class Clear implements SubscriberInterface
         $logEntry->setValues(array(
             'method' => 'clear',
             'args' => $args,
-            'meta' =>  \array_merge(array(
+            'meta' => \array_merge(array(
                 'bitmask' => $bitmask,
                 'evalLine' => $callerInfo['evalLine'],
                 'file' => $callerInfo['file'],

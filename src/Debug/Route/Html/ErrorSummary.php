@@ -237,7 +237,7 @@ class ErrorSummary
         $inConsoleCount = $this->stats['counts'][$category]['inConsole'];
         return $inConsoleCount === 1
             ? \ucfirst($category)
-            :  $this->catStrings[$category]['header'];
+            : $this->catStrings[$category]['header'];
     }
 
     /**

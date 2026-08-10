@@ -201,7 +201,7 @@ class Value extends BaseValue
             ))
             : '';
         return $caption
-            ? $caption .  "\n" . \str_repeat('-', \strlen($caption)) . "\n" . $this->dumpArray($tableAsArray)
+            ? $caption . "\n" . \str_repeat('-', \strlen($caption)) . "\n" . $this->dumpArray($tableAsArray)
             : $this->dumpArray($tableAsArray);
     }
 

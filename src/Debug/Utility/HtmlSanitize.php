@@ -228,7 +228,7 @@ class HtmlSanitize
         }
         // allow tag, but sanitize attributes
         $attribs = self::sanitizeAttributes($tagName, $matches['attributes'][0]);
-        return '<' . $tagName . $attribs . ($isVoidTag ? ' /' : '')  . '>';
+        return '<' . $tagName . $attribs . ($isVoidTag ? ' /' : '') . '>';
     }
 
     /**

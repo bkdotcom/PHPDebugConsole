@@ -163,7 +163,7 @@ class HtmlBuild
         }
         $values = \array_map(static function ($key, $val) {
             return \is_bool($val)
-                ? ($val ?  $key : null)
+                ? ($val ? $key : null)
                 : $val;
         }, \array_keys($values), $values);
         // only interested in unique, non-empty values

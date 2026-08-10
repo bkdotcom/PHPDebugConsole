@@ -106,7 +106,7 @@ abstract class AbstractErrorRoute extends AbstractRoute
         $error['stats'] = \array_merge(array(
             $statsKey => array(
                 'countSince' => 0,
-                'timestamp'  => null,
+                'timestamp' => null,
             ),
         ), $error['stats'] ?: array());
         $tsCutoff = \time() - $this->cfg['throttleMin'] * 60;

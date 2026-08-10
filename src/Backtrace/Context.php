@@ -31,7 +31,7 @@ class Context
         if ($length <= 0) {
             $length = 19;
         }
-        $sub = (int) \floor($length  / 2);
+        $sub = (int) \floor($length / 2);
         return \array_map(static function ($i, $frame) use ($backtrace, $length, $sub) {
             $lines = isset($frame['evalLine'])
                 ? self::findEvalCode($backtrace, $i)
@@ -141,7 +141,7 @@ class Context
             \array_unshift($lines, null);
             unset($lines[0]);
         }
-        $start  = \max($start - 1, 0);
+        $start = \max($start - 1, 0);
         $length = (int) $length;
         if ($start || $length) {
             // Get a subset of lines (preserve keys)

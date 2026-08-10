@@ -29,7 +29,7 @@ class ProxiedClassBuilder
     {
         $this->classDef = $classDef;
 
-        return 'use ' . __NAMESPACE__ . '\\ProxyTrait;'  . "\n\n"
+        return 'use ' . __NAMESPACE__ . '\\ProxyTrait;' . "\n\n"
             . \trim($this->buildClassSignature()) . "\n"
             . '{' . "\n"
             . $this->buildClassBody() . "\n"
@@ -163,13 +163,11 @@ class ProxiedClassBuilder
         $template = \in_array('static', $method['modifiers'], true)
             ? '{{return}}self::proxyCallStatic({{name}}, {{paramsCall}});'
             : '{{return}}$this->proxyCall({{name}}, {{paramsCall}});';
-        $params = $this->buildMethodCallParams($method['parameters']);
-        if ($method['proxyViaFuncGetArgs']) {
-            $params = 'func_get_args()';
-        } elseif ($haveVariadicParameter && PHP_VERSION_ID < 70400) {
+        $params = $this->buildMethodCallParams($method);
+        if ($haveVariadicParameter && PHP_VERSION_ID < 70400) {
             // array unpacking not supported until php 7.4... use ugly workaround for older versions
             \preg_match('/\[(?:(.*?), )?&?\.\.\.(\$\S+)\]/', $params, $matches);
-            $template  = '$proxyParamsTemp = [' . $matches[1] . '];' . "\n"
+            $template = '$proxyParamsTemp = [' . $matches[1] . '];' . "\n"
                 . 'foreach (' . $matches[2] . ' as &$value) {' . "\n"
                 . '    $proxyParamsTemp[] = &$value;' . "\n"
                 . '}' . "\n"
@@ -177,7 +175,7 @@ class ProxiedClassBuilder
             $params = '$proxyParamsTemp';
         }
         $values = $this->buildMethodBodyValues($method, $params);
-        $output =  \strtr($template, $values);
+        $output = \strtr($template, $values);
         $indent = $this->buildIndent(2);
         return $indent . \str_replace("\n", "\n" . $indent, $output);
     }
@@ -210,20 +208,23 @@ class ProxiedClassBuilder
     /**
      * Builds parameters passed to a proxy's method call.
      *
-     * @param array $parameters A map where key is parameter name and value is parameter definition.
+     * @param array $method Method definition
      *
      * @return string Parameters as a string. Empty string is returned when no parameters were passed.
      */
-    private function buildMethodCallParams(array $parameters)
+    private function buildMethodCallParams(array $method)
     {
-        $parameters = \array_map(static function ($param) {
+        $params = \array_map(static function ($param) {
             $param = \array_merge(ClassDefFactory::$defaultParam, $param);
             return ''
                 . ($param['isPassedByReference'] && !$param['isVariadic'] ? '&' : '')
                 . ($param['isVariadic'] ? '...' : '')
                 . '$' . $param['name'];
-        }, $parameters);
-        return '[' . \implode(', ', $parameters) . ']';
+        }, $method['parameters']);
+        $params = '[' . \implode(', ', $params) . ']';
+        return $method['proxyViaFuncGetArgs'] || \preg_match('/(&|\.\.\.)/', $params) === 0
+            ? 'func_get_args()'
+            : $params;
     }
 
     /**

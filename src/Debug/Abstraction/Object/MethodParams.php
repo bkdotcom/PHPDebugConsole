@@ -160,7 +160,7 @@ class MethodParams
             'desc' => $phpDocParam['desc'],
             'isOptional' => $refParam->isOptional(),
             'isPassedByReference' => $refParam->isPassedByReference(),
-            'isPromoted' =>  PHP_VERSION_ID >= 80000 && $refParam->isPromoted(),
+            'isPromoted' => PHP_VERSION_ID >= 80000 && $refParam->isPromoted(),
             'isVariadic' => PHP_VERSION_ID >= 50600
                 ? $refParam->isVariadic() || $phpDocParam['isVariadic']
                 : $phpDocParam['isVariadic'],

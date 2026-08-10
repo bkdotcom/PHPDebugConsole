@@ -33,17 +33,11 @@ class Manager
     /**
      * Constructor
      *
-     * @param CacheInterface|FileSystemCache|null $cache Optional PSR-16 (SimpleCache) instance
-     *
-     * @throws InvalidArgumentException If provided cache does not implement CacheInterface
+     * @param CacheInterface|null $cache Optional PSR-16 (SimpleCache) instance
      */
     public function __construct($cache = null)
     {
-        $validCache = $cache === null || $cache instanceof CacheInterface || $cache instanceof FileSystemCache;
-        if (!$validCache) {
-            throw new InvalidArgumentException('Cache must implement Psr\SimpleCache\CacheInterface');
-        }
-        $this->cache = $cache;
+        $this->setCache($cache);
         $this->classDefFactory = new ClassDefFactory();
         $this->proxiedClassBuilder = new ProxiedClassBuilder();
     }
@@ -82,6 +76,34 @@ class Manager
         $subjectClassName = \get_class($subject);
         return $this->buildFromClassName($subjectClassName)
             ->setSubject($subject);
+    }
+
+    /**
+     * Get cache instance
+     *
+     * @return CacheInterface|null PSR-16 (SimpleCache) instance (or null)
+     */
+    public function getCache()
+    {
+        return $this->cache;
+    }
+
+    /**
+     * Set cache instance
+     *
+     * @param CacheInterface|null $cache PSR-16 (SimpleCache) instance (or null)
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException If provided cache does not implement CacheInterface
+     */
+    public function setCache($cache)
+    {
+        $isValidCache = $cache instanceof CacheInterface;
+        if ($cache !== null && !$isValidCache) {
+            throw new InvalidArgumentException('Cache must implement Psr\SimpleCache\CacheInterface');
+        }
+        $this->cache = $cache;
     }
 
     /**

@@ -70,6 +70,7 @@ class ClassDefModifier
         ]);
         $classDef['methods']['rollback']['parameters'] = \array_replace_recursive($classDef['methods']['rollback']['parameters'], $flagsAndName);
         $classDef['methods']['store_result']['parameters'] = \array_replace_recursive($classDef['methods']['store_result']['parameters'], $flags);
+        $classDef['methods']['store_result']['proxyViaFuncGetArgs'] = true; // store_result is overloaded and does not like having default values passed, so proxy via func_get_args() to pass only what was given
         return $classDef;
     }
 

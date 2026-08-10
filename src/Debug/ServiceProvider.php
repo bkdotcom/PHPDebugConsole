@@ -96,12 +96,12 @@ class ServiceProvider implements ServiceProviderInterface
             return $backtrace;
         };
         $container['cache'] = static function (Container $container) {
-            // return a simple cache instance (Psr\SimpleCache\CacheInterface)
             $cacheDir = $container['debug']->getCfg('cacheDir', Debug::CONFIG_DEBUG);
-            $cache = new \bdk\Cache\FileSystem($cacheDir);
-            $proxyManager = $container['proxyManager'];
+            $fileSystemCache = new \bdk\Cache\FileSystem($cacheDir);
+            // convert to PSR-16 via proxy
+            $proxyManager = new \bdk\Proxy\Manager();
             return $proxyManager->buildFromClassName('Psr\SimpleCache\CacheInterface')
-                ->setSubject($cache);
+                ->setSubject($fileSystemCache);
         };
         $container['config'] = static function (Container $container) {
             return new \bdk\Debug\Config($container['debug'], $container['debug']->configNormalizer);
@@ -159,8 +159,7 @@ class ServiceProvider implements ServiceProviderInterface
             $debug = $container['debug'];
             // treat the proxy classes as "internal"
             $debug->addPlugin(new \bdk\Debug\Plugin\ProxyHooks($debug));
-            $cacheDir = $debug->getCfg('cacheDir', Debug::CONFIG_DEBUG);
-            $cache = new \bdk\Cache\FileSystem($cacheDir);
+            $cache = $container['cache'];
             return new \bdk\Proxy\Manager($cache);
         };
     }

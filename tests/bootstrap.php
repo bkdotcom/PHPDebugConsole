@@ -70,6 +70,9 @@ $httpdCfg = array(
     ... we want to make sure we initialize with route=>'html'
 */
 $debug = \bdk\Debug::getInstance(array(
+    'cacheDir' => \sys_get_temp_dir() . DIRECTORY_SEPARATOR
+        . 'PHPDebugConsoleCache' . DIRECTORY_SEPARATOR
+        . \phpversion(),
     'collect' => true,
     'container' => array(
         'allowOverride' => true,

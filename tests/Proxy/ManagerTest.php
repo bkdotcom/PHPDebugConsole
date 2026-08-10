@@ -24,9 +24,14 @@ class ManagerTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        self::$cache = new FileSystemCache();
+        $fileSystemCache = new FileSystemCache();
+        $proxyManagerTemp = new Manager();
+        self::$cache = $proxyManagerTemp->buildFromClassName('Psr\SimpleCache\CacheInterface')
+            ->setSubject($fileSystemCache);
+
         self::$cache->clear();
-        self::$manager = new Manager(self::$cache);
+        self::$manager = new Manager();
+        self::$manager->setCache(self::$cache);
     }
 
     public static function tearDownAfterClass(): void

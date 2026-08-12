@@ -29,7 +29,9 @@ class OAuthTest extends DebugTestFramework
     {
         parent::setUpBeforeClass();
         if (\extension_loaded('OAuth')) {
+            $GLOBALS['turd'] = true;
             self::$oauthDebug = new OAuth(self::$consumerKey, self::$consumerSecret, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_AUTHORIZATION);
+            $GLOBALS['turd'] = false;
         }
     }
 

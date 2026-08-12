@@ -150,12 +150,22 @@ class Manager
             $classDeclaration = $this->cache->get($proxyClassName);
         }
 
+        if (!empty($GLOBALS['turd']) && $this->cache) {
+            echo \bdk\Debug\Utility\Reflection::propGet($this->cache->getSubject(), 'directory') . ' ' . $proxyClassName . "\n";
+        }
         if (!$classDeclaration) {
+            if (!empty($GLOBALS['turd'])) {
+                echo 'not in cache' . "\n";
+            }
             $classDef = $this->getClassDef($subjectClassName);
             $classDeclaration = $this->proxiedClassBuilder->build($classDef);
             if ($this->cache) {
                 $this->cache->set($proxyClassName, $classDeclaration);
             }
+        }
+
+        if (!empty($GLOBALS['turd'])) {
+            echo $classDeclaration . "\n\n";
         }
 
         // @phpcs:ignore Squiz.PHP.Eval.Discouraged

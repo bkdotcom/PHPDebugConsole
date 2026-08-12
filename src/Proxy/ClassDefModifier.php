@@ -107,7 +107,7 @@ class ClassDefModifier
             // verifier_token
             2 => array( 'defaultValue' => '', 'isDefaultValueAvailable' => true ),
             // http_method
-            3 => array( 'defaultValue' => 'OAUTH_HTTP_METHOD_GET', 'isDefaultValueAvailable' => true, 'isDefaultValueConstant' => true ),
+            3 => array( 'defaultValue' => 'OAUTH_HTTP_METHOD_GET', 'isDefaultValueAvailable' => true, 'isDefaultValueConstant' => true, 'name' => 'http_method' ),
         ));
         $classDef['methods']['getRequestHeader']['parameters'] = \array_replace_recursive($classDef['methods']['getRequestHeader']['parameters'], array(
             2 => $this->defaultArray, // extra parameters
@@ -116,7 +116,7 @@ class ClassDefModifier
             // callback_url
             1 => array( 'defaultValue' => '', 'isDefaultValueAvailable' => true ),
             // http_method
-            2 => array( 'defaultValue' => 'OAUTH_HTTP_METHOD_GET', 'isDefaultValueAvailable' => true, 'isDefaultValueConstant' => true ),
+            2 => array( 'defaultValue' => 'OAUTH_HTTP_METHOD_GET', 'isDefaultValueAvailable' => true, 'isDefaultValueConstant' => true, 'name' => 'http_method' ),
         ));
         return $classDef;
     }

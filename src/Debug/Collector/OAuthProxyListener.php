@@ -7,7 +7,7 @@ use bdk\Debug\Plugin\Redaction;
 use bdk\HttpMessage\Utility\Uri as UriUtils;
 use bdk\Proxy\ListenerInterface;
 use Exception;
-use OAuth;
+use OAuth as OAuthBase;
 
 /**
  * Listener for OAuth proxy

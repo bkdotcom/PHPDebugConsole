@@ -100,10 +100,10 @@ class Php
      */
     public static function getIniFiles()
     {
-        return \array_merge(
+        return \array_values(\array_filter(\array_merge(
             [\php_ini_loaded_file()],
-            \array_filter(\preg_split('#\s*[,\r\n]+\s*#', \trim((string) \php_ini_scanned_files())))
-        );
+            \preg_split('#\s*[,\r\n]+\s*#', \trim((string) \php_ini_scanned_files()))
+        )));
     }
 
     /**

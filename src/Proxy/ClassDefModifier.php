@@ -71,7 +71,7 @@ class ClassDefModifier
             4 => array( 'defaultValue' => 0, 'isDefaultValueAvailable' => true ),
         ]);
         $classDef['methods']['query']['parameters'] = \array_replace_recursive($classDef['methods']['query']['parameters'], array(
-            1 => array( 'defaultValue' => 'MYSQLI_STORE_RESULT', 'isDefaultValueAvailable' => true, 'isDefaultValueConstant' => true ),
+            1 => array( 'defaultValue' => 'MYSQLI_STORE_RESULT', 'isDefaultValueAvailable' => true, 'isDefaultValueConstant' => true, 'name' => 'result_mode' ),
         ));
         $classDef['methods']['real_connect']['parameters'] = \array_replace_recursive($classDef['methods']['real_connect']['parameters'], \array_merge($connectionParams, $flags));
         $classDef['methods']['rollback']['parameters'] = \array_replace_recursive($classDef['methods']['rollback']['parameters'], $flagsAndName);

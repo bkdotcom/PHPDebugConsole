@@ -320,10 +320,6 @@ class Backtrace
         }
         $trace = $exception->getTrace();
         $firstFrame = \reset($trace) ?: [];
-        if (\array_intersect_key($firstFrame, \array_flip(['file', 'line'])) === array()) {
-            // if the first frame doesn't have file & line, we can't be sure it's the same as the exception's file & line
-            return $trace;
-        }
         $fileLine = array(
             'file' => $exception->getFile(),
             'line' => $exception->getLine(),

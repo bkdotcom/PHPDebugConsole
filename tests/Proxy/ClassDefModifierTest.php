@@ -209,7 +209,7 @@ class ClassDefModifierTest extends TestCase
      *
      * @return array<string,mixed>
      */
-    private function classDef($name, array $methods): array
+    private function classDef($name, array $methods)
     {
         $classDef = array('name' => $name, 'methods' => array());
         foreach ($methods as $method => $parameterCount) {

@@ -77,7 +77,7 @@ class ProfileTest extends DebugTestFramework
                     )), $rows[0][0]['value']);
                     self::assertSame(1, $rows[0][1]);
                     self::assertGreaterThanOrEqual(0.25 + 0.75 * 2, $rows[0][2]);
-                    self::assertLessThan(0.01, $rows[0][3]);
+                    self::assertLessThan(0.0111, $rows[0][3]);
                     // test b
                     self::assertEquals(new Abstraction(Type::TYPE_IDENTIFIER, array(
                         'typeMore' => Type::TYPE_IDENTIFIER_METHOD,

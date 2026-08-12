@@ -221,7 +221,7 @@ class ClassDefFactory
             // isArray is deprecated in php 8.0
             // isArray is only concerned with type-hint and does not look at default value
             $type = 'array';
-        } elseif (\preg_match('/\[\s<\w+>\s([\w\\\\]+)/s', $refParam->__toString(), $matches)) {
+        } elseif (\preg_match('/\[\s<\w+>\s([\w\\\\]+)/', $refParam->__toString(), $matches)) {
             // Parameter #0 [ <required> namespace\Type $varName ]
             $type = $matches[1];
         }

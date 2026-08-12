@@ -156,7 +156,7 @@ class GuzzleMiddlewareTest extends DebugTestFramework
             $this->markTestSkipped('guzzle middleware is php 5.5+');
         }
         $client = $this->getClient(array(
-            new Response(202, ['Content-Length' => 0]),
+            new Response(202, ['Content-Length' => '0']),
         ));
         $response = $client->requestAsync('GET', $this->url)->wait();
         $this->assertInstanceOf('Psr\\Http\\Message\\ResponseInterface', $response);

@@ -12,7 +12,6 @@ namespace bdk\Debug\Collector;
 
 use GuzzleHttp;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Promise;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\RequestInterface;
@@ -58,7 +57,9 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
             'requestId' => \spl_object_hash($request),
         );
         if ($options['allow_redirects'] === true) {
-            $options['allow_redirects'] = GuzzleHttp\RedirectMiddleware::$defaultSettings;
+            $options['allow_redirects'] = \defined('GuzzleHttp\RedirectMiddleware::DEFAULT_SETTINGS')
+                ? GuzzleHttp\RedirectMiddleware::DEFAULT_SETTINGS
+                : GuzzleHttp\RedirectMiddleware::$defaultSettings;
         }
         if ($options['allow_redirects']) {
             $this->onRedirectOrig = isset($options['allow_redirects']['on_redirect'])
@@ -83,7 +84,7 @@ class GuzzleMiddleware extends AbstractAsyncMiddleware
     public function onRejected(GuzzleException $reason, array $requestInfo)
     {
         $meta = $this->debug->meta();
-        $response = $reason instanceof RequestException
+        $response = \method_exists($reason, 'getResponse')
             ? $reason->getResponse()
             : null;
         if ($requestInfo['isAsynchronous']) {

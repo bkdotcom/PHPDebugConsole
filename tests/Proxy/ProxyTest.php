@@ -2,6 +2,7 @@
 
 namespace bdk\Test\Proxy;
 
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\PhpUnitPolyfill\ExpectExceptionTrait;
 use bdk\Proxy\Manager;
 use bdk\Test\Proxy\Fixture\Listener;
@@ -13,6 +14,7 @@ use PHPUnit\Framework\TestCase;
  */
 class ProxyTest extends TestCase
 {
+    use AssertionTrait;
     use ExpectExceptionTrait;
 
     public function testGetListener(): void
@@ -89,26 +91,19 @@ class ProxyTest extends TestCase
             // ignore
         }
         $this->assertInstanceOf('RuntimeException', $exception);
-        $this->assertStringMatchesFormat(
-            \strtr(\json_encode([
-                array(
-                    'event' => 'init',
-                    'proxy' => 'bdk_Test_Proxy_Fixture_WidgetProxy',
-                    'subject' => 'bdk\Test\Proxy\Fixture\Widget',
-                ),
-                array(
-                    'arguments' => ['test'],  // broken doesn't have any arguments, but func_get_args() is used
-                    'exception' => $exception,
-                    'initValues' => array(
-                        'memoryStart' => '%d',
-                        'timeStart' => '%f',
-                    ),
-                    'method' => 'broken',
-                    'result' => null,
-                ),
-            ], JSON_PRETTY_PRINT), array('"%d"' => '%d', '"%f"' => '%f')),
-            \json_encode($listener->getLog(), JSON_PRETTY_PRINT)
-        );
+        $log = $listener->getLog();
+        $this->assertCount(2, $log);
+        $this->assertSame(array(
+            'event' => 'init',
+            'proxy' => 'bdk_Test_Proxy_Fixture_WidgetProxy',
+            'subject' => 'bdk\Test\Proxy\Fixture\Widget',
+        ), $log[0]);
+        $this->assertSame(['test'], $log[1]['arguments']);  // broken doesn't have any arguments, but func_get_args() is used
+        $this->assertSame($exception, $log[1]['exception']);
+        $this->assertIsInt($log[1]['initValues']['memoryStart']);
+        $this->assertIsFloat($log[1]['initValues']['timeStart']);
+        $this->assertSame('broken', $log[1]['method']);
+        $this->assertNull($log[1]['result']);
     }
 
     public function testCallStatic()

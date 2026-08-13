@@ -23,7 +23,7 @@ jobs:
         # MySQL 8 defaults to caching_sha2_password, which older mysqli/php versions
         # cannot authenticate against. Force the root account to use the legacy
         # mysql_native_password plugin so PHP 7.3 and earlier can still connect.
-        sudo /etc/init.d/mysql start --default-auth=mysql_native_password
+        sudo /etc/init.d/mysql start
         sudo mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${{ env.MYSQL_PASSWORD }}'; FLUSH PRIVILEGES;"
         mysql -e 'CREATE DATABASE IF NOT EXISTS ${{ env.MYSQL_DATABASE }};' -u${{ env.MYSQL_USERNAME }} -p${{ env.MYSQL_PASSWORD }}
         echo "MySQL version: $(mysqld --version)"

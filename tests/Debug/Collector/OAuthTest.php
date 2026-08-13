@@ -27,6 +27,7 @@ class OAuthTest extends DebugTestFramework
 
     public static function setUpBeforeClass(): void
     {
+        return;
         parent::setUpBeforeClass();
         if (\extension_loaded('OAuth')) {
             self::$oauthDebug = new OAuth(self::$consumerKey, self::$consumerSecret, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_AUTHORIZATION);

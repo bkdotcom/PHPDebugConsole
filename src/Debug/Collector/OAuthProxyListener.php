@@ -32,7 +32,7 @@ class OAuthProxyListener implements ListenerInterface
     /** @var array */
     private $initValues = array();
 
-    /** @var OAuth */
+    /** @var OAuthBase */
     private $subject;
 
     /**

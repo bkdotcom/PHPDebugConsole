@@ -47,6 +47,9 @@ class DebugTestFramework extends DOMTestCase
     {
         self::$helper = new Helper();
         parent::__construct($name, $data, $dataName);
+        if (PHP_VERSION_ID < 70000) {
+            self::$outputCurrentTest = true;
+        }
     }
 
     public function __get($name)

@@ -62,7 +62,7 @@ jobs:
         php -f vendor/bdk/devutil/src/coverageChecker.php -- coverage/clover.xml
     - name: Publish code coverage
       if: ${{ matrix.php-version == env.COVERAGE_VER && github.ref_name == 'master' }}
-      uses: qltysh/qlty-action/coverage@v1
+      uses: qltysh/qlty-action/coverage@v2
       with:
         files: coverage/clover.xml
         oidc: true

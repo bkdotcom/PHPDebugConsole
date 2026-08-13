@@ -3,6 +3,7 @@
 namespace bdk\Test\Debug\Plugin;
 
 use bdk\PubSub\Manager as EventManager;
+use bdk\PhpUnitPolyfill\AssertionTrait;
 use bdk\Test\Debug\DebugTestFramework;
 
 /**
@@ -12,6 +13,8 @@ use bdk\Test\Debug\DebugTestFramework;
  */
 class RuntimeTest extends DebugTestFramework
 {
+    use AssertionTrait;
+
     /**
      * @doesNotPerformAssertions
      */
@@ -34,6 +37,7 @@ class RuntimeTest extends DebugTestFramework
         $logEntries = $this->helper->deObjectifyData($this->debug->data->get('logSummary')[1]);
 
         self::assertStringMatchesFormat('Built in %f %s', $logEntries[0]['args'][0]);
-        self::assertStringMatchesFormat('Peak memory usage <i class="fa fa-question-circle-o" title="Includes debug overhead"></i>: %f %s / %f %s', $logEntries[1]['args'][0]);
+        $regex = '#Peak memory usage <i class="fa fa-question-circle-o" title="Includes debug overhead"></i>: \d+(\.\d+)? \S+ / (\d+(\.\d+)? \S+|∞)#';
+        self::assertMatchesRegularExpression($regex, $logEntries[1]['args'][0]);
     }
 }

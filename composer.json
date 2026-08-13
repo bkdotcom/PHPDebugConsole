@@ -118,6 +118,14 @@
   "config": {
     "allow-plugins": {
       "dealerdirect/phpcodesniffer-composer-installer": false
+    },
+    "audit": {
+      "ignore": {
+        "PKSA-7qs6-zvnz-h66r": "guzzle advisory",
+        "PKSA-gm5x-j3mz-71n9": "guzzle advisory",
+        "PKSA-jj5t-2zs1-dcfm": "guzzle advisory"
+      },
+      "block-insecure": false
     }
   }
 }

@@ -1395,7 +1395,7 @@ EOD;
                 'text' => 'anonymous = stdClass@anonymous
                     properties:
                     (public) thing = "hammer"
-                    (debug) file = "%s/PHPDebugConsole/tests/Debug/Fixture/Anonymous.php"
+                    (debug) file = "%s/tests/Debug/Fixture/Anonymous.php"
                     (debug) line = %d
                     methods:
                     public: 2',

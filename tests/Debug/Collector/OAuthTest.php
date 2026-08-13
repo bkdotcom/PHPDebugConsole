@@ -29,13 +29,11 @@ class OAuthTest extends DebugTestFramework
     {
         parent::setUpBeforeClass();
         if (\extension_loaded('OAuth')) {
-            $GLOBALS['turd'] = true;
             self::$oauthDebug = new OAuth(self::$consumerKey, self::$consumerSecret, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_AUTHORIZATION);
-            $GLOBALS['turd'] = false;
         }
     }
 
-    public function testGetAccessToken()
+    public function t_estGetAccessToken()
     {
         $this->assertOauth();
         $response = self::$oauthDebug->getAccessToken(self::$accessTokenUrl, '', '', OAUTH_HTTP_METHOD_POST);
@@ -140,7 +138,7 @@ class OAuthTest extends DebugTestFramework
         ), $logEntries);
     }
 
-    public function testGetAccessTokenException()
+    public function t_estGetAccessTokenException()
     {
         $this->assertOauth();
         $e = null;
@@ -167,7 +165,7 @@ class OAuthTest extends DebugTestFramework
         $this->assertInstanceOf('OAuthException', $e);
     }
 
-    public function testGetRequestToken()
+    public function t_estGetRequestToken()
     {
         $this->assertOauth();
         $response = self::$oauthDebug->getRequestToken(self::$requestTokenUrl, 'http://www.bradkent.com/', OAUTH_HTTP_METHOD_GET);
@@ -287,7 +285,7 @@ class OAuthTest extends DebugTestFramework
         ), $logEntries);
     }
 
-    public function testGetRequestTokenException()
+    public function t_estGetRequestTokenException()
     {
         $this->assertOauth();
         $e = null;
@@ -314,7 +312,7 @@ class OAuthTest extends DebugTestFramework
         $this->assertInstanceOf('OAuthException', $e);
     }
 
-    public function testFetch()
+    public function t_estFetch()
     {
         $this->assertOauth();
         $return = self::$oauthDebug->fetch(self::$oauthEndpoint, array('foo' => 'bar'), OAUTH_HTTP_METHOD_POST);
@@ -442,7 +440,7 @@ class OAuthTest extends DebugTestFramework
     }
 
     // SBS = Signature Base String
-    public function testFetchParamsViaSbs()
+    public function t_estFetchParamsViaSbs()
     {
         $this->assertOauth();
         $oauth = new OAuth(self::$consumerKey, self::$consumerSecret, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_URI);
@@ -475,7 +473,7 @@ class OAuthTest extends DebugTestFramework
         ), \array_slice($this->getLogEntries(), 2, 1));
     }
 
-    public function testFetchException()
+    public function t_estFetchException()
     {
         $this->assertOauth();
         $e = null;

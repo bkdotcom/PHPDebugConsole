@@ -23,18 +23,23 @@ class OAuthTest extends DebugTestFramework
     public static $oauthEndpoint = 'http://127.0.0.1:8080/echo';
     public static $token;
     public static $tokenSecret;
+
     private static $oauthDebug;
 
     public static function setUpBeforeClass(): void
     {
-        return;
         parent::setUpBeforeClass();
-        if (\extension_loaded('OAuth')) {
+        if (self::phpVersion() === '5.6') {
+            // segmentation fault cropped up in ver 3.6... reason(s) unknown
+            return;
+        }
+        if (\extension_loaded('oauth')) {
+            echo 'OAuth version: ' . \phpversion("oauth") . "\n";
             self::$oauthDebug = new OAuth(self::$consumerKey, self::$consumerSecret, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_AUTHORIZATION);
         }
     }
 
-    public function t_estGetAccessToken()
+    public function testGetAccessToken()
     {
         $this->assertOauth();
         $response = self::$oauthDebug->getAccessToken(self::$accessTokenUrl, '', '', OAUTH_HTTP_METHOD_POST);
@@ -139,7 +144,7 @@ class OAuthTest extends DebugTestFramework
         ), $logEntries);
     }
 
-    public function t_estGetAccessTokenException()
+    public function testGetAccessTokenException()
     {
         $this->assertOauth();
         $e = null;
@@ -166,7 +171,7 @@ class OAuthTest extends DebugTestFramework
         $this->assertInstanceOf('OAuthException', $e);
     }
 
-    public function t_estGetRequestToken()
+    public function testGetRequestToken()
     {
         $this->assertOauth();
         $response = self::$oauthDebug->getRequestToken(self::$requestTokenUrl, 'http://www.bradkent.com/', OAUTH_HTTP_METHOD_GET);
@@ -286,7 +291,7 @@ class OAuthTest extends DebugTestFramework
         ), $logEntries);
     }
 
-    public function t_estGetRequestTokenException()
+    public function testGetRequestTokenException()
     {
         $this->assertOauth();
         $e = null;
@@ -313,7 +318,7 @@ class OAuthTest extends DebugTestFramework
         $this->assertInstanceOf('OAuthException', $e);
     }
 
-    public function t_estFetch()
+    public function testFetch()
     {
         $this->assertOauth();
         $return = self::$oauthDebug->fetch(self::$oauthEndpoint, array('foo' => 'bar'), OAUTH_HTTP_METHOD_POST);
@@ -441,7 +446,7 @@ class OAuthTest extends DebugTestFramework
     }
 
     // SBS = Signature Base String
-    public function t_estFetchParamsViaSbs()
+    public function testFetchParamsViaSbs()
     {
         $this->assertOauth();
         $oauth = new OAuth(self::$consumerKey, self::$consumerSecret, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_URI);
@@ -474,7 +479,7 @@ class OAuthTest extends DebugTestFramework
         ), \array_slice($this->getLogEntries(), 2, 1));
     }
 
-    public function t_estFetchException()
+    public function testFetchException()
     {
         $this->assertOauth();
         $e = null;
@@ -503,8 +508,18 @@ class OAuthTest extends DebugTestFramework
 
     protected function assertOauth()
     {
+        if (self::phpVersion() === '5.6') {
+            // segmentation fault cropped up in ver 3.6... reason(s) unknown
+            $this->markTestSkipped('PHPDebugConsole and OAuth extension are not getting along on php 5.6');
+        }
         if (\extension_loaded('oauth') === false) {
             $this->markTestSkipped('OAuth not avail');
         }
+    }
+
+    protected static function phpVersion()
+    {
+        \preg_match('/^(\d\.\d)\b/', \phpversion(), $matches);
+        return $matches[1];
     }
 }
